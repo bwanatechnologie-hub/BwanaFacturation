@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content_auth %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+    <div class="card p-4 shadow-lg border-0 text-center"
+         style="width:100%; max-width:480px; border-radius:20px;">
+        <div style="font-size:60px;">❌</div>
+        <h3 class="fw-bold mt-3 text-danger">Lien invalide</h3>
+        <p class="text-muted">
+            Ce lien d'activation est invalide ou a expiré.<br>
+            Veuillez vous réinscrire.
+        </p>
+        <a href="{% url 'inscription' %}"
+           class="btn w-100 py-2 fw-bold mt-3"
+           style="background:#1e3a5f; color:white; border-radius:10px;">
+            S'inscrire à nouveau
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-box-seam me-2 text-primary"></i>
+                    {{ titre }}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="produitForm">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <!-- Référence -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Référence <span class="text-danger">*</span>
+                            </label>
+                            {{ form.reference }}
+                            {% if form.reference.errors %}
+                                <div class="text-danger small">{{ form.reference.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Ex: REF-001</small>
+                        </div>
+
+                        <!-- Nom du produit -->
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">
+                                Nom du produit <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                                <div class="text-danger small">{{ form.nom.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Description</label>
+                            {{ form.description }}
+                            <small class="text-muted">Description détaillée du produit/service</small>
+                        </div>
+
+                        <!-- Catégorie -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Catégorie</label>
+                            {{ form.categorie }}
+                            <div class="mt-2">
+                                {# ✅ Remplacé : target="_blank" → data-bs-toggle="modal" #}
+                                <a href="#" class="small" id="lien-nouvelle-categorie"
+                                   data-bs-toggle="modal" data-bs-target="#modalNouvelleCategorie">
+                                    <i class="bi bi-plus-circle"></i> Nouvelle catégorie
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Unité de vente -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Unité de vente</label>
+                            {{ form.unite }}
+                        </div>
+
+                        <!-- Prix HT avec devise -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Prix HT <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light" id="devise-label">prix</span>
+                                {{ form.prix_ht }}
+                            </div>
+                            <small class="text-muted">Le prix hors taxes</small>
+                        </div>
+
+                        <!-- Devise -->
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                Devise
+                                <i class="bi bi-info-circle text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   title="Le pays détermine la devise et la TVA automatiquement"></i>
+                            </label>
+                            {{ form.pays }}
+                            <small class="text-muted" id="devise-helper">Sélectionnez le pays</small>
+                        </div>
+
+                        <!-- Province (Canada uniquement) -->
+                        <div class="col-md-4" id="province-container" style="display: none;">
+                            <label class="form-label fw-semibold">
+                                Province (Canada)
+                                <i class="bi bi-info-circle text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   title="Détermine la TVH/TPS/TVQ"></i>
+                            </label>
+                            {{ form.province }}
+                        </div>
+
+                        <!-- Produit actif -->
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.actif }}
+                                <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                    Produit actif
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-lg me-2"></i>{{ bouton }}
+                            </button>
+                            <a href="{% url 'liste_produits' %}" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-x me-2"></i>Annuler
+                            </a>
+                        </div>
+                        {% if produit %}
+                        <a href="{% url 'dupliquer_produit' produit.pk %}"
+                           class="btn btn-outline-info"
+                           onclick="return confirm('Créer une copie de ce produit ?')">
+                            <i class="bi bi-files me-2"></i>Dupliquer
+                        </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{# ══════════════════════════════════════════════════════════════ #}
+{# MODAL — Nouvelle catégorie                                      #}
+{# ══════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="modalNouvelleCategorie" tabindex="-1"
+     aria-labelledby="modalNouvelleCateggorieLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalNouvelleCateggorieLabel">
+                    <i class="bi bi-tag me-2"></i>Nouvelle catégorie
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                {# Zone d'alerte (erreurs / succès) #}
+                <div id="modal-alert" class="alert d-none" role="alert"></div>
+
+                <div class="mb-3">
+                    <label for="modal-cat-nom" class="form-label fw-semibold">
+                        Nom de la catégorie <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="modal-cat-nom" class="form-control"
+                           placeholder="Ex : Fournitures bureau" maxlength="100" autocomplete="off">
+                </div>
+
+                <div class="mb-3">
+                    <label for="modal-cat-desc" class="form-label fw-semibold">
+                        Description <span class="text-muted small">(optionnel)</span>
+                    </label>
+                    <textarea id="modal-cat-desc" class="form-control" rows="2"
+                              placeholder="Description de la catégorie…"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Annuler
+                </button>
+                <button type="button" class="btn btn-primary" id="btn-sauvegarder-categorie">
+                    <span id="btn-cat-spinner"
+                          class="spinner-border spinner-border-sm me-1 d-none"
+                          role="status" aria-hidden="true"></span>
+                    <i class="bi bi-check-lg me-1" id="btn-cat-icon"></i>
+                    Enregistrer
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+{# ══════════════════════════════════════════════════════════════ #}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Tooltips Bootstrap ────────────────────────────────────────
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach(el => new bootstrap.Tooltip(el));
+
+    // ── Gestion pays / devise ────────────────────────────────────
+    const paysSelect        = document.getElementById('id_pays');
+    const provinceContainer = document.getElementById('province-container');
+    const provinceSelect    = document.getElementById('id_province');
+    const deviseLabel       = document.getElementById('devise-label');
+    const deviseHelper      = document.getElementById('devise-helper');
+
+    const paysData = {
+        {% for pays in pays_list %}
+        '{{ pays.id }}': {
+            'code':   '{{ pays.code }}',
+            'devise': '{{ pays.symbole_devise }}',
+            'nom':    '{{ pays.nom }}',
+        },
+        {% endfor %}
+    };
+
+    function updatePays() {
+        const paysId = paysSelect.value;
+        if (!paysId) {
+            deviseLabel.textContent         = 'prix';
+            deviseHelper.textContent        = 'Sélectionnez le pays';
+            provinceContainer.style.display = 'none';
+            return;
+        }
+        const pays = paysData[paysId];
+        if (!pays) return;
+        deviseLabel.textContent  = pays.devise;
+        deviseHelper.textContent = `${pays.nom} — ${pays.devise}`;
+        if (pays.code === 'CA') {
+            provinceContainer.style.display = 'block';
+            if (provinceSelect) provinceSelect.disabled = false;
+        } else {
+            provinceContainer.style.display = 'none';
+            if (provinceSelect) { provinceSelect.value = ''; provinceSelect.disabled = true; }
+        }
+    }
+
+    paysSelect.addEventListener('change', updatePays);
+    updatePays();
+
+
+    // ── Modal nouvelle catégorie ─────────────────────────────────
+    const modalEl       = document.getElementById('modalNouvelleCategorie');
+    const inputNom      = document.getElementById('modal-cat-nom');
+    const inputDesc     = document.getElementById('modal-cat-desc');
+    const btnSave       = document.getElementById('btn-sauvegarder-categorie');
+    const alertBox      = document.getElementById('modal-alert');
+    const spinner       = document.getElementById('btn-cat-spinner');
+    const btnIcon       = document.getElementById('btn-cat-icon');
+
+    // Réinitialiser le modal à chaque ouverture
+    modalEl.addEventListener('show.bs.modal', function () {
+        inputNom.value  = '';
+        inputDesc.value = '';
+        inputNom.classList.remove('is-invalid');
+        alertBox.className = 'alert d-none';
+        alertBox.textContent = '';
+    });
+
+    // Focus automatique sur le champ nom
+    modalEl.addEventListener('shown.bs.modal', function () {
+        inputNom.focus();
+    });
+
+    // Permettre la soumission avec la touche Entrée
+    inputNom.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); btnSave.click(); }
+    });
+
+    // Sauvegarde via fetch (AJAX)
+    btnSave.addEventListener('click', async function () {
+        const nom  = inputNom.value.trim();
+        const desc = inputDesc.value.trim();
+
+        // Validation côté client
+        if (!nom) {
+            inputNom.classList.add('is-invalid');
+            inputNom.focus();
+            return;
+        }
+        inputNom.classList.remove('is-invalid');
+
+        // UI — état chargement
+        spinner.classList.remove('d-none');
+        btnIcon.classList.add('d-none');
+        btnSave.disabled = true;
+
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const response = await fetch("{% url 'ajouter_categorie' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken':  csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',   // ← signal AJAX pour la vue
+                },
+                body: JSON.stringify({ nom, description: desc }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.id) {
+                // ✅ Succès — ajouter l'option dans le select
+                const select  = document.getElementById('id_categorie');
+                const option  = new Option(data.nom, data.id, true, true);
+                select.appendChild(option);
+
+                // Fermer le modal après un court délai
+                const bsModal = bootstrap.Modal.getInstance(modalEl);
+                bsModal.hide();
+
+                // Badge de confirmation sous le lien
+                const lien  = document.getElementById('lien-nouvelle-categorie');
+                const badge = document.createElement('span');
+                badge.className   = 'badge bg-success ms-2';
+                badge.textContent = `✅ "${data.nom}" ajoutée`;
+                lien.after(badge);
+                setTimeout(() => badge.remove(), 3000);
+
+            } else {
+                // ❌ Erreur serveur
+                const msg = data.erreur || data.nom?.[0] || 'Une erreur est survenue.';
+                showAlert('danger', msg);
+            }
+
+        } catch (err) {
+            showAlert('danger', 'Impossible de contacter le serveur. Veuillez réessayer.');
+            console.error(err);
+        } finally {
+            spinner.classList.add('d-none');
+            btnIcon.classList.remove('d-none');
+            btnSave.disabled = false;
+        }
+    });
+
+    function showAlert(type, message) {
+        alertBox.className   = `alert alert-${type}`;
+        alertBox.textContent = message;
+    }
+});
+</script>
+
+<style>
+.tooltip-inner { max-width: 300px; padding: 8px 12px; background-color: #1e3a5f; }
+input[readonly], select[disabled] { background-color: #f8f9fa; cursor: not-allowed; }
+.input-group { flex-wrap: nowrap; }
+#province-container { transition: all 0.3s ease; }
+
+/* Modal — finitions */
+#modalNouvelleCategorie .modal-header { border-bottom: none; }
+#modalNouvelleCategorie .modal-footer { border-top: 1px solid #e9ecef; }
+#modal-cat-nom.is-invalid { border-color: #dc3545; }
+#modal-cat-nom.is-invalid:focus { box-shadow: 0 0 0 .25rem rgba(220,53,69,.25); }
+</style>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Mon Profil{% endblock %}
+{% block page_title %}Mon Profil{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-body p-4">
+
+                <!-- Avatar -->
+                <div class="text-center mb-4">
+                    <div class="bg-primary rounded-circle d-inline-flex
+                                align-items-center justify-content-center"
+                         style="width:80px;height:80px;">
+                        <i class="bi bi-person-fill text-white"
+                           style="font-size:2.5rem;"></i>
+                    </div>
+                    <h5 class="fw-bold mt-3">{{ user.username }}</h5>
+                    <small class="text-muted">
+                        Membre depuis {{ user.date_joined|date:"d/m/Y" }}
+                    </small>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Prénom</label>
+                            <input type="text" name="first_name"
+                                   class="form-control"
+                                   value="{{ user.first_name }}"
+                                   placeholder="Votre prénom">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nom</label>
+                            <input type="text" name="last_name"
+                                   class="form-control"
+                                   value="{{ user.last_name }}"
+                                   placeholder="Votre nom">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email"
+                                   class="form-control"
+                                   value="{{ user.email }}"
+                                   placeholder="votre@email.com">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Nom d'utilisateur
+                            </label>
+                            <input type="text" class="form-control"
+                                   value="{{ user.username }}" disabled>
+                            <small class="text-muted">
+                                Le nom d'utilisateur ne peut pas être modifié.
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Enregistrer les modifications
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistiques personnelles -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-bar-chart me-2 text-primary"></i>
+                    Mes statistiques
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fs-4 fw-bold text-primary">
+                            {{ user.clients.count }}
+                        </div>
+                        <small class="text-muted">Clients</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-4 fw-bold text-warning">
+                            {{ user.devis.count }}
+                        </div>
+                        <small class="text-muted">Devis</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="fs-4 fw-bold text-success">
+                            {{ user.factures.count }}
+                        </div>
+                        <small class="text-muted">Factures</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

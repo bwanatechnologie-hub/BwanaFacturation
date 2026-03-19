@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content_auth %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+    <div class="card p-4 shadow-lg border-0" style="width: 100%; max-width: 420px; border-radius: 20px;">
+        
+        <!-- Logo et titre -->
+        <div class="text-center mb-4">
+            <div class="d-flex justify-content-center mb-3">
+                <div class="logo-circle">
+                    <img src="{% static 'img/logo-bwana.png' %}" 
+                         alt="Bwana Facturation"
+                         style="width: 70px; height: 70px; object-fit: contain;"
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'70\' height=\'70\' viewBox=\'0 0 24 24\' fill=\'%231e3a5f\'%3E%3Cpath d=\'M20 8h-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h2v2c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM4 16V6h12v2h-2v8H4zm16 4H8v-2h2v-8h10v10z\' fill=\'white\'/%3E%3C/svg%3E'">
+                </div>
+            </div>
+            <h2 class="fw-bold" style="color: #1e3a5f; letter-spacing: 2px;">B W A N A</h2>
+            <h5 class="text-muted" style="color: #344e65 !important; font-weight: 300;">Facturation</h5>
+            <p class="text-muted mt-3">Connectez-vous à votre compte</p>
+        </div>
+
+        <!-- ✅ Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0"
+                     role="alert" style="border-radius: 12px;">
+                    <i class="bi bi-{{ message.tags }}-circle me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Formulaire de connexion -->
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Email (remplace le nom d'utilisateur) -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                    <i class="bi bi-envelope me-1"></i>Adresse email
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-envelope" style="color: #1e3a5f;"></i>
+                    </span>
+                    <input type="email" name="username" class="form-control"
+                           placeholder="exemple@email.com" required autofocus>
+                </div>
+                <small class="text-muted">Utilisez votre adresse email</small>
+            </div>
+
+            <!-- Mot de passe -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                    <i class="bi bi-lock me-1"></i>Mot de passe
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-lock" style="color: #1e3a5f;"></i>
+                    </span>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <!-- Bouton de connexion -->
+            <button type="submit" class="btn w-100 py-2 fw-bold mb-3" 
+                    style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none; border-radius: 10px;">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Se connecter
+            </button>
+
+            <!-- Mot de passe oublié -->
+            <div class="text-center mb-3">
+                <a href="{% url 'password_reset' %}" class="text-decoration-none small" style="color: #1e3a5f;">
+                    <i class="bi bi-key me-1"></i>
+                    Mot de passe oublié ?
+                </a>
+            </div>
+
+            <!-- Séparateur -->
+            <div class="position-relative my-4">
+                <hr class="text-muted">
+                <span class="position-absolute top-50 start-50 translate-middle px-3 bg-white text-muted small">
+                    ou
+                </span>
+            </div>
+
+            <!-- Lien inscription -->
+            <p class="text-center text-muted mb-0">
+                Pas encore de compte ?
+                <a href="{% url 'inscription' %}" class="text-decoration-none fw-bold" style="color: #1e3a5f;">
+                    S'inscrire <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </p>
+        </form>
+        
+        <!-- Version -->
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                <i class="bi bi-tag me-1"></i> v2.0.0-beta
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+.logo-circle {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 20px rgba(30, 58, 95, 0.3);
+    margin-bottom: 15px;
+}
+
+.card {
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-control, .input-group-text {
+    border: 1px solid #e0e0e0;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 58, 95, 0.3);
+}
+
+.form-label {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+    .card {
+        margin: 15px;
+        padding: 20px !important;
+    }
+}
+</style>
+{% endblock %}

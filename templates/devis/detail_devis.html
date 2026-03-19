@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% block title %}{{ devis.numero }}{% endblock %}
+{% block page_title %}Détail du Devis{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">{{ devis.numero }}</h4>
+        <span class="text-muted">Créé le {{ devis.date_creation|date:"d/m/Y" }}</span>
+        {% if devis.client.pays_obj %}
+        <span class="badge bg-info text-dark ms-2">
+            {{ devis.client.pays_obj.nom }} — {{ devis.client.devise }}
+        </span>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        {% if devis.statut == 'accepte' and not devis.transforme_en_facture %}
+        <a href="{% url 'transformer_en_facture' devis.pk %}" class="btn btn-success">
+            <i class="bi bi-arrow-right-circle me-2"></i>Transformer en facture
+        </a>
+        {% endif %}
+        {% if not devis.transforme_en_facture %}
+        <a href="{% url 'modifier_devis' devis.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil me-2"></i>Modifier
+        </a>
+        {% endif %}
+        <a href="{% url 'pdf_devis' devis.pk %}" class="btn btn-outline-primary" target="_blank">
+            <i class="bi bi-file-pdf me-2"></i>Télécharger PDF
+        </a>
+        <a href="{% url 'liste_devis' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Retour
+        </a>
+    </div>
+</div>
+
+{# Devise du client (priorité) sinon FCFA #}
+{% with devise=devis.client.devise|default:"FCFA" %}
+
+<div class="row g-4">
+    <div class="col-md-8">
+
+        <!-- Infos -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-muted mb-2">CLIENT</h6>
+                        <p class="fw-bold mb-1">{{ devis.client.nom }} {{ devis.client.prenom }}</p>
+                        {% if devis.client.entreprise %}
+                            <p class="mb-1 text-muted">{{ devis.client.entreprise }}</p>
+                        {% endif %}
+                        <p class="mb-1">{{ devis.client.email }}</p>
+                        <p class="mb-1">{{ devis.client.telephone_complet }}</p>
+                        {% if devis.client.adresse %}
+                            <p class="mb-1 text-muted small">{{ devis.client.adresse }}</p>
+                        {% endif %}
+                        {% if devis.client.ville %}
+                            <p class="mb-0 text-muted small">
+                                {{ devis.client.ville }}
+                                {% if devis.client.code_postal %} — {{ devis.client.code_postal }}{% endif %}
+                                {% if devis.client.province %} ({{ devis.client.province }}){% endif %}
+                            </p>
+                        {% endif %}
+                        {% if devis.client.pays_obj %}
+                            <p class="mb-0 mt-1">
+                                <span class="badge bg-light text-dark border">
+                                    {{ devis.client.pays_obj.nom }} — {{ devise }}
+                                </span>
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h6 class="fw-bold text-muted mb-2">DEVIS</h6>
+                        <p class="mb-1"><strong>N°</strong> {{ devis.numero }}</p>
+                        <p class="mb-1"><strong>Date :</strong> {{ devis.date_creation|date:"d/m/Y" }}</p>
+                        <p class="mb-1"><strong>Validité :</strong> {{ devis.date_validite|date:"d/m/Y" }}</p>
+                        {% if devis.pays %}
+                        <p class="mb-1 small text-muted">
+                            <strong>Pays :</strong> {{ devis.pays }}
+                            {% if devis.type_taxe %} — {{ devis.type_taxe }}{% endif %}
+                            {% if devis.taux_taxe %} {{ devis.taux_taxe }}%{% endif %}
+                        </p>
+                        {% endif %}
+                        <p class="mb-0">
+                            <strong>Statut :</strong>
+                            {% if devis.statut == 'en_attente' %}
+                                <span class="badge bg-warning text-dark">En attente</span>
+                            {% elif devis.statut == 'accepte' %}
+                                <span class="badge bg-success">Accepté</span>
+                            {% else %}
+                                <span class="badge bg-danger">Refusé</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lignes -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-center">Qté</th>
+                            <th class="text-end">Prix HT</th>
+                            <th class="text-center">TVA</th>
+                            <th class="text-end">Total TTC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in lignes %}
+                        <tr>
+                            <td>{{ ligne.description }}</td>
+                            <td class="text-center">{{ ligne.quantite }}</td>
+                            <td class="text-end">{{ ligne.prix_unitaire|floatformat:0 }} {{ devise }}</td>
+                            <td class="text-center">{{ ligne.tva }}%</td>
+                            <td class="text-end fw-semibold">{{ ligne.total_ttc|floatformat:0 }} {{ devise }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-semibold">Total HT</td>
+                            <td class="text-end fw-semibold">
+                                {{ devis.calculer_total_ht|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end fw-semibold">
+                                {{ devis.type_taxe|default:"TVA" }}
+                                {% if devis.taux_taxe %}({{ devis.taux_taxe }}%){% endif %}
+                            </td>
+                            <td class="text-end fw-semibold">
+                                {{ devis.calculer_tva|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold fs-5">Total TTC</td>
+                            <td class="text-end fw-bold fs-5 text-primary">
+                                {{ devis.calculer_total_ttc|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% if devis.notes %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="fw-bold">Notes</h6>
+                <p class="mb-0 text-muted">{{ devis.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Actions rapides</h6>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'pdf_devis' devis.pk %}" class="btn btn-primary" target="_blank">
+                        <i class="bi bi-file-pdf me-2"></i>Télécharger PDF
+                    </a>
+                    {% if not devis.transforme_en_facture %}
+                    <a href="{% url 'modifier_devis' devis.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Modifier le devis
+                    </a>
+                    {% endif %}
+                    {% if devis.statut == 'accepte' and not devis.transforme_en_facture %}
+                    <a href="{% url 'transformer_en_facture' devis.pk %}" class="btn btn-success">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Créer la facture
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'detail_client' devis.client.pk %}" class="btn btn-outline-primary">
+                        <i class="bi bi-person me-2"></i>Voir le client
+                    </a>
+                    <a href="{% url 'supprimer_devis' devis.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>Supprimer
+                    </a>
+                </div>
+
+                <!-- Résumé financier -->
+                <hr>
+                <h6 class="fw-bold mb-2">Résumé</h6>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Total HT</span>
+                    <span class="fw-semibold small">{{ devis.calculer_total_ht|floatformat:0 }} {{ devise }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">{{ devis.type_taxe|default:"TVA" }}</span>
+                    <span class="fw-semibold small">{{ devis.calculer_tva|floatformat:0 }} {{ devise }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Total TTC</span>
+                    <span class="fw-bold text-primary">{{ devis.calculer_total_ttc|floatformat:0 }} {{ devise }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endwith %}
+{% endblock %}

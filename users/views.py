@@ -1,0 +1,245 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import SetPasswordForm
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.conf import settings
+from .tokens import token_activation
+from .forms import InscriptionForm
+
+
+# ══════════════════════════════════════════
+# INSCRIPTION
+# ══════════════════════════════════════════
+def inscription(request):
+    if request.user.is_authenticated:
+        return redirect('tableau_de_bord')
+
+    if request.method == 'POST':
+
+        # ✅ Vérifier que le checkbox conditions est coché
+        if not request.POST.get('terms'):
+            form = InscriptionForm(request.POST)
+            messages.error(request,
+                "❌ Vous devez accepter les conditions d'utilisation "
+                "et la politique de confidentialité.")
+            return render(request, 'users/inscription.html', {'form': form})
+
+        form = InscriptionForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = False
+            user.save()
+
+            uid   = urlsafe_base64_encode(force_bytes(user.pk))
+            token = token_activation.make_token(user)
+            activation_url = f"{settings.SITE_URL}/users/activer/{uid}/{token}/"
+
+            try:
+                html_message = render_to_string(
+                    'users/emails/activation_email.html',
+                    {'user': user, 'activation_url': activation_url}
+                )
+                send_mail(
+                    subject='🧾 Bwana Facturation — Activez votre compte',
+                    message=f'Activation : {activation_url}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+            except Exception:
+                user.is_active = True
+                user.save()
+                login(request, user)
+                messages.success(request, "Compte créé avec succès !")
+                return redirect('tableau_de_bord')
+
+            return render(request, 'users/activation_envoyee.html',
+                          {'email': user.email})
+    else:
+        form = InscriptionForm()
+
+    return render(request, 'users/inscription.html', {'form': form})
+
+
+# ══════════════════════════════════════════
+# ACTIVATION COMPTE
+# ══════════════════════════════════════════
+def activer_compte(request, uidb64, token):
+    try:
+        uid  = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user and token_activation.check_token(user, token):
+        user.is_active = True
+        user.save()
+        return render(request, 'users/activation_succes.html')
+    else:
+        return render(request, 'users/activation_invalide.html')
+
+
+# ══════════════════════════════════════════
+# CONNEXION / DÉCONNEXION
+# ══════════════════════════════════════════
+def connexion(request):
+    if request.user.is_authenticated:
+        return redirect('tableau_de_bord')
+
+    if request.method == 'POST':
+        email    = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        # ✅ Récupérer IP et User-Agent pour l'historique
+        ip = (request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+              or request.META.get('REMOTE_ADDR', ''))
+        ua = request.META.get('HTTP_USER_AGENT', '')
+
+        try:
+            user     = User.objects.get(email=email)
+            username = user.username
+        except User.DoesNotExist:
+            username = None
+            messages.error(request, "❌ Aucun compte trouvé avec cet email.")
+
+        if username:
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+
+                    # ✅ Enregistrer connexion réussie
+                    try:
+                        from .admin_models import LoginHistory
+                        LoginHistory.objects.create(
+                            user=user, ip_address=ip or None,
+                            user_agent=ua, succes=True
+                        )
+                    except Exception:
+                        pass
+
+                    next_url = request.GET.get('next', 'tableau_de_bord')
+                    messages.success(request,
+                        f"✅ Bienvenue {user.first_name or user.username} !")
+                    return redirect(next_url)
+                else:
+                    messages.error(request,
+                        "⚠️ Votre compte n'est pas encore activé. "
+                        "Vérifiez votre email de confirmation.")
+            else:
+                # ✅ Enregistrer tentative échouée
+                try:
+                    from .admin_models import LoginHistory
+                    failed_user = User.objects.filter(username=username).first()
+                    if failed_user:
+                        LoginHistory.objects.create(
+                            user=failed_user, ip_address=ip or None,
+                            user_agent=ua, succes=False
+                        )
+                except Exception:
+                    pass
+                messages.error(request, "❌ Mot de passe incorrect.")
+
+    return render(request, 'users/connexion.html')
+
+
+def deconnexion(request):
+    logout(request)
+    return redirect('connexion')
+
+
+# ══════════════════════════════════════════
+# PROFIL
+# ══════════════════════════════════════════
+@login_required
+def profil(request):
+    return render(request, 'users/profil.html', {'user': request.user})
+
+
+# ══════════════════════════════════════════
+# MOT DE PASSE OUBLIÉ
+# ══════════════════════════════════════════
+def password_reset_request(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        try:
+            user  = User.objects.get(email=email, is_active=True)
+            uid   = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = f"{settings.SITE_URL}/users/password-reset/{uid}/{token}/"
+
+            html_message = render_to_string(
+                'users/emails/reset_password_email.html',
+                {'user': user, 'reset_url': reset_url}
+            )
+            send_mail(
+                subject='🔑 Bwana Facturation — Réinitialisation mot de passe',
+                message=f'Reset : {reset_url}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+        except User.DoesNotExist:
+            pass
+
+        return render(request, 'users/password_reset_envoye.html')
+
+    return render(request, 'users/password_reset.html')
+
+
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid  = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    validlink = user and default_token_generator.check_token(user, token)
+
+    if request.method == 'POST' and validlink:
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('password_reset_succes')
+    else:
+        form = SetPasswordForm(user) if validlink else None
+
+    # ✅ Classes Bootstrap sur les champs
+    if form:
+        form.fields['new_password1'].widget.attrs.update({
+            'class': 'form-control form-control-lg',
+            'placeholder': '••••••••'
+        })
+        form.fields['new_password2'].widget.attrs.update({
+            'class': 'form-control form-control-lg',
+            'placeholder': '••••••••'
+        })
+
+    return render(request, 'users/password_reset_confirm.html', {
+        'form':      form,
+        'validlink': validlink,
+    })
+
+
+def password_reset_succes(request):
+    return render(request, 'users/password_reset_succes.html')
+
+
+# ══════════════════════════════════════════
+# PAGES LÉGALES
+# ══════════════════════════════════════════
+def conditions_utilisation(request):
+    return render(request, 'users/conditions_utilisation.html')
+
+
+def politique_confidentialite(request):
+    return render(request, 'users/politique_confidentialite.html')

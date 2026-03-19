@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{{ titre }} — Admin{% endblock %}
+{% block page_title %}⚙️ {{ titre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Titre <span class="text-danger">*</span></label>
+                        <input type="text" name="titre" class="form-control"
+                               placeholder="Ex: Maintenance prévue le 20 mars" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control" rows="4"
+                                  placeholder="Détails de l'annonce..." required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Type</label>
+                        <select name="type_annonce" class="form-select">
+                            <option value="info">ℹ️ Information</option>
+                            <option value="warning">⚠️ Avertissement</option>
+                            <option value="success">✅ Succès</option>
+                            <option value="danger">🚨 Urgent</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date de début <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="date_debut" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Date de fin <span class="text-muted">(optionnel)</span></label>
+                            <input type="datetime-local" name="date_fin" class="form-control">
+                            <small class="text-muted">Laisser vide = annonce permanente</small>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-megaphone me-2"></i>{{ bouton }}
+                        </button>
+                        <a href="{% url 'admin_annonces' %}" class="btn btn-outline-secondary px-4">
+                            Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% block title %}Administration — Bwana{% endblock %}
+{% block page_title %}⚙️ Administration{% endblock %}
+
+{% block content %}
+
+<!-- Bannière admin -->
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-shield-lock-fill fs-4"></i>
+    <div>
+        <strong>Zone administrateur</strong> — Vous êtes connecté en tant que
+        <strong>{{ user.get_full_name|default:user.username }}</strong>.
+        Toutes vos actions sont irréversibles.
+    </div>
+</div>
+
+<!-- ✅ ACCÈS RAPIDES -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <a href="{% url 'admin_liste_users' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-people-fill fs-2 text-primary mb-2 d-block"></i>
+                <div class="fw-semibold text-dark">Utilisateurs</div>
+                <div class="small text-muted">Gérer les comptes</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'admin_historique_connexions' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-clock-history fs-2 text-info mb-2 d-block"></i>
+                <div class="fw-semibold text-dark">Connexions</div>
+                <div class="small text-muted">
+                    {{ connexions_aujourd }} aujourd'hui
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'admin_annonces' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-megaphone-fill fs-2 text-success mb-2 d-block"></i>
+                <div class="fw-semibold text-dark">Annonces</div>
+                <div class="small text-muted">
+                    {{ nb_annonces }} active{% if nb_annonces != 1 %}s{% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-md-3">
+        <a href="{% url 'admin_maintenance' %}"
+           class="card border-0 shadow-sm text-decoration-none h-100
+                  {% if maintenance.actif %}border-danger{% endif %}">
+            <div class="card-body text-center py-3">
+                <i class="bi bi-tools fs-2 mb-2 d-block
+                   {% if maintenance.actif %}text-danger{% else %}text-secondary{% endif %}"></i>
+                <div class="fw-semibold text-dark">Maintenance</div>
+                <div class="small">
+                    {% if maintenance.actif %}
+                        <span class="text-danger fw-bold">● ACTIF</span>
+                    {% else %}
+                        <span class="text-muted">Désactivée</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Cartes stats globales -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="fs-1 fw-bold text-primary">{{ nb_users }}</div>
+                <div class="text-muted small">Utilisateurs</div>
+                <div class="small mt-1">
+                    <span class="badge bg-success">{{ nb_actifs }} actifs</span>
+                    <span class="badge bg-danger ms-1">{{ nb_inactifs }} inactifs</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="fs-1 fw-bold text-warning">{{ nb_devis }}</div>
+                <div class="text-muted small">Devis total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="fs-1 fw-bold text-success">{{ nb_factures }}</div>
+                <div class="text-muted small">Factures total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="fs-1 fw-bold" style="color:#1e3a5f;">{{ ca_total|floatformat:0 }}</div>
+                <div class="text-muted small">CA total (toutes devises)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- Derniers inscrits -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-person-plus me-2 text-primary"></i>Derniers inscrits
+                    </h6>
+                    <a href="{% url 'admin_liste_users' %}" class="btn btn-sm btn-outline-primary">
+                        Voir tous
+                    </a>
+                </div>
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Statut</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in derniers_users %}
+                        <tr>
+                            <td>{{ u.get_full_name|default:u.username }}</td>
+                            <td class="small text-muted">{{ u.email }}</td>
+                            <td>
+                                {% if u.is_active %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactif</span>
+                                {% endif %}
+                                {% if u.is_superuser %}
+                                    <span class="badge bg-warning text-dark ms-1">Admin</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_detail_user' u.pk %}"
+                                   class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top utilisateurs -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">
+                        <i class="bi bi-trophy me-2 text-warning"></i>Top utilisateurs
+                    </h6>
+                    <a href="{% url 'admin_liste_users' %}" class="btn btn-sm btn-outline-warning">
+                        Voir tous
+                    </a>
+                </div>
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th class="text-center">Devis</th>
+                            <th class="text-center">Factures</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users_actifs %}
+                        <tr>
+                            <td>{{ u.get_full_name|default:u.username }}</td>
+                            <td class="text-center">{{ u.nb_devis }}</td>
+                            <td class="text-center">{{ u.nb_factures }}</td>
+                            <td>
+                                <a href="{% url 'admin_detail_user' u.pk %}"
+                                   class="btn btn-sm btn-outline-secondary py-0 px-1">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Aucun utilisateur</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-lightning-fill me-2 text-warning"></i>Actions rapides
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'admin_liste_users' %}?filtre=inactifs"
+                       class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-person-x me-1"></i>
+                        Comptes inactifs ({{ nb_inactifs }})
+                    </a>
+                    <a href="{% url 'admin_liste_users' %}?filtre=superusers"
+                       class="btn btn-outline-warning btn-sm">
+                        <i class="bi bi-shield me-1"></i>
+                        Administrateurs ({{ nb_superusers }})
+                    </a>
+                    <a href="{% url 'admin_ajouter_annonce' %}"
+                       class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-megaphone me-1"></i>
+                        Publier une annonce
+                    </a>
+                    <a href="{% url 'admin_historique_connexions' %}"
+                       class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Historique connexions
+                    </a>
+                    {% if maintenance.actif %}
+                    <a href="{% url 'admin_maintenance' %}"
+                       class="btn btn-danger btn-sm">
+                        <i class="bi bi-tools me-1"></i>
+                        Désactiver la maintenance
+                    </a>
+                    {% else %}
+                    <a href="{% url 'admin_maintenance' %}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-tools me-1"></i>
+                        Activer la maintenance
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

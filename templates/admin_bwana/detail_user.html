@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}{{ u.get_full_name }} — Admin{% endblock %}
+{% block page_title %}⚙️ {{ u.get_full_name|default:u.username }}{% endblock %}
+
+{% block content %}
+
+<!-- Infos + actions -->
+<div class="row g-4 mb-4">
+
+    <!-- Carte infos utilisateur -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width:70px;height:70px;font-size:1.5rem;">
+                    {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                </div>
+                <h5 class="fw-bold">{{ u.get_full_name|default:u.username }}</h5>
+                <div class="text-muted small mb-2">@{{ u.username }}</div>
+                <div class="mb-3">
+                    {% if u.is_superuser %}
+                        <span class="badge bg-warning text-dark">Administrateur</span>
+                    {% elif u.is_active %}
+                        <span class="badge bg-success">Actif</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inactif</span>
+                    {% endif %}
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-envelope me-1"></i>{{ u.email }}<br>
+                    <i class="bi bi-calendar me-1"></i>Inscrit le {{ u.date_joined|date:"d/m/Y" }}<br>
+                    <i class="bi bi-clock me-1"></i>Dernière connexion :
+                    {% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}Jamais{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats utilisateur -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-bar-chart me-2 text-primary"></i>Statistiques
+                </h6>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Clients</span>
+                    <span class="fw-semibold">{{ nb_clients }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Devis</span>
+                    <span class="fw-semibold">{{ nb_devis }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2 border-bottom">
+                    <span class="text-muted">Factures</span>
+                    <span class="fw-semibold">{{ nb_factures }}</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                    <span class="text-muted">CA total</span>
+                    <span class="fw-bold text-primary">{{ ca_user|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-lightning me-2 text-warning"></i>Actions
+                </h6>
+                <div class="d-grid gap-2">
+                    {% if not u.is_superuser %}
+                    <!-- Activer/Désactiver -->
+                    <a href="{% url 'admin_toggle_user' u.pk %}"
+                       class="btn {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                        <i class="bi bi-{% if u.is_active %}pause-circle{% else %}play-circle{% endif %} me-2"></i>
+                        {% if u.is_active %}Désactiver le compte{% else %}Activer le compte{% endif %}
+                    </a>
+                    {% endif %}
+
+                    <!-- Reset mot de passe -->
+                    <a href="{% url 'admin_reset_password' u.pk %}"
+                       class="btn btn-outline-primary"
+                       onclick="return confirm('Envoyer un email de réinitialisation à {{ u.email }} ?')">
+                        <i class="bi bi-key me-2"></i>Réinitialiser le mot de passe
+                    </a>
+
+                    {% if not u.is_superuser %}
+                    <!-- Impersonner -->
+                    <a href="{% url 'admin_impersonate' u.pk %}"
+                       class="btn btn-outline-info"
+                       onclick="return confirm('Se connecter en tant que {{ u.get_full_name|default:u.username }} ?')">
+                        <i class="bi bi-person-badge me-2"></i>Se connecter en tant que lui
+                    </a>
+
+                    <!-- Promouvoir admin -->
+                    <a href="{% url 'admin_toggle_superuser' u.pk %}"
+                       class="btn btn-outline-secondary"
+                       onclick="return confirm('Modifier le statut admin de {{ u.get_full_name|default:u.username }} ?')">
+                        <i class="bi bi-shield me-2"></i>
+                        {% if u.is_superuser %}Rétrograder utilisateur{% else %}Promouvoir administrateur{% endif %}
+                    </a>
+
+                    <!-- Supprimer -->
+                    <a href="{% url 'admin_supprimer_user' u.pk %}"
+                       class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>Supprimer le compte
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Derniers devis -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">
+            <i class="bi bi-file-text me-2 text-primary"></i>
+            Devis ({{ nb_devis }})
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Client</th>
+                        <th>Total TTC</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in devis|slice:":10" %}
+                    <tr>
+                        <td>{{ d.numero }}</td>
+                        <td>{{ d.client.nom }}</td>
+                        <td>{{ d.calculer_total_ttc|floatformat:0 }}</td>
+                        <td>
+                            {% if d.statut == 'en_attente' %}
+                                <span class="badge bg-secondary">En attente</span>
+                            {% elif d.statut == 'accepte' %}
+                                <span class="badge bg-success">Accepté</span>
+                            {% else %}
+                                <span class="badge bg-danger">Refusé</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ d.date_creation|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">Aucun devis</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Dernières factures -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">
+            <i class="bi bi-receipt me-2 text-success"></i>
+            Factures ({{ nb_factures }})
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Numéro</th>
+                        <th>Client</th>
+                        <th>Total TTC</th>
+                        <th>Statut</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in factures|slice:":10" %}
+                    <tr>
+                        <td>{{ f.numero }}</td>
+                        <td>{{ f.client.nom }}</td>
+                        <td>{{ f.calculer_total_ttc|floatformat:0 }}</td>
+                        <td>
+                            {% if f.statut == 'non_payee' %}
+                                <span class="badge bg-danger">Non payée</span>
+                            {% elif f.statut == 'payee' %}
+                                <span class="badge bg-success">Payée</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">{{ f.date_creation|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">Aucune facture</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'admin_liste_users' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Retour à la liste
+    </a>
+</div>
+{% endblock %}

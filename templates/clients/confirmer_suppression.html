@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Supprimer client{% endblock %}
+{% block page_title %}Supprimer un client{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-body text-center p-5">
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 fw-bold">Confirmer la suppression</h4>
+                <p class="text-muted mt-2">
+                    Voulez-vous vraiment supprimer le client
+                    <strong>{{ client.nom }} {{ client.prenom }}</strong> ?
+                    <br>
+                    <span class="text-danger small">
+                        Tous ses devis et factures seront également supprimés.
+                    </span>
+                </p>
+                <div class="d-flex gap-3 justify-content-center mt-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash me-2"></i>Oui, supprimer
+                        </button>
+                    </form>
+                    <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-x me-2"></i>Annuler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.nom }}{% endblock %}
+{% block page_title %}Fiche Client{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Infos client -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="bg-primary rounded-circle d-inline-flex align-items-center
+                            justify-content-center mb-3"
+                     style="width:70px;height:70px;">
+                    <i class="bi bi-person-fill text-white fs-2"></i>
+                </div>
+                <h5 class="fw-bold">{{ client.nom }} {{ client.prenom }}</h5>
+                {% if client.entreprise %}
+                    <p class="text-muted mb-1">
+                        <i class="bi bi-building me-1"></i>{{ client.entreprise }}
+                    </p>
+                {% endif %}
+                <div class="mt-3 text-start">
+                    {% if client.email %}
+                    <p class="mb-1"><i class="bi bi-envelope me-2 text-primary"></i>{{ client.email }}</p>
+                    {% endif %}
+                    {% if client.telephone %}
+                    <p class="mb-1"><i class="bi bi-telephone me-2 text-primary"></i>{{ client.telephone }}</p>
+                    {% endif %}
+                    {% if client.adresse %}
+                    <p class="mb-1"><i class="bi bi-geo-alt me-2 text-primary"></i>{{ client.adresse }}, {{ client.ville }}</p>
+                    {% endif %}
+                    <p class="mb-1"><i class="bi bi-flag me-2 text-primary"></i>{{ client.pays }}</p>
+                </div>
+                <div class="mt-3 d-flex gap-2 justify-content-center">
+                    <a href="{% url 'modifier_client' client.pk %}"
+                       class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil me-1"></i>Modifier
+                    </a>
+                    <a href="{% url 'supprimer_client' client.pk %}"
+                       class="btn btn-danger btn-sm">
+                        <i class="bi bi-trash me-1"></i>Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Devis et Factures -->
+    <div class="col-md-8">
+        <!-- Devis -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-file-text me-2 text-primary"></i>
+                    Devis ({{ devis.count }})
+                </h6>
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr><th>Numéro</th><th>Date</th><th>Statut</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for d in devis %}
+                        <tr>
+                            <td>{{ d.numero }}</td>
+                            <td>{{ d.date_creation|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if d.statut == 'en_attente' %}
+                                    <span class="badge bg-warning text-dark">En attente</span>
+                                {% elif d.statut == 'accepte' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'detail_devis' d.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center">Aucun devis</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Factures -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-receipt me-2 text-success"></i>
+                    Factures ({{ factures.count }})
+                </h6>
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr><th>Numéro</th><th>Date</th><th>Statut</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                        {% for f in factures %}
+                        <tr>
+                            <td>{{ f.numero }}</td>
+                            <td>{{ f.date_creation|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if f.statut == 'non_payee' %}
+                                    <span class="badge bg-danger">Non payée</span>
+                                {% elif f.statut == 'payee' %}
+                                    <span class="badge bg-success">Payée</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Annulée</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'detail_facture' f.pk %}"
+                                   class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="text-muted text-center">Aucune facture</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="post" id="clientForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+
+                        <!-- ── IDENTITÉ ── -->
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-1">
+                                <i class="bi bi-person me-2"></i>Identité
+                            </h6>
+                            <hr class="mt-1">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Nom <span class="text-danger">*</span>
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                                <div class="text-danger small">{{ form.nom.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Prénom</label>
+                            {{ form.prenom }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Entreprise</label>
+                            {{ form.entreprise }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- ── TÉLÉPHONE ── -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Téléphone</label>
+                            <div class="input-group">
+                                {{ form.indicatif }}
+                                {{ form.telephone }}
+                            </div>
+                            <small class="text-muted">Choisissez l'indicatif puis entrez le numéro</small>
+                        </div>
+
+                        <!-- ── LOGO ── -->
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-1 mt-2">
+                                <i class="bi bi-image me-2"></i>Logo
+                            </h6>
+                            <hr class="mt-1">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Logo client
+                                <i class="bi bi-info-circle text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   title="Utilisé dans les PDF de devis et factures"></i>
+                            </label>
+                            {{ form.logo }}
+                            <small class="text-muted">PNG, JPG — utilisé dans les PDF</small>
+                        </div>
+
+                        <!-- Aperçu logo existant -->
+                        {% if client.logo %}
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div>
+                                <label class="form-label fw-semibold">Logo actuel</label><br>
+                                <img src="{{ client.logo.url }}"
+                                     alt="Logo" height="60"
+                                     class="rounded border p-1">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- ── ADRESSE ── -->
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-1 mt-2">
+                                <i class="bi bi-geo-alt me-2"></i>Adresse
+                            </h6>
+                            <hr class="mt-1">
+                        </div>
+
+                        <!-- Pays -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Pays
+                                <i class="bi bi-info-circle text-muted ms-1"
+                                   data-bs-toggle="tooltip"
+                                   title="Détermine la devise et la TVA pour les devis/factures"></i>
+                            </label>
+                            {{ form.pays_obj }}
+                            <small class="text-muted" id="devise-info">
+                                Détermine la devise et la TVA
+                            </small>
+                        </div>
+
+                        <!-- Province / État -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Province / État / Région
+                            </label>
+                            {{ form.province }}
+                            <small class="text-muted">Ex: Québec, Ontario, California...</small>
+                        </div>
+
+                        <!-- Ville -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ville</label>
+                            {{ form.ville }}
+                        </div>
+
+                        <!-- Code postal -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Code postal</label>
+                            {{ form.code_postal }}
+                        </div>
+
+                        <!-- Adresse complète -->
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Adresse complète</label>
+                            {{ form.adresse }}
+                        </div>
+
+                        <!-- Badge devise/TVA détectés -->
+                        <div class="col-12" id="pays-badge" style="display:none;">
+                            <div class="alert alert-info py-2 small mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span id="pays-badge-text"></span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>{{ bouton }}
+                        </button>
+                        <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ── Tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach(el => new bootstrap.Tooltip(el));
+
+    const paysSelect  = document.getElementById('id_pays_obj');
+    const deviseInfo  = document.getElementById('devise-info');
+    const paysBadge   = document.getElementById('pays-badge');
+    const paysBadgeText = document.getElementById('pays-badge-text');
+
+    // ── Données pays depuis Django (devise + TVA)
+    const paysData = {
+        {% for pays in pays_list %}
+        '{{ pays.id }}': {
+            'nom':    '{{ pays.nom }}',
+            'devise': '{{ pays.symbole_devise }}',
+            'tva':    {{ pays.types_taxe.first.taux_par_defaut|default:0 }},
+            'type_taxe': '{% if pays.types_taxe.first %}{{ pays.types_taxe.first.code }}{% endif %}',
+        },
+        {% endfor %}
+    };
+
+    function updatePays() {
+        const paysId = paysSelect.value;
+
+        if (!paysId) {
+            deviseInfo.textContent  = 'Détermine la devise et la TVA';
+            paysBadge.style.display = 'none';
+            return;
+        }
+
+        const pays = paysData[paysId];
+        if (!pays) return;
+
+        deviseInfo.textContent = `${pays.nom} — ${pays.devise}`;
+
+        if (pays.tva > 0) {
+            paysBadge.style.display  = 'block';
+            paysBadgeText.textContent =
+                `Devise : ${pays.devise}  |  ${pays.type_taxe} : ${pays.tva}%  — utilisés dans les devis/factures`;
+        } else {
+            paysBadge.style.display  = 'block';
+            paysBadgeText.textContent =
+                `Devise : ${pays.devise} — utilisée dans les devis/factures`;
+        }
+    }
+
+    if (paysSelect) {
+        paysSelect.addEventListener('change', updatePays);
+        updatePays();
+    }
+});
+</script>
+
+<style>
+#id_indicatif {
+    min-width: 200px;
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+#id_telephone {
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+.input-group { flex-wrap: nowrap; }
+</style>
+{% endblock %}

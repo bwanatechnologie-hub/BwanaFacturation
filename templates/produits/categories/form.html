@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-tag me-2"></i>{{ titre }}
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Nom <span class="text-danger">*</span>
+                        </label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}
+                            <div class="text-danger small">{{ form.nom.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Description</label>
+                        {{ form.description }}
+                        <small class="text-muted">Optionnel</small>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>{{ bouton }}
+                        </button>
+                        <a href="{% url 'liste_categories' %}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x me-2"></i>Annuler
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

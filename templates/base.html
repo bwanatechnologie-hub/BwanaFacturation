@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bwana Facturation - Gestion Devis & Factures{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            overflow-x: hidden; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Conteneur principal */
+        .d-flex.position-relative {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR DESKTOP ── */
+        .sidebar {
+            width: 250px;
+            min-width: 250px;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+            color: white;
+            transition: width 0.3s ease, min-width 0.3s ease, transform 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+        }
+
+        /* Sidebar réduite */
+        .sidebar.collapsed {
+            width: 70px;
+            min-width: 70px;
+        }
+
+        /* ── SIDEBAR MOBILE — cachée par défaut ── */
+        @media (max-width: 767px) {
+            .sidebar {
+                position: fixed;
+                transform: translateX(-100%);
+                width: 260px !important;
+                min-width: 260px !important;
+                z-index: 1050;
+            }
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1049;
+                backdrop-filter: blur(2px);
+            }
+            .sidebar-overlay.active {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+            
+            .btn-toggle-sidebar {
+                display: none !important;
+            }
+            
+            .main-content {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+            
+            .navbar-top {
+                padding: 10px 12px;
+            }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .sidebar.mobile-open {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Bouton toggle DANS LA SIDEBAR */
+        .btn-toggle-sidebar {
+            position: absolute;
+            top: 18px;
+            right: -14px;
+            width: 28px;
+            height: 28px;
+            background: #344e65;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: transform 0.3s ease, background 0.3s ease;
+            color: white;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn-toggle-sidebar:hover {
+            background: #2d6a9f;
+            transform: scale(1.1);
+        }
+        .sidebar.collapsed .btn-toggle-sidebar {
+            transform: rotate(180deg);
+            right: -14px;
+        }
+
+        /* ── BOUTON BURGER MOBILE ── */
+        .btn-burger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #1e3a5f;
+            cursor: pointer;
+            padding: 0 5px;
+            margin-right: 8px;
+        }
+        @media (max-width: 767px) {
+            .btn-burger { display: inline-block; }
+        }
+
+        /* Scrollbar sidebar */
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+
+        /* Textes et labels */
+        .sidebar .nav-label,
+        .sidebar .nav-title,
+        .sidebar .brand-text,
+        .sidebar .version-text,
+        .sidebar .credits-text {
+            transition: opacity 0.2s ease, width 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar.collapsed .nav-label,
+        .sidebar.collapsed .nav-title,
+        .sidebar.collapsed .brand-text,
+        .sidebar.collapsed .version-text,
+        .sidebar.collapsed .credits-text {
+            opacity: 0;
+            width: 0;
+            display: none;
+        }
+
+        /* Liens sidebar */
+        .sidebar a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 8px;
+            margin: 3px 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #344e65;
+            color: white;
+            transform: translateX(5px);
+        }
+        .sidebar a i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            width: 22px;
+            text-align: center;
+        }
+
+        .sidebar .nav-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.45);
+            padding: 12px 15px 4px;
+        }
+
+        /* ✅ Lien admin — couleur dorée distinctive */
+        .sidebar a.nav-admin {
+            color: #ffd966;
+            border: 1px solid rgba(255,217,102,0.2);
+            margin-top: 4px;
+        }
+        .sidebar a.nav-admin:hover,
+        .sidebar a.nav-admin.active {
+            background: rgba(255,217,102,0.15);
+            color: #ffd966;
+        }
+
+        /* Logo et branding */
+        .sidebar-brand {
+            padding: 20px 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed .sidebar-brand {
+            justify-content: center;
+            padding: 20px 5px 15px;
+        }
+        .logo-container {
+            width: 45px;
+            height: 45px;
+            background: #344e65;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed .logo-container {
+            margin: 0 auto;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #2d6a9f;
+        }
+        .brand-text { line-height: 1.2; }
+        .brand-name { font-weight: 700; font-size: 1rem; color: white; letter-spacing: 1px; }
+        .brand-sub { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
+
+        /* Footer sidebar */
+        .sidebar-footer {
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 15px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.45);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 0 10px;
+            text-align: center;
+            background: rgba(30, 58, 95, 0.95);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        .sidebar.collapsed .sidebar-footer {
+            background: transparent;
+            backdrop-filter: none;
+            padding: 10px 5px;
+        }
+        .sidebar.collapsed .credits-text a span { display: none; }
+        .version-text { display: flex; align-items: center; justify-content: center; gap: 4px; margin-bottom: 5px; }
+        .credits-text { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.7rem; }
+        .credits-text a { color: rgba(255,255,255,0.6); text-decoration: none; padding: 2px 4px; display: inline-flex; align-items: center; gap: 4px; }
+        .credits-text a:hover { color: #ffd966; transform: translateY(-2px); }
+
+        /* Tooltip sidebar réduite */
+        .sidebar.collapsed a {
+            justify-content: center;
+            padding: 10px;
+            margin: 3px 8px;
+            position: relative;
+        }
+        .sidebar.collapsed a::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 65px;
+            background: #1e3a5f;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .sidebar.collapsed a:hover::after { opacity: 1; }
+
+        /* ── CONTENU PRINCIPAL ── */
+        .main-content {
+            flex-grow: 1;
+            min-width: 0;
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+
+        /* ── NAVBAR TOP ── */
+        .navbar-top {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* ✅ Bannière impersonation */
+        .impersonate-bar {
+            background: #ff6b35;
+            color: white;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            font-weight: 500;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ✅ Bannière maintenance (superuser) */
+        .maintenance-bar {
+            background: #dc3545;
+            color: white;
+            padding: 6px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* ── CARTES ── */
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            border-radius: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary { background: #1e3a5f; border-color: #1e3a5f; }
+        .btn-primary:hover { background: #2d6a9f; border-color: #2d6a9f; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(30, 58, 95, 0.3); }
+        .btn-outline-primary { color: #1e3a5f; border-color: #1e3a5f; }
+        .btn-outline-primary:hover { background: #1e3a5f; border-color: #1e3a5f; color: white; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .main-content { animation: fadeIn 0.3s ease-out; }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #344e65; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #1e3a5f; }
+
+        /* ── RESPONSIVE TABLETTES ── */
+        @media (min-width: 768px) and (max-width: 991px) {
+            .navbar-quick-btns .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+            .navbar-quick-btns .btn-sm i { margin-right: 2px; }
+        }
+
+        /* ── RESPONSIVE MOBILE ── */
+        @media (max-width: 767px) {
+            .navbar-quick-btns { display: flex !important; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+            .navbar-quick-btns .btn-sm { padding: 0.25rem 0.5rem; }
+            .navbar-quick-btns .btn-sm span { display: none; }
+            .navbar-quick-btns .btn-sm i { font-size: 1.2rem; margin: 0; }
+            .navbar-top h5 { font-size: 1rem; }
+            .navbar-top h5 i { font-size: 1.2rem; }
+            .dropdown button span { display: none; }
+            .dropdown button i { font-size: 1.3rem; }
+            .p-4 { padding: 1rem !important; }
+            .px-4 { padding-left: 1rem !important; padding-right: 1rem !important; }
+        }
+
+        /* ── TRÈS PETITS MOBILES ── */
+        @media (max-width: 399px) {
+            .navbar-top { padding: 8px 10px; }
+            .navbar-top h5 { font-size: 0.9rem; }
+            .navbar-top h5 i { display: none; }
+            .navbar-quick-btns .btn-sm { padding: 0.2rem 0.4rem; }
+        }
+
+        /* ── TABLEAUX MOBILE ── */
+        @media (max-width: 767px) {
+            .table-responsive { border: 0; margin-bottom: 0; }
+            .table thead { display: none; }
+            .table tr { display: block; margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.5rem; }
+            .table td { display: flex; justify-content: space-between; align-items: center; text-align: right; border: none; padding: 0.5rem; border-bottom: 1px solid #eee; }
+            .table td:last-child { border-bottom: none; }
+            .table td::before { content: attr(data-label); font-weight: 600; color: #1e3a5f; text-align: left; margin-right: 10px; }
+            .table td .d-flex { justify-content: flex-end; }
+        }
+
+        /* ── CARTES STATS MOBILE ── */
+        @media (max-width: 575px) {
+            .row.g-3 > [class*="col-"] { width: 50%; }
+            .card-body { padding: 0.8rem; }
+            .card-body .fs-2 { font-size: 1.3rem !important; }
+            .card-body .rounded-circle { width: 40px !important; height: 40px !important; }
+            .card-body .rounded-circle i { font-size: 1.1rem !important; }
+        }
+
+        /* ── FORMULAIRES MOBILE ── */
+        @media (max-width: 575px) {
+            .row.g-3 > .col-6 { width: 100%; }
+            .input-group { flex-wrap: wrap; }
+            .input-group .form-control { width: 100%; border-radius: 8px !important; margin-top: 5px; }
+            .input-group .input-group-text { width: 100%; border-radius: 8px !important; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+{% load admin_tags %}
+
+<!-- Overlay mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<div class="d-flex position-relative">
+
+    <!-- ══════════════════════════════════ -->
+    <!-- SIDEBAR                            -->
+    <!-- ══════════════════════════════════ -->
+    <div class="sidebar" id="sidebar">
+
+        <div class="btn-toggle-sidebar" id="btnToggle" onclick="toggleSidebar()">
+            <i class="bi bi-chevron-left" id="toggleIcon"></i>
+        </div>
+
+        <div class="sidebar-brand">
+           <div class="logo-container">
+             <img src="/static/img/logo-bwana.png" 
+                  alt="Bwana" 
+                  style="width: 35px; height: 35px; object-fit: contain;"
+                  onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'35\' height=\'35\' viewBox=\'0 0 24 24\' fill=\'%23ffd966\'%3E%3Cpath d=\'M20 8h-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h2v2c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM4 16V6h12v2h-2v8H4zm16 4H8v-2h2v-8h10v10z\'/%3E%3C/svg%3E'">
+            </div>
+            <div class="brand-text">
+                <div class="brand-name">B W A N A</div>
+                <div class="brand-sub">Facturation</div>
+            </div>
+        </div>
+
+        <hr style="border-color:rgba(255,255,255,0.15);margin:0 10px 5px;">
+
+        <div class="nav-title">Principal</div>
+        <a href="{% url 'tableau_de_bord' %}"
+           data-tooltip="Tableau de bord"
+           class="{% if request.resolver_match.url_name == 'tableau_de_bord' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i>
+            <span class="nav-label">Tableau de bord</span>
+        </a>
+
+        <div class="nav-title">Gestion</div>
+        <a href="{% url 'liste_clients' %}"
+           data-tooltip="Clients"
+           class="{% if 'client' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-people"></i>
+            <span class="nav-label">Clients</span>
+        </a>
+        <a href="{% url 'liste_produits' %}"
+           data-tooltip="Produits"
+           class="{% if 'produit' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-box-seam"></i>
+            <span class="nav-label">Produits</span>
+        </a>
+        <a href="{% url 'liste_devis' %}"
+           data-tooltip="Devis"
+           class="{% if 'devis' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-file-text"></i>
+            <span class="nav-label">Devis</span>
+        </a>
+        <a href="{% url 'liste_factures' %}"
+           data-tooltip="Factures"
+           class="{% if 'facture' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-receipt"></i>
+            <span class="nav-label">Factures</span>
+        </a>
+
+        <hr style="border-color:rgba(255,255,255,0.15);margin:8px 10px;">
+
+        <a href="{% url 'profil' %}"
+           data-tooltip="Mon profil"
+           class="{% if request.resolver_match.url_name == 'profil' %}active{% endif %}">
+            <i class="bi bi-person-circle"></i>
+            <span class="nav-label">Mon profil</span>
+        </a>
+
+        {# ✅ Lien Admin — visible uniquement pour superuser #}
+        {% if user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}"
+           data-tooltip="Administration"
+           class="nav-admin {% if 'admin_' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-shield-lock"></i>
+            <span class="nav-label">Administration</span>
+        </a>
+        {% endif %}
+
+        <a href="{% url 'deconnexion' %}" data-tooltip="Déconnexion">
+            <i class="bi bi-box-arrow-right"></i>
+            <span class="nav-label">Déconnexion</span>
+        </a>
+
+        <div class="sidebar-footer">
+            <div class="version-text">
+                <i class="bi bi-tag me-1"></i>
+                v2.1.0-beta
+            </div>
+            <div class="credits-text">
+                <i class="bi bi-code-slash"></i>
+                <a href="https://bwanatech.com/" target="_blank" rel="noopener noreferrer" data-tooltip="Visitez Bwana Tech">
+                    <span>copywrite & design by Bwana Tech</span>
+                    <i class="bi bi-box-arrow-up-right" style="font-size: 0.6rem;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════ -->
+    <!-- CONTENU PRINCIPAL                  -->
+    <!-- ══════════════════════════════════ -->
+    <div class="main-content" id="mainContent">
+
+        {# ✅ Bannière impersonation #}
+        {% if request.session.admin_id %}
+        <div class="impersonate-bar">
+            <span>
+                <i class="bi bi-person-badge me-2"></i>
+                Mode impersonation — connecté en tant que
+                <strong>{{ user.get_full_name|default:user.username }}</strong>
+            </span>
+            <a href="{% url 'admin_stop_impersonate' %}"
+               class="btn btn-sm btn-light text-danger fw-bold">
+                <i class="bi bi-arrow-return-left me-1"></i>Revenir à mon compte
+            </a>
+        </div>
+        {% endif %}
+
+        {# ✅ Bannière maintenance active — visible superuser seulement #}
+        {% if user.is_superuser %}
+        {% get_maintenance as maintenance_status %}
+        {% if maintenance_status.actif %}
+        <div class="maintenance-bar">
+            <span>
+                <i class="bi bi-tools me-2"></i>
+                Mode maintenance <strong>ACTIF</strong> — site inaccessible aux utilisateurs
+            </span>
+            <a href="{% url 'admin_maintenance' %}" class="btn btn-sm btn-outline-light">
+                Gérer
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {# ✅ Annonces système actives — visibles à tous #}
+        {% get_annonces as annonces_actives %}
+        {% for annonce in annonces_actives %}
+        <div class="alert alert-{{ annonce.type_annonce }} alert-dismissible fade show mb-0 border-0 rounded-0" role="alert">
+            <i class="bi bi-megaphone me-2"></i>
+            <strong>{{ annonce.titre }}</strong> — {{ annonce.message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+
+        <!-- Navbar top -->
+        <div class="navbar-top">
+            <div class="d-flex align-items-center">
+                <button class="btn-burger" id="btnBurger" onclick="openMobileSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-grid me-2" style="color:#1e3a5f;"></i>
+                    {% block page_title %}{% endblock %}
+                </h5>
+            </div>
+            <div class="d-flex align-items-center gap-2 navbar-quick-btns">
+                <a href="{% url 'ajouter_client' %}"
+                   class="btn btn-sm btn-outline-primary" title="Ajouter un client">
+                    <i class="bi bi-person-plus"></i>
+                    <span class="d-none d-sm-inline ms-1">Client</span>
+                </a>
+                <a href="{% url 'ajouter_devis' %}"
+                   class="btn btn-sm btn-outline-warning" title="Ajouter un devis">
+                    <i class="bi bi-file-plus"></i>
+                    <span class="d-none d-sm-inline ms-1">Devis</span>
+                </a>
+                <a href="{% url 'ajouter_facture' %}"
+                   class="btn btn-sm btn-outline-success" title="Ajouter une facture">
+                    <i class="bi bi-receipt"></i>
+                    <span class="d-none d-sm-inline ms-1">Facture</span>
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark text-decoration-none dropdown-toggle p-0"
+                            type="button" data-bs-toggle="dropdown"
+                            title="{{ user.get_full_name|default:user.username }}">
+                        <i class="bi bi-person-circle fs-5"></i>
+                        <span class="d-none d-md-inline ms-1">{{ user.get_full_name|default:user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'profil' %}">
+                            <i class="bi bi-person me-2"></i>Mon profil
+                        </a></li>
+                        {# ✅ Lien admin dans dropdown aussi #}
+                        {% if user.is_superuser %}
+                        <li><a class="dropdown-item text-warning" href="{% url 'admin_dashboard' %}">
+                            <i class="bi bi-shield-lock me-2"></i>Administration
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'deconnexion' %}">
+                            <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="px-4 pt-3">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm"
+                         role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close"
+                                data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <!-- Contenu page -->
+        <div class="p-4">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+    <div class="container-fluid p-0">
+        {% block content_auth %}{% endblock %}
+    </div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ── Toggle sidebar DESKTOP
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+            toggleIcon.classList.remove('bi-chevron-left');
+            toggleIcon.classList.add('bi-chevron-right');
+        } else {
+            toggleIcon.classList.remove('bi-chevron-right');
+            toggleIcon.classList.add('bi-chevron-left');
+        }
+        
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+    }
+
+    // ── Ouvrir sidebar MOBILE
+    function openMobileSidebar() {
+        document.getElementById('sidebar').classList.add('mobile-open');
+        document.getElementById('sidebarOverlay').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // ── Fermer sidebar MOBILE
+    function closeMobileSidebar() {
+        document.getElementById('sidebar').classList.remove('mobile-open');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // ── Fermer sidebar mobile si on clique sur un lien
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 768) closeMobileSidebar();
+        });
+    });
+
+    // ── Restaurer l'état au chargement
+    document.addEventListener('DOMContentLoaded', function () {
+        const collapsed = localStorage.getItem('sidebarCollapsed');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (collapsed === '1' && window.innerWidth >= 768) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('collapsed');
+            toggleIcon.classList.remove('bi-chevron-left');
+            toggleIcon.classList.add('bi-chevron-right');
+        }
+        
+        // Initialiser les tooltips Bootstrap
+        const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(el => new bootstrap.Tooltip(el));
+        
+        // Messages disparaissent après 5s
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(alert => {
+                try { new bootstrap.Alert(alert).close(); } catch(e) {}
+            });
+        }, 5000);
+    });
+
+    // ── Ajouter active aux liens de navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentUrl = window.location.pathname;
+        document.querySelectorAll('.sidebar a').forEach(link => {
+            if (link.getAttribute('href') === currentUrl) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+</body>
+</html>

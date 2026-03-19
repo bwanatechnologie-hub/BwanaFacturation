@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Factures{% endblock %}
+{% block page_title %}Gestion des Factures{% endblock %}
+
+{% block content %}
+
+<!-- Statistiques -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center p-3">
+            <div class="fs-3 fw-bold text-primary">{{ nb_total }}</div>
+            <div class="text-muted small">Total</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3">
+            <div class="fs-3 fw-bold text-danger">{{ nb_non_payees }}</div>
+            <div class="text-muted small">Non payées</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3">
+            <div class="fs-3 fw-bold text-success">{{ nb_payees }}</div>
+            <div class="text-muted small">Payées</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center p-3">
+            <div class="fs-3 fw-bold text-secondary">{{ nb_annulees }}</div>
+            <div class="text-muted small">Annulées</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtres -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <form method="get" class="d-flex gap-2">
+                    <input type="hidden" name="statut" value="{{ statut }}">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control"
+                               placeholder="Rechercher..." value="{{ recherche }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">OK</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'liste_factures' %}"
+                       class="btn btn-sm {% if not statut %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Toutes
+                    </a>
+                    <a href="?statut=non_payee"
+                       class="btn btn-sm {% if statut == 'non_payee' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        Non payées
+                    </a>
+                    <a href="?statut=payee"
+                       class="btn btn-sm {% if statut == 'payee' %}btn-success{% else %}btn-outline-success{% endif %}">
+                        Payées
+                    </a>
+                    <a href="?statut=annulee"
+                       class="btn btn-sm {% if statut == 'annulee' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">
+                        Annulées
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <a href="{% url 'ajouter_facture' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Nouvelle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tableau -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Client</th>
+                    <th>Date création</th>
+                    <th>Échéance</th>
+                    <th>Total TTC</th>
+                    <th>Statut</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in factures %}
+                <tr>
+                    <td><strong>{{ f.numero }}</strong></td>
+                    <td>
+                        {{ f.client.nom }}
+                        {% if f.client.entreprise %}
+                            <br><small class="text-muted">{{ f.client.entreprise }}</small>
+                        {% endif %}
+                    </td>
+                    <td>{{ f.date_creation|date:"d/m/Y" }}</td>
+                    <td>
+                        {{ f.date_echeance|date:"d/m/Y" }}
+                    </td>
+                    {# ✅ Correction : devise dynamique avec fallback sur FCFA #}
+                    <td class="fw-semibold">{{ f.calculer_total_ttc|floatformat:0 }} {{ f.client.devise|default:"FCFA" }}</td>
+                    <td>
+                        {% if f.statut == 'non_payee' %}
+                            <span class="badge bg-danger">Non payée</span>
+                        {% elif f.statut == 'payee' %}
+                            <span class="badge bg-success">Payée</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Annulée</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'detail_facture' f.pk %}"
+                           class="btn btn-sm btn-outline-info me-1" title="Voir">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{% url 'modifier_facture' f.pk %}"
+                           class="btn btn-sm btn-outline-warning me-1" title="Modifier">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="{% url 'supprimer_facture' f.pk %}"
+                           class="btn btn-sm btn-outline-danger" title="Supprimer">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="bi bi-receipt fs-3 d-block mb-2"></i>
+                        Aucune facture trouvée.
+                        <a href="{% url 'ajouter_facture' %}">Créer la première facture</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

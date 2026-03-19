@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content_auth %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+    <div class="card p-4 shadow-lg border-0 text-center"
+         style="width:100%; max-width:480px; border-radius:20px;">
+        <div style="font-size:60px;">📧</div>
+        <h3 class="fw-bold mt-3" style="color:#1e3a5f;">Email envoyé !</h3>
+        <p class="text-muted">
+            Un email de confirmation a été envoyé à<br>
+            <strong>{{ email }}</strong>
+        </p>
+        <p class="text-muted small">
+            Cliquez sur le lien dans l'email pour activer votre compte.<br>
+            Vérifiez vos spams si vous ne le trouvez pas.
+        </p>
+        <a href="{% url 'connexion' %}" class="btn btn-outline-secondary mt-3">
+            Retour à la connexion
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Maintenance — Admin{% endblock %}
+{% block page_title %}⚙️ Mode Maintenance{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-tools me-2 text-danger"></i>État actuel
+                </h6>
+
+                {% if maintenance.actif %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Mode maintenance ACTIF</strong><br>
+                    Le site est inaccessible aux utilisateurs.<br>
+                    <small class="text-muted">
+                        Activé le {{ maintenance.date_debut|date:"d/m/Y à H:i" }}
+                        {% if maintenance.active_par %}
+                        par {{ maintenance.active_par.get_full_name|default:maintenance.active_par.username }}
+                        {% endif %}
+                    </small>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="desactiver">
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                        <i class="bi bi-check-circle me-2"></i>Désactiver le mode maintenance
+                    </button>
+                </form>
+
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>Site accessible</strong> — Mode maintenance désactivé.
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="activer">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message affiché aux utilisateurs</label>
+                        <textarea name="message" class="form-control" rows="4">{{ maintenance.message }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 py-2 fw-bold"
+                            onclick="return confirm('Activer la maintenance ? Le site sera inaccessible.')">
+                        <i class="bi bi-tools me-2"></i>Activer le mode maintenance
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-pencil me-2 text-primary"></i>Modifier le message
+                </h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="message">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Message de maintenance</label>
+                        <textarea name="message" class="form-control" rows="4">{{ maintenance.message }}</textarea>
+                        <small class="text-muted">Ce message sera affiché durant la maintenance.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-2"></i>Mettre à jour
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Aperçu -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-eye me-2 text-info"></i>Aperçu utilisateur
+                </h6>
+                <div class="border rounded p-3 text-center bg-light">
+                    <div style="font-size:48px;">🔧</div>
+                    <h5 class="fw-bold mt-2">Site en maintenance</h5>
+                    <p class="text-muted">{{ maintenance.message }}</p>
+                    <small class="text-muted">Voilà ce que verront les utilisateurs.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-2"></i>Retour au dashboard
+    </a>
+</div>
+{% endblock %}

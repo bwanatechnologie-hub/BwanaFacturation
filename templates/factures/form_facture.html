@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+
+<form method="post" id="formFacture">
+{% csrf_token %}
+
+{# ── Champs cachés remplis par JS ── #}
+<input type="hidden" name="pays"      id="id_pays"      value="{{ form.pays.value|default:'' }}">
+<input type="hidden" name="type_taxe" id="id_type_taxe" value="{{ form.type_taxe.value|default:'' }}">
+<input type="hidden" name="taux_taxe" id="id_taux_taxe" value="{{ form.taux_taxe.value|default:'0' }}">
+
+<div class="row g-4">
+    <div class="col-md-8">
+
+        <!-- INFOS GÉNÉRALES -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>
+                    Informations générales
+                </h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Client <span class="text-danger">*</span>
+                        </label>
+                        {{ form.client }}
+                        <div id="client-info" class="mt-1 d-none">
+                            <span class="badge bg-info text-dark" id="client-devise-badge"></span>
+                            <span class="badge bg-secondary ms-1" id="client-pays-badge"></span>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown taxes (Canada et autres pays multi-taxes) -->
+                    <div class="col-md-6" id="taxe-client-container" style="display:none;">
+                        <label class="form-label fw-semibold">
+                            Type de taxe
+                            <i class="bi bi-info-circle text-muted ms-1"
+                               data-bs-toggle="tooltip"
+                               title="Sélectionnez la taxe applicable selon le pays du client"></i>
+                        </label>
+                        <select class="form-select" id="select-taxe-client">
+                            <option value="">-- Choisir la taxe --</option>
+                        </select>
+                        <small class="text-muted" id="taxe-client-info"></small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            Date d'échéance <span class="text-danger">*</span>
+                        </label>
+                        {{ form.date_echeance }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Statut</label>
+                        {{ form.statut }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGNES PRODUITS -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-list-ul me-2 text-primary"></i>
+                    Produits / Services
+                </h6>
+
+                {{ formset.management_form }}
+
+                <div class="alert alert-info small d-flex align-items-center gap-2" id="debug-info">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Sélectionnez un client puis un produit</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle" id="tableau-lignes">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:28%">Produit</th>
+                                <th style="width:22%">Description</th>
+                                <th style="width:9%">Qté</th>
+                                <th style="width:18%">Prix HT</th>
+                                <th style="width:8%">TVA%</th>
+                                <th style="width:11%">Total TTC</th>
+                                <th style="width:4%"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="lignes-body">
+
+                        {% if lignes_existantes %}
+                            {# ── MODE MODIFICATION ── #}
+                            {% for ligne in lignes_existantes %}
+                            <tr class="ligne-row" id="row-{{ forloop.counter0 }}">
+                                <td>
+                                    <select name="lignes-{{ forloop.counter0 }}-produit"
+                                            class="form-select select-produit"
+                                            id="id_lignes-{{ forloop.counter0 }}-produit"
+                                            data-row="{{ forloop.counter0 }}">
+                                        <option value="">--- Sélectionnez ---</option>
+                                        {% for produit in produits %}
+                                        <option value="{{ produit.id }}"
+                                                data-prix="{{ produit.prix_ht|stringformat:'g' }}"
+                                                data-tva="{{ produit.taux_tva|stringformat:'g' }}"
+                                                data-description="{{ produit.description|default:produit.nom }}"
+                                                data-nom="{{ produit.nom }}"
+                                                data-devise="{{ produit.devise_symbole }}"
+                                                data-pays-code="{{ produit.pays.code|default:'' }}"
+                                                data-type-taxe="{{ produit.description_taxe|default:'' }}"
+                                                {% if ligne.produit_id == produit.id %}selected{% endif %}>
+                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }} (TVA {{ produit.taux_tva }}%)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           name="lignes-{{ forloop.counter0 }}-description"
+                                           value="{{ ligne.description }}"
+                                           class="form-control form-control-sm description-input"
+                                           placeholder="Description">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="lignes-{{ forloop.counter0 }}-quantite"
+                                           value="{{ ligne.quantite|stringformat:'g' }}"
+                                           class="form-control form-control-sm quantite-input"
+                                           step="0.01" min="0"
+                                           onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                                </td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number"
+                                               name="lignes-{{ forloop.counter0 }}-prix_unitaire"
+                                               value="{{ ligne.prix_unitaire|stringformat:'g' }}"
+                                               class="form-control prix-unitaire"
+                                               step="0.01" min="0"
+                                               onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                                        <span class="input-group-text devise-symbole bg-light">
+                                            {% if ligne.produit %}{{ ligne.produit.devise_symbole }}{% else %}FCFA{% endif %}
+                                        </span>
+                                    </div>
+                                    <small class="text-warning devise-warning d-none"></small>
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="lignes-{{ forloop.counter0 }}-tva"
+                                           value="{{ ligne.tva|stringformat:'g' }}"
+                                           class="form-control form-control-sm tva-input"
+                                           step="0.01" min="0" readonly>
+                                </td>
+                                <td>
+                                    <span class="ligne-ttc fw-semibold text-primary small">
+                                        {{ ligne.total_ttc|floatformat:0 }} {% if ligne.produit %}{{ ligne.produit.devise_symbole }}{% else %}FCFA{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                        {% else %}
+                            {# ── MODE CRÉATION ── #}
+                            {% for ligne_form in formset %}
+                            <tr class="ligne-row" id="row-{{ forloop.counter0 }}">
+                                <td>
+                                    <select name="lignes-{{ forloop.counter0 }}-produit"
+                                            class="form-select select-produit"
+                                            id="id_lignes-{{ forloop.counter0 }}-produit"
+                                            data-row="{{ forloop.counter0 }}">
+                                        <option value="">--- Sélectionnez ---</option>
+                                        {% for produit in produits %}
+                                        <option value="{{ produit.id }}"
+                                                data-prix="{{ produit.prix_ht|stringformat:'g' }}"
+                                                data-tva="{{ produit.taux_tva|stringformat:'g' }}"
+                                                data-description="{{ produit.description|default:produit.nom }}"
+                                                data-nom="{{ produit.nom }}"
+                                                data-devise="{{ produit.devise_symbole }}"
+                                                data-pays-code="{{ produit.pays.code|default:'' }}"
+                                                data-type-taxe="{{ produit.description_taxe|default:'' }}">
+                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }} (TVA {{ produit.taux_tva }}%)
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           name="lignes-{{ forloop.counter0 }}-description"
+                                           value=""
+                                           class="form-control form-control-sm description-input"
+                                           placeholder="Description">
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="lignes-{{ forloop.counter0 }}-quantite"
+                                           value="1"
+                                           class="form-control form-control-sm quantite-input"
+                                           step="0.01" min="0"
+                                           onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                                </td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number"
+                                               name="lignes-{{ forloop.counter0 }}-prix_unitaire"
+                                               value="0"
+                                               class="form-control prix-unitaire"
+                                               step="0.01" min="0"
+                                               onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                                        <span class="input-group-text devise-symbole bg-light">FCFA</span>
+                                    </div>
+                                    <small class="text-warning devise-warning d-none"></small>
+                                </td>
+                                <td>
+                                    <input type="number"
+                                           name="lignes-{{ forloop.counter0 }}-tva"
+                                           value="0"
+                                           class="form-control form-control-sm tva-input"
+                                           step="0.01" min="0" readonly>
+                                </td>
+                                <td>
+                                    <span class="ligne-ttc fw-semibold text-primary small">0 FCFA</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if ligne_form.DELETE %}
+                                        <div style="display:none">{{ ligne_form.DELETE }}</div>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-ajouter-ligne">
+                        <i class="bi bi-plus-lg me-1"></i>Ajouter une ligne
+                    </button>
+                    <a href="{% url 'liste_produits' %}" class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-box-seam me-1"></i>Gérer mes produits
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RÉSUMÉ -->
+    <div class="col-md-4">
+        <div class="card sticky-top" style="top: 80px;">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">
+                    <i class="bi bi-calculator me-2 text-primary"></i>
+                    Résumé
+                </h6>
+
+                <div id="resume-client" class="alert alert-light py-2 small d-none mb-3">
+                    <i class="bi bi-person me-1"></i>
+                    <span id="resume-client-text"></span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total HT</span>
+                    <span id="total-ht" class="fw-semibold">0 FCFA</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted" id="label-tva">TVA</span>
+                    <span id="total-tva" class="fw-semibold">0 FCFA</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold fs-5">Total TTC</span>
+                    <span id="total-ttc" class="fw-bold fs-5 text-primary">0 FCFA</span>
+                </div>
+
+                <hr>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                    <i class="bi bi-check-lg me-2"></i>{{ bouton }}
+                </button>
+                <a href="{% url 'liste_factures' %}" class="btn btn-outline-secondary w-100 mt-2">
+                    Annuler
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+<script>
+let deviseGlobale  = 'FCFA';
+let deviseClient   = 'FCFA';
+let paysClient     = '';
+let tauxTvaClient  = 0;
+let typeTaxeClient = 'TVA';
+
+// ══════════════════════════════════════════════════
+// NETTOYER UN NOMBRE venant de Django (ex: "1 500,00" → 1500.00)
+// ══════════════════════════════════════════════════
+function nettoyerNombre(valeur) {
+    if (!valeur) return '0';
+    return String(valeur)
+        .replace(/\s/g, '')      // supprimer espaces (séparateurs de milliers)
+        .replace(',', '.');      // virgule → point décimal
+}
+
+// ══════════════════════════════════════════════════
+// CHARGER INFOS CLIENT
+// ══════════════════════════════════════════════════
+function chargerInfosClient(clientId, callback) {
+    if (!clientId) return;
+    fetch(`/clients/api/${clientId}/info/`)
+        .then(r => r.json())
+        .then(data => {
+            deviseClient   = data.devise    || 'FCFA';
+            paysClient     = data.pays_code || '';
+            tauxTvaClient  = parseFloat(data.taux_tva) || 0;
+            typeTaxeClient = data.type_taxe || 'TVA';
+            deviseGlobale  = deviseClient;
+
+            document.getElementById('client-info').classList.remove('d-none');
+            document.getElementById('client-devise-badge').textContent = `💱 ${deviseClient}`;
+            document.getElementById('client-pays-badge').textContent   = data.pays_nom || '';
+
+            document.getElementById('resume-client').classList.remove('d-none');
+            document.getElementById('resume-client-text').textContent =
+                `${data.pays_nom} — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+
+            // ✅ CORRECTION : Toujours afficher le conteneur de taxe
+            const taxeContainer = document.getElementById('taxe-client-container');
+            const selectTaxe    = document.getElementById('select-taxe-client');
+            const taxeInfo      = document.getElementById('taxe-client-info');
+            
+            taxeContainer.style.display = 'block';  // ✅ Toujours visible
+            selectTaxe.innerHTML = '<option value="">-- Choisir la taxe --</option>';
+
+            if (data.taxes && data.taxes.length > 0) {
+                // ✅ Cas multi-taxes (Canada, etc.)
+                data.taxes.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value        = t.taux_defaut;
+                    opt.dataset.code = t.code;
+                    opt.dataset.nom  = t.nom;
+                    opt.textContent  = `${t.nom} (${t.code}) — ${t.taux_defaut}%`;
+                    selectTaxe.appendChild(opt);
+                });
+
+                taxeInfo.textContent = `${data.taxes.length} taxe(s) pour ${data.pays_nom}`;
+
+                // Sélectionner automatiquement si une seule taxe
+                if (data.taxes.length === 1) {
+                    selectTaxe.selectedIndex = 1;
+                    appliquerTaxeSelectionnee();
+                }
+                // Pour les pays avec plusieurs taxes, ne pas sélectionner automatiquement
+                // L'utilisateur doit choisir
+                
+            } else {
+                // ✅ Cas taxe unique (France, Belgique, etc.)
+                const opt = document.createElement('option');
+                opt.value        = tauxTvaClient;
+                opt.dataset.code = typeTaxeClient;
+                opt.dataset.nom  = typeTaxeClient;
+                opt.textContent  = `${typeTaxeClient} — ${tauxTvaClient}%`;
+                opt.selected = true;  // Sélectionner automatiquement
+                selectTaxe.appendChild(opt);
+                
+                taxeInfo.textContent = `Taxe unique pour ${data.pays_nom}`;
+                
+                // ✅ Appliquer automatiquement la taxe
+                appliquerTaxeSelectionnee();
+            }
+
+            document.getElementById('label-tva').textContent  = typeTaxeClient;
+            document.getElementById('id_pays').value          = paysClient;
+            document.getElementById('id_type_taxe').value     = typeTaxeClient;
+            document.getElementById('id_taux_taxe').value     = tauxTvaClient;
+
+            document.querySelectorAll('.devise-symbole').forEach(s => s.textContent = deviseClient);
+
+            document.getElementById('debug-info').innerHTML =
+                `<i class="bi bi-check-circle me-1 text-success"></i>
+                 Client : <strong>${data.nom}</strong> — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+
+            if (callback) callback();
+        })
+        .catch(err => console.error('Erreur API client:', err));
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        .forEach(el => new bootstrap.Tooltip(el));
+
+    // Synchroniser TOTAL_FORMS avec les lignes affichées
+    const nbLignes   = document.querySelectorAll('#lignes-body tr.ligne-row').length;
+    const totalForms = document.querySelector('#id_lignes-TOTAL_FORMS');
+    if (totalForms && nbLignes > 0) {
+        totalForms.value = nbLignes;
+    }
+
+    const clientSelect = document.getElementById('id_client');
+    if (clientSelect && clientSelect.value) {
+        chargerInfosClient(clientSelect.value, calculerTotaux);
+    } else {
+        calculerTotaux();
+    }
+});
+
+// ══════════════════════════════════════════════════
+// CHANGEMENT CLIENT
+// ══════════════════════════════════════════════════
+const clientSelectEl = document.getElementById('id_client');
+if (clientSelectEl) {
+    clientSelectEl.addEventListener('change', function() {
+        if (!this.value) { resetClientInfo(); return; }
+        chargerInfosClient(this.value, calculerTotaux);
+    });
+}
+
+const selectTaxeClient = document.getElementById('select-taxe-client');
+if (selectTaxeClient) selectTaxeClient.addEventListener('change', appliquerTaxeSelectionnee);
+
+function appliquerTaxeSelectionnee() {
+    const sel = document.getElementById('select-taxe-client');
+    if (!sel || !sel.value) return;
+    const taux = parseFloat(sel.value) || 0;
+    const opt  = sel.options[sel.selectedIndex];
+    tauxTvaClient  = taux;
+    typeTaxeClient = opt.dataset.code || 'TVA';
+
+    document.getElementById('id_taux_taxe').value     = taux;
+    document.getElementById('id_type_taxe').value     = typeTaxeClient;
+    document.getElementById('label-tva').textContent  = `${opt.dataset.nom} (${typeTaxeClient})`;
+    document.getElementById('taxe-client-info').textContent = `✅ ${taux}% appliqué sur toutes les lignes`;
+
+    // Mettre à jour TVA sur toutes les lignes existantes
+    document.querySelectorAll('.tva-input').forEach(i => i.value = taux);
+    calculerTotaux();
+}
+
+function resetClientInfo() {
+    deviseClient = deviseGlobale = 'FCFA';
+    tauxTvaClient = 0;
+    document.getElementById('client-info').classList.add('d-none');
+    document.getElementById('resume-client').classList.add('d-none');
+    document.getElementById('taxe-client-container').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════
+// SÉLECTION PRODUIT → REMPLISSAGE AUTOMATIQUE
+// ══════════════════════════════════════════════════
+document.addEventListener('change', function(e) {
+    if (!e.target.classList.contains('select-produit')) return;
+    const select = e.target;
+    const option = select.options[select.selectedIndex];
+    const row    = select.closest('tr');
+
+    if (!option || !option.value) {
+        row.querySelector('.prix-unitaire').value        = '0';
+        row.querySelector('.tva-input').value            = tauxTvaClient || '0';
+        row.querySelector('.description-input').value   = '';
+        row.querySelector('.devise-symbole').textContent = deviseClient;
+        row.querySelector('.ligne-ttc').textContent      = '0 ' + deviseClient;
+        row.querySelector('.devise-warning').classList.add('d-none');
+        calculerTotaux();
+        return;
+    }
+
+    // ✅ Nettoyer prix et tva (supprimer espaces, virgule → point)
+    const prix          = nettoyerNombre(option.dataset.prix);
+    const tvaProduit    = nettoyerNombre(option.dataset.tva);
+    const description   = option.dataset.description || option.dataset.nom || '';
+    const deviseProduit = option.dataset.devise || 'FCFA';
+
+    row.querySelector('.description-input').value    = description;
+    row.querySelector('.quantite-input').value       = '1';
+    row.querySelector('.prix-unitaire').value        = prix;
+    // ✅ TVA : priorité à la taxe du client sélectionnée, sinon celle du produit
+    row.querySelector('.tva-input').value            = tauxTvaClient > 0 ? tauxTvaClient : tvaProduit;
+    row.querySelector('.devise-symbole').textContent = deviseClient;
+
+    const warning = row.querySelector('.devise-warning');
+    if (deviseProduit !== deviseClient && deviseProduit !== '') {
+        warning.classList.remove('d-none');
+        warning.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Prix en ${deviseProduit} — vérifiez en ${deviseClient}`;
+        row.querySelector('.prix-unitaire').removeAttribute('readonly');
+        row.querySelector('.prix-unitaire').classList.add('border-warning');
+    } else {
+        warning.classList.add('d-none');
+        row.querySelector('.prix-unitaire').setAttribute('readonly', true);
+        row.querySelector('.prix-unitaire').classList.remove('border-warning');
+    }
+    calculerTotaux();
+});
+
+// ══════════════════════════════════════════════════
+// CALCUL DES TOTAUX
+// ══════════════════════════════════════════════════
+function calculerTotaux() {
+    let totalHT = 0, totalTVA = 0;
+    document.querySelectorAll('#lignes-body tr.ligne-row').forEach(row => {
+        if (row.style.display === 'none') return;
+        const qte    = parseFloat(row.querySelector('.quantite-input')?.value)  || 0;
+        const pu     = parseFloat(row.querySelector('.prix-unitaire')?.value)   || 0;
+        const tva    = parseFloat(row.querySelector('.tva-input')?.value)       || 0;
+        const devise = (row.querySelector('.devise-symbole')?.textContent || deviseGlobale).trim();
+        if (devise) deviseGlobale = devise;
+        const ht = qte * pu, tvaM = ht * tva / 100, ttc = ht + tvaM;
+        totalHT += ht; totalTVA += tvaM;
+        const span = row.querySelector('.ligne-ttc');
+        if (span) span.textContent = ttc.toLocaleString('fr-FR') + ' ' + devise;
+    });
+    const ttc = totalHT + totalTVA;
+    document.getElementById('total-ht').textContent  = totalHT.toLocaleString('fr-FR')  + ' ' + deviseGlobale;
+    document.getElementById('total-tva').textContent = totalTVA.toLocaleString('fr-FR') + ' ' + deviseGlobale;
+    document.getElementById('total-ttc').textContent = ttc.toLocaleString('fr-FR')      + ' ' + deviseGlobale;
+}
+
+// ══════════════════════════════════════════════════
+// SUPPRIMER UNE LIGNE
+// ══════════════════════════════════════════════════
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.btn-supprimer-ligne')) return;
+    const row = e.target.closest('tr');
+    const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (del) { del.checked = true; row.style.display = 'none'; } else row.remove();
+    document.querySelector('#id_lignes-TOTAL_FORMS').value =
+        document.querySelectorAll('#lignes-body tr.ligne-row').length;
+    calculerTotaux();
+});
+
+// ══════════════════════════════════════════════════
+// AJOUTER UNE LIGNE
+// ══════════════════════════════════════════════════
+document.getElementById('btn-ajouter-ligne').addEventListener('click', function() {
+    const totalForms  = document.querySelector('#id_lignes-TOTAL_FORMS');
+    const index       = parseInt(totalForms.value);
+    const firstSelect = document.querySelector('.select-produit');
+    const optionsHTML = firstSelect ? firstSelect.innerHTML : '<option value="">--- Sélectionnez ---</option>';
+
+    const newRow = document.createElement('tr');
+    newRow.className = 'ligne-row';
+    newRow.id = `row-${index}`;
+    newRow.innerHTML = `
+        <td>
+            <select name="lignes-${index}-produit" class="form-select select-produit"
+                    id="id_lignes-${index}-produit" data-row="${index}">
+                ${optionsHTML}
+            </select>
+        </td>
+        <td><input type="text" name="lignes-${index}-description"
+               class="form-control form-control-sm description-input" placeholder="Description"></td>
+        <td><input type="number" name="lignes-${index}-quantite"
+               class="form-control form-control-sm quantite-input"
+               step="0.01" min="0" value="1"
+               onchange="calculerTotaux()" onkeyup="calculerTotaux()"></td>
+        <td>
+            <div class="input-group input-group-sm">
+                <input type="number" name="lignes-${index}-prix_unitaire"
+                       class="form-control prix-unitaire" step="0.01" min="0" value="0"
+                       onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                <span class="input-group-text devise-symbole bg-light">${deviseClient}</span>
+            </div>
+            <small class="text-warning devise-warning d-none"></small>
+        </td>
+        <td><input type="number" name="lignes-${index}-tva"
+               class="form-control form-control-sm tva-input"
+               step="0.01" min="0" value="${tauxTvaClient}" readonly></td>
+        <td><span class="ligne-ttc fw-semibold text-primary small">0 ${deviseClient}</span></td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>`;
+
+    document.getElementById('lignes-body').appendChild(newRow);
+    totalForms.value = index + 1;
+    newRow.querySelector('.select-produit').value = '';
+    calculerTotaux();
+});
+</script>
+
+<style>
+input[readonly] { background-color: #f8f9fa; }
+.border-warning { border-color: #ffc107 !important; background-color: #fff3cd !important; }
+#total-ht, #total-tva, #total-ttc { transition: all 0.3s ease; }
+</style>
+{% endblock %}

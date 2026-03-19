@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}{{ facture.numero }}{% endblock %}
+{% block page_title %}Détail de la Facture{% endblock %}
+
+{% block content %}
+
+{# ✅ Définir la devise une fois pour tout le template #}
+{% with devise=facture.client.devise|default:"FCFA" %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">{{ facture.numero }}</h4>
+        <span class="text-muted">Créée le {{ facture.date_creation|date:"d/m/Y" }}</span>
+        {% if facture.devis %}
+            <span class="badge bg-info ms-2">
+                Depuis devis {{ facture.devis.numero }}
+            </span>
+        {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+
+        <!-- ✅ Bouton PDF corrigé -->
+        <a href="{% url 'pdf_facture' facture.pk %}"
+           class="btn btn-outline-primary" target="_blank">
+            <i class="bi bi-file-pdf me-2"></i>Télécharger PDF
+        </a>
+
+        {% if facture.statut != 'payee' %}
+        <a href="{% url 'modifier_facture' facture.pk %}" class="btn btn-warning">
+            <i class="bi bi-pencil me-2"></i>Modifier
+        </a>
+        {% endif %}
+        <a href="{% url 'liste_factures' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Retour
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+
+        <!-- En-tête facture -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-muted mb-2">CLIENT</h6>
+                        <p class="fw-bold mb-1">
+                            {{ facture.client.nom }} {{ facture.client.prenom }}
+                        </p>
+                        {% if facture.client.entreprise %}
+                            <p class="mb-1 text-muted">{{ facture.client.entreprise }}</p>
+                        {% endif %}
+                        <p class="mb-1">{{ facture.client.email }}</p>
+                        <p class="mb-0">{{ facture.client.telephone }}</p>
+                        {% if facture.client.adresse %}
+                            <p class="mb-0 text-muted small mt-1">
+                                {{ facture.client.adresse }}, {{ facture.client.ville }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <h6 class="fw-bold text-muted mb-2">FACTURE</h6>
+                        <p class="mb-1"><strong>N°</strong> {{ facture.numero }}</p>
+                        <p class="mb-1">
+                            <strong>Date :</strong>
+                            {{ facture.date_creation|date:"d/m/Y" }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Échéance :</strong>
+                            {{ facture.date_echeance|date:"d/m/Y" }}
+                        </p>
+                        <p class="mb-0">
+                            <strong>Statut :</strong>
+                            {% if facture.statut == 'non_payee' %}
+                                <span class="badge bg-danger">Non payée</span>
+                            {% elif facture.statut == 'payee' %}
+                                <span class="badge bg-success">Payée</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Annulée</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lignes -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Description</th>
+                            <th class="text-center">Qté</th>
+                            <th class="text-end">Prix HT</th>
+                            <th class="text-center">TVA</th>
+                            <th class="text-end">Total TTC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in lignes %}
+                        <tr>
+                            <td>{{ ligne.description }}</td>
+                            <td class="text-center">{{ ligne.quantite }}</td>
+                            <td class="text-end">
+                                {# ✅ Utilisation de la devise dynamique #}
+                                {{ ligne.prix_unitaire|floatformat:0 }} {{ devise }}
+                            </td>
+                            <td class="text-center">{{ ligne.tva }}%</td>
+                            <td class="text-end fw-semibold">
+                                {# ✅ Utilisation de la devise dynamique #}
+                                {{ ligne.total_ttc|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-semibold">Total HT</td>
+                            <td class="text-end fw-semibold">
+                                {# ✅ Utilisation de la devise dynamique #}
+                                {{ facture.calculer_total_ht|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end fw-semibold">TVA</td>
+                            <td class="text-end fw-semibold">
+                                {# ✅ Utilisation de la devise dynamique #}
+                                {{ facture.calculer_tva|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold fs-5">
+                                Total TTC
+                            </td>
+                            <td class="text-end fw-bold fs-5 text-primary">
+                                {# ✅ Utilisation de la devise dynamique #}
+                                {{ facture.calculer_total_ttc|floatformat:0 }} {{ devise }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% if facture.notes %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="fw-bold">Notes</h6>
+                <p class="mb-0 text-muted">{{ facture.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div class="col-md-4">
+
+        <!-- Changer statut -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Changer le statut</h6>
+                <form method="post" action="{% url 'changer_statut_facture' facture.pk %}">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2">
+                        {% if facture.statut != 'payee' %}
+                        <button type="submit" name="statut" value="payee"
+                                class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Marquer payée
+                        </button>
+                        {% endif %}
+                        {% if facture.statut != 'non_payee' %}
+                        <button type="submit" name="statut" value="non_payee"
+                                class="btn btn-outline-danger">
+                            <i class="bi bi-x-circle me-2"></i>Marquer non payée
+                        </button>
+                        {% endif %}
+                        {% if facture.statut != 'annulee' %}
+                        <button type="submit" name="statut" value="annulee"
+                                class="btn btn-outline-secondary">
+                            <i class="bi bi-slash-circle me-2"></i>Annuler la facture
+                        </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Autres actions -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Actions</h6>
+                <div class="d-grid gap-2">
+
+                    <!-- ✅ Bouton PDF dans actions rapides -->
+                    <a href="{% url 'pdf_facture' facture.pk %}"
+                       class="btn btn-primary" target="_blank">
+                        <i class="bi bi-file-pdf me-2"></i>Télécharger PDF
+                    </a>
+
+                    <a href="{% url 'detail_client' facture.client.pk %}"
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-person me-2"></i>Voir le client
+                    </a>
+
+                    {% if facture.devis %}
+                    <a href="{% url 'detail_devis' facture.devis.pk %}"
+                       class="btn btn-outline-info">
+                        <i class="bi bi-file-text me-2"></i>Voir le devis
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'supprimer_facture' facture.pk %}"
+                       class="btn btn-outline-danger">
+                        <i class="bi bi-trash me-2"></i>Supprimer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ✅ Fin du bloc with #}
+{% endwith %}
+
+{% endblock %}

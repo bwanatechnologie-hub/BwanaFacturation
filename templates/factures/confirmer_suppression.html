@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Supprimer facture{% endblock %}
+{% block page_title %}Supprimer une facture{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-body text-center p-5">
+                <i class="bi bi-exclamation-triangle text-danger"
+                   style="font-size: 4rem;"></i>
+                <h4 class="mt-3 fw-bold">Confirmer la suppression</h4>
+                <p class="text-muted">
+                    Voulez-vous vraiment supprimer la facture
+                    <strong>{{ facture.numero }}</strong> ?
+                    <br>
+                    <span class="text-danger small">
+                        Cette action est irréversible.
+                    </span>
+                </p>
+                <div class="d-flex gap-3 justify-content-center mt-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash me-2"></i>Oui, supprimer
+                        </button>
+                    </form>
+                    <a href="{% url 'liste_factures' %}"
+                       class="btn btn-outline-secondary px-4">
+                        Annuler
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

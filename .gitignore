@@ -1,0 +1,39 @@
+# ── Environnement Python
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# ── Django
+*.log
+local_settings.py
+db.sqlite3
+media/
+
+# ── SECRETS — NE JAMAIS ENVOYER
+.env
+*.env
+
+# ── Base de données
+*.sql
+*.sqlite3
+
+# ── Fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE
+.vscode/
+.idea/
+*.swp
+
+# ── Fichiers statiques collectés
+staticfiles/
+
+# ── Certificats
+*.pem
+*.key

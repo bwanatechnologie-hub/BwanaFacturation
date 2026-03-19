@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titre }}{% endblock %}
+{% block page_title %}{{ titre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Statistiques rapides - 2 cartes -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1 opacity-75">Total produits</h6>
+                            <h2 class="mb-0">{{ total_produits }}</h2>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1 opacity-75">Catégories</h6>
+                            <h2 class="mb-0">{{ categories|length }}</h2>
+                        </div>
+                        <i class="bi bi-tags fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres et actions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'liste_produits' %}" 
+                       class="btn btn-sm {% if not categorie_active %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        <i class="bi bi-grid"></i> Tous
+                    </a>
+                    {% for cat in categories %}
+                        <a href="?categorie={{ cat.id }}" 
+                           class="btn btn-sm {% if categorie_active == cat.id %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                            <i class="bi bi-folder"></i> {{ cat.nom }} ({{ cat.nb_produits }})
+                        </a>
+                    {% endfor %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'ajouter_categorie' %}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-folder-plus"></i> Catégorie
+                    </a>
+                    <a href="{% url 'ajouter_produit' %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-circle"></i> Nouveau produit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des produits -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-box-seam me-2"></i>Liste des produits
+            </h5>
+            <span class="badge bg-secondary">{{ produits|length }} produit(s)</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>Réf.</th>
+                            <th>Produit</th>
+                            <th>Catégorie</th>
+                            <th class="text-end">Prix HT</th>
+                            <th class="text-end">Prix TTC</th>
+                            <th>TVA</th>
+                            <th>Unité</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produit in produits %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ produit.reference }}</span>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ produit.nom }}</div>
+                                {% if produit.description %}
+                                    <small class="text-muted">{{ produit.description|truncatechars:50 }}</small>
+                                {% endif %}
+                                <!-- Affichage de la devise uniquement -->
+                                {% if produit.pays %}
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="bi bi-currency-exchange"></i> {{ produit.devise_symbole }}
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if produit.categorie %}
+                                    <span class="badge bg-info bg-opacity-10 text-info">
+                                        <i class="bi bi-folder me-1"></i>{{ produit.categorie.nom }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {{ produit.prix_ht|floatformat:0 }} {{ produit.devise_symbole }}
+                            </td>
+                            <td class="text-end fw-bold text-primary">
+                                {{ produit.prix_ttc|floatformat:0 }} {{ produit.devise_symbole }}
+                            </td>
+                            <td>
+                                {% if produit.taux_tva > 0 %}
+                                    <span class="badge bg-info">{{ produit.taux_tva }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ produit.get_unite_display }}</td>
+                            <td>
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="{% url 'modifier_produit' produit.pk %}" 
+                                       class="btn btn-sm btn-outline-warning"
+                                       title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'dupliquer_produit' produit.pk %}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Dupliquer">
+                                        <i class="bi bi-files"></i>
+                                    </a>
+                                    <a href="{% url 'supprimer_produit' produit.pk %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       title="Supprimer">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <i class="bi bi-box-seam display-1 text-muted"></i>
+                                <h5 class="mt-3">Aucun produit</h5>
+                                <p class="text-muted">Commencez par ajouter votre premier produit</p>
+                                <a href="{% url 'ajouter_produit' %}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Ajouter un produit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
