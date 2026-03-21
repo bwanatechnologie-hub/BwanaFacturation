@@ -68,7 +68,23 @@ def montant_en_lettres(montant, devise='FCFA'):
         return str(montant)
 
 
-# ✅ Changement : generer_pdf_facture au lieu de generer_pdf_devis
+def _get_profil(utilisateur):
+    try:
+        from users.models import ProfilUtilisateur
+        return ProfilUtilisateur.objects.get(user=utilisateur)
+    except Exception:
+        return None
+
+
+def _logo_image(path, largeur=3.5*cm, hauteur=2*cm):
+    try:
+        if path and os.path.exists(path):
+            return Image(path, width=largeur, height=hauteur, kind='proportional')
+    except Exception:
+        pass
+    return None
+
+
 def generer_pdf_facture(facture):
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -78,18 +94,23 @@ def generer_pdf_facture(facture):
     )
 
     elements = []
-    s_normal = ParagraphStyle('s_normal', fontSize=9, fontName='Helvetica', leading=13)
-    s_bold   = ParagraphStyle('s_bold',   fontSize=9, fontName='Helvetica-Bold', leading=13)
-    s_small  = ParagraphStyle('s_small',  fontSize=8, fontName='Helvetica', textColor=GRIS, leading=11)
-    s_right  = ParagraphStyle('s_right',  fontSize=9, fontName='Helvetica', alignment=TA_RIGHT, leading=13)
-    s_center = ParagraphStyle('s_center', fontSize=9, fontName='Helvetica', alignment=TA_CENTER)
+    s_normal = ParagraphStyle('s_normal', fontSize=9,  fontName='Helvetica',      leading=13)
+    s_bold   = ParagraphStyle('s_bold',   fontSize=9,  fontName='Helvetica-Bold', leading=13)
+    s_small  = ParagraphStyle('s_small',  fontSize=8,  fontName='Helvetica',      textColor=GRIS, leading=11)
+    s_right  = ParagraphStyle('s_right',  fontSize=9,  fontName='Helvetica',      alignment=TA_RIGHT, leading=13)
+    s_center = ParagraphStyle('s_center', fontSize=9,  fontName='Helvetica',      alignment=TA_CENTER)
 
-    utilisateur  = facture.utilisateur
-    client       = facture.client
-    nom_emetteur = f"{utilisateur.first_name} {utilisateur.last_name}".strip() or utilisateur.username
-    nom_client   = f"{client.nom} {client.prenom}".strip()
+    utilisateur = facture.utilisateur
+    client      = facture.client
+    profil      = _get_profil(utilisateur)
 
-    # ── Devise du client (priorité) sinon FCFA
+    # ── Nom émetteur
+    nom_emetteur = (profil.nom_entreprise if profil and profil.nom_entreprise
+                    else f"{utilisateur.first_name} {utilisateur.last_name}".strip()
+                    or utilisateur.username)
+    nom_client = f"{client.nom} {client.prenom}".strip()
+
+    # ── Devise
     devise = client.devise if client.pays_obj else 'FCFA'
 
     # ── Infos taxe
@@ -101,58 +122,67 @@ def generer_pdf_facture(facture):
 
     # ── Adresse client
     adresse_client_lines = []
-    if client.adresse:     adresse_client_lines.append(client.adresse)
+    if client.adresse: adresse_client_lines.append(client.adresse)
     if client.ville:
         ville_str = client.ville
         if client.code_postal: ville_str += f" {client.code_postal}"
         if client.province:    ville_str += f" ({client.province})"
         adresse_client_lines.append(ville_str)
-    if client.pays_obj:    adresse_client_lines.append(client.pays_obj.nom)
+    if client.pays_obj: adresse_client_lines.append(client.pays_obj.nom)
 
-    # ✅ Changement : statut pour facture
-    statut_map = {
-        'non_payee': 'NON PAYÉE',
-        'payee': 'PAYÉE',
-        'annulee': 'ANNULÉE'
-    }
+    statut_map   = {'non_payee': 'NON PAYÉE', 'payee': 'PAYÉE', 'annulee': 'ANNULÉE'}
     statut_texte = statut_map.get(facture.statut, '')
 
     # ══════════════════════════════════════════
-    # EN-TÊTE
+    # LOGOS — tous les deux EN HAUT de leur colonne
     # ══════════════════════════════════════════
+    logo_emetteur = None
+    if profil and profil.logo:
+        logo_emetteur = _logo_image(profil.logo.path, largeur=4*cm, hauteur=2.2*cm)
 
-    # Logo client si disponible
-    logo_element = None
-    if client.logo and hasattr(client.logo, 'path') and os.path.exists(client.logo.path):
-        try:
-            logo_element = Image(client.logo.path, width=3*cm, height=2*cm,
-                                  kind='proportional')
-        except Exception:
-            logo_element = None
+    logo_client = None
+    if hasattr(client, 'logo') and client.logo:
+        logo_client = _logo_image(client.logo.path, largeur=4*cm, hauteur=2.2*cm)
 
-    col_emetteur = [
-        Paragraph(f"<b>{nom_emetteur}</b>", s_bold),
-        Paragraph(utilisateur.email or '', s_normal),
-    ]
+    # ── Colonne émetteur : LOGO EN HAUT puis infos
+    col_emetteur = []
+    if logo_emetteur:
+        col_emetteur.append(logo_emetteur)          # ← logo tout en haut
+        col_emetteur.append(Spacer(1, 0.25*cm))
+    col_emetteur.append(Paragraph(f"<b>{nom_emetteur}</b>", s_bold))
+    if profil:
+        if profil.telephone:
+            col_emetteur.append(Paragraph(f"Tél : {profil.telephone}", s_normal))
+        email_e = profil.email_entreprise or utilisateur.email or ''
+        if email_e:
+            col_emetteur.append(Paragraph(email_e, s_normal))
+        if profil.site_web:
+            col_emetteur.append(Paragraph(profil.site_web, s_small))
+        if profil.adresse:
+            col_emetteur.append(Paragraph(profil.adresse, s_small))
+        if profil.ville:
+            ville = f"{profil.code_postal} {profil.ville}".strip() if profil.code_postal else profil.ville
+            col_emetteur.append(Paragraph(ville, s_small))
+        if profil.pays:
+            col_emetteur.append(Paragraph(profil.pays, s_small))
+    else:
+        col_emetteur.append(Paragraph(utilisateur.email or '', s_normal))
 
-    # ✅ Changement : titre "FACTURE" au lieu de "DEVIS"
+    # ── Colonne titre FACTURE (centre)
     col_titre = [
         Paragraph('FACTURE', ParagraphStyle(
-            'titre', fontSize=22, fontName='Helvetica-Bold',
+            'titre', fontSize=24, fontName='Helvetica-Bold',
             textColor=BLEU, alignment=TA_CENTER
         )),
-        Spacer(1, 0.7*cm),
-        # ✅ Changement : facture.numero
+        Spacer(1, 0.5*cm),
         Paragraph(f"N° : <b>{facture.numero}</b>", ParagraphStyle(
             'num', fontSize=10, fontName='Helvetica', alignment=TA_CENTER
         )),
         Spacer(1, 0.2*cm),
-        # ✅ Changement : facture.date_creation
         Paragraph(f"Date : {date_fr(facture.date_creation)}", ParagraphStyle(
             'date', fontSize=9, fontName='Helvetica',
             alignment=TA_CENTER, textColor=GRIS
         )),
-        # ✅ Changement : ajout de la date d'échéance
         Spacer(1, 0.2*cm),
         Paragraph(f"Échéance : {date_fr(facture.date_echeance)}", ParagraphStyle(
             'echeance', fontSize=9, fontName='Helvetica-Bold',
@@ -160,26 +190,27 @@ def generer_pdf_facture(facture):
         )),
     ]
 
-    col_client_content = [
-        Paragraph("Facturé à :", s_small),  # ✅ Changement : "Facturé à" au lieu de "Proposé à"
-        Paragraph(f"<b>{nom_client}</b>", s_bold),
-    ]
+    # ── Colonne client : LOGO EN HAUT puis infos
+    col_client = []
+    if logo_client:
+        col_client.append(logo_client)              # ← logo tout en haut
+        col_client.append(Spacer(1, 0.25*cm))
+    col_client.append(Paragraph("Facturé à :", s_small))
+    col_client.append(Paragraph(f"<b>{nom_client}</b>", s_bold))
     if client.entreprise:
-        col_client_content.append(Paragraph(client.entreprise, s_normal))
+        col_client.append(Paragraph(client.entreprise, s_normal))
     if client.email:
-        col_client_content.append(Paragraph(client.email, s_normal))
-    if client.telephone_complet:
-        col_client_content.append(Paragraph(client.telephone_complet, s_normal))
+        col_client.append(Paragraph(client.email, s_normal))
+    if hasattr(client, 'telephone_complet') and client.telephone_complet:
+        col_client.append(Paragraph(f"Tél : {client.telephone_complet}", s_normal))
     for line in adresse_client_lines:
-        col_client_content.append(Paragraph(line, s_small))
-    if logo_element:
-        col_client_content.append(Spacer(1, 0.3*cm))
-        col_client_content.append(logo_element)
+        col_client.append(Paragraph(line, s_small))
 
-    header_data  = [[col_emetteur, col_titre, col_client_content]]
+    # ── Table en-tête 3 colonnes
+    header_data  = [[col_emetteur, col_titre, col_client]]
     header_table = Table(header_data, colWidths=[6*cm, 6*cm, 6*cm])
     header_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('VALIGN',  (0, 0), (-1, -1), 'TOP'),   # ← TOP = logos alignés en haut
         ('PADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(header_table)
@@ -192,12 +223,9 @@ def generer_pdf_facture(facture):
     # ══════════════════════════════════════════
     pays_str = f" — {pays_label}" if pays_label else ""
     infos_data = [[
-        # ✅ Changement : facture.numero
         Paragraph(f"<b>Facture N° :</b> {facture.numero}", s_normal),
-        # ✅ Changement : facture.date_creation
         Paragraph(f"<b>Date :</b> {date_fr(facture.date_creation)}", s_normal),
         Paragraph(
-            # ✅ Changement : facture.date_echeance
             f"<b>Échéance :</b> {date_fr(facture.date_echeance)}"
             f"{(' — <b>' + statut_texte + '</b>') if statut_texte else ''}"
             f"{pays_str}",
@@ -221,10 +249,10 @@ def generer_pdf_facture(facture):
     ]]
     taxe_table = Table(taxe_data, colWidths=[6*cm, 6*cm, 6*cm])
     taxe_table.setStyle(TableStyle([
-        ('BACKGROUND',  (0, 0), (-1, -1), colors.HexColor('#e8f0fe')),
-        ('PADDING',     (0, 0), (-1, -1), 8),
-        ('VALIGN',      (0, 0), (-1, -1), 'MIDDLE'),
-        ('LINEBEFORE',  (0, 0), (0, -1), 3, BLEU_CLAIR),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e8f0fe')),
+        ('PADDING',    (0, 0), (-1, -1), 8),
+        ('VALIGN',     (0, 0), (-1, -1), 'MIDDLE'),
+        ('LINEBEFORE', (0, 0), (0, -1), 3, BLEU_CLAIR),
     ]))
     elements.append(taxe_table)
     elements.append(Spacer(1, 0.4*cm))
@@ -232,7 +260,6 @@ def generer_pdf_facture(facture):
     # ══════════════════════════════════════════
     # TABLEAU DES LIGNES
     # ══════════════════════════════════════════
-    # ✅ Changement : facture.lignes.all()
     lignes = facture.lignes.all()
 
     def th(txt):
@@ -256,21 +283,21 @@ def generer_pdf_facture(facture):
             Paragraph(f"{montant_ht:,.2f}", s_right),
         ])
 
-    col_widths  = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
+    col_widths   = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
     lignes_table = Table(rows, colWidths=col_widths)
     lignes_table.setStyle(TableStyle([
-        ('BACKGROUND',   (0, 0), (-1, 0), BLEU),
-        ('TEXTCOLOR',    (0, 0), (-1, 0), BLANC),
-        ('FONTNAME',     (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE',     (0, 0), (-1, 0), 9),
-        ('ALIGN',        (0, 0), (-1, 0), 'CENTER'),
-        ('PADDING',      (0, 0), (-1, 0), 8),
-        ('FONTNAME',     (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE',     (0, 1), (-1, -1), 9),
-        ('PADDING',      (0, 1), (-1, -1), 7),
+        ('BACKGROUND',    (0, 0), (-1, 0), BLEU),
+        ('TEXTCOLOR',     (0, 0), (-1, 0), BLANC),
+        ('FONTNAME',      (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, 0), 9),
+        ('ALIGN',         (0, 0), (-1, 0), 'CENTER'),
+        ('PADDING',       (0, 0), (-1, 0), 8),
+        ('FONTNAME',      (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE',      (0, 1), (-1, -1), 9),
+        ('PADDING',       (0, 1), (-1, -1), 7),
         ('ROWBACKGROUNDS',(0, 1), (-1, -1), [BLANC, GRIS_CLAIR]),
-        ('GRID',         (0, 0), (-1, -1), 0.4, colors.HexColor('#cccccc')),
-        ('VALIGN',       (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID',          (0, 0), (-1, -1), 0.4, colors.HexColor('#cccccc')),
+        ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     elements.append(lignes_table)
     elements.append(Spacer(1, 0.4*cm))
@@ -278,13 +305,12 @@ def generer_pdf_facture(facture):
     # ══════════════════════════════════════════
     # TOTAUX
     # ══════════════════════════════════════════
-    # ✅ Changement : utilisation des méthodes de facture
     total_ht  = facture.calculer_total_ht()
     total_tva = facture.calculer_tva()
     total_ttc = facture.calculer_total_ttc()
 
     totaux_data = [
-        ['', '', Paragraph(f'<b>Sous total HT :</b>', s_right),
+        ['', '', Paragraph('<b>Sous total HT :</b>', s_right),
                  Paragraph(f"{total_ht:,.2f} {devise}", s_right)],
         ['', '', Paragraph(f'<b>{type_taxe_label} ({taux_taxe_val}%) :</b>', s_right),
                  Paragraph(f"{total_tva:,.2f} {devise}", s_right)],
@@ -297,9 +323,9 @@ def generer_pdf_facture(facture):
     ]
     totaux_table = Table(totaux_data, colWidths=[3*cm, 5*cm, 5.5*cm, 4.5*cm])
     totaux_table.setStyle(TableStyle([
-        ('PADDING',   (0, 0), (-1, -1), 5),
-        ('LINEABOVE', (2, 2), (3, 2), 1, BLEU),
-        ('BACKGROUND',(2, 2), (3, 2), GRIS_CLAIR),
+        ('PADDING',    (0, 0), (-1, -1), 5),
+        ('LINEABOVE',  (2, 2), (3, 2), 1, BLEU),
+        ('BACKGROUND', (2, 2), (3, 2), GRIS_CLAIR),
     ]))
     elements.append(totaux_table)
 
@@ -310,7 +336,6 @@ def generer_pdf_facture(facture):
     elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
     elements.append(Spacer(1, 0.2*cm))
     lettres = montant_en_lettres(total_ttc, devise)
-    # ✅ Changement : "facture" au lieu de "devis"
     elements.append(Paragraph(
         f"Arrêtée la présente facture à la somme de "
         f"<b>{lettres} ({total_ttc:,.0f}) {devise}</b>.",
@@ -325,10 +350,26 @@ def generer_pdf_facture(facture):
     # ══════════════════════════════════════════
     # PIED DE PAGE
     # ══════════════════════════════════════════
-    elements.append(Spacer(1, 1*cm))
+    elements.append(Spacer(1, 0.8*cm))
     elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
     elements.append(Spacer(1, 0.2*cm))
-    # ✅ Changement : facture.numero et facture.date_creation
+
+    #if profil and profil.conditions_paiement:
+    #    elements.append(Paragraph(
+    #        f"<b>Conditions de paiement :</b> {profil.conditions_paiement}",
+    #        ParagraphStyle('cond', fontSize=8, fontName='Helvetica',
+    #                       textColor=NOIR, leading=12)
+    #    ))
+    #    elements.append(Spacer(1, 0.15*cm))
+
+    if profil and profil.mention_legale:
+        elements.append(Paragraph(
+            profil.mention_legale,
+            ParagraphStyle('mention', fontSize=7, fontName='Helvetica',
+                           textColor=GRIS, leading=10)
+        ))
+        elements.append(Spacer(1, 0.15*cm))
+
     elements.append(Paragraph(
         f"Document généré automatiquement — {facture.numero} — {date_fr(facture.date_creation)}",
         ParagraphStyle('footer', fontSize=7, fontName='Helvetica',

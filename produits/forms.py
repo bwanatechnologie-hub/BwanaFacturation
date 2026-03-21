@@ -1,126 +1,134 @@
 from django import forms
-from .models import Produit, Categorie, Pays, Province, TypeTaxe
+from .models import Produit, Categorie, Pays, Province, TypeTaxe, UniteVente
 
 
-class ProduitForm(forms.ModelForm):
+class UniteVenteForm(forms.ModelForm):
+    """Formulaire pour créer une unité personnalisée."""
     class Meta:
-        model = Produit
-        fields = [
-            'reference', 'nom', 'description', 'categorie',
-            'prix_ht', 'pays', 'type_taxe', 'taux_taxe_personnalise',
-            'province', 'unite', 'stock', 'stock_alerte', 'actif'
-        ]
+        model  = UniteVente
+        fields = ['nom', 'code']
         widgets = {
-            'reference': forms.TextInput(attrs={
+            'nom':  forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'REF-001'
+                'placeholder': 'Ex: Sac de 25kg, Palette...'
             }),
-            'nom': forms.TextInput(attrs={
+            'code': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Nom du produit/service'
-            }),
-            'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
-                'placeholder': 'Description détaillée...'
-            }),
-            'categorie': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'prix_ht': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0'
-            }),
-            'pays': forms.Select(attrs={
-                'class': 'form-select',
-                'id': 'id_pays'
-            }),
-            # ✅ type_taxe caché — rempli automatiquement par JS
-            'type_taxe': forms.Select(attrs={
-                'class': 'form-select d-none',
-                'id': 'id_type_taxe'
-            }),
-            # ✅ taux_taxe_personnalise — rempli auto par JS, modifiable
-            'taux_taxe_personnalise': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0',
-                'placeholder': '0.00'
-            }),
-            'province': forms.Select(attrs={
-                'class': 'form-select',
-                'id': 'id_province'
-            }),
-            'unite': forms.Select(attrs={
-                'class': 'form-select'
-            }),
-            'stock': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Laissez vide si non applicable'
-            }),
-            'stock_alerte': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Notification quand stock bas'
-            }),
-            'actif': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
+                'placeholder': 'Ex: sac25, pal...'
             }),
         }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        self.fields['code'].required = False
 
-        # Filtrer les catégories par utilisateur
+    def clean_nom(self):
+        nom = self.cleaned_data['nom'].strip()
+        if self.user:
+            qs = UniteVente.objects.filter(user=self.user, nom__iexact=nom)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("Cette unité existe déjà.")
+        return nom
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code', '').strip()
+        nom  = self.cleaned_data.get('nom', '')
+        if not code:
+            # Générer un code depuis le nom
+            import re
+            code = re.sub(r'[^a-z0-9]', '_', nom.lower())[:20]
+        return code
+
+
+class ProduitForm(forms.ModelForm):
+    class Meta:
+        model  = Produit
+        fields = [
+            'reference', 'nom', 'description', 'categorie',
+            'prix_ht', 'pays', 'type_taxe', 'taux_taxe_personnalise',
+            'province', 'unite_vente', 'stock', 'stock_alerte', 'actif'
+        ]
+        widgets = {
+            'reference': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'REF-001'
+            }),
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'Nom du produit/service'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control', 'rows': 3,
+                'placeholder': 'Description détaillée...'
+            }),
+            'categorie': forms.Select(attrs={'class': 'form-select'}),
+            'prix_ht': forms.NumberInput(attrs={
+                'class': 'form-control', 'step': '0.01', 'min': '0'
+            }),
+            'pays': forms.Select(attrs={'class': 'form-select', 'id': 'id_pays'}),
+            'type_taxe': forms.Select(attrs={
+                'class': 'form-select d-none', 'id': 'id_type_taxe'
+            }),
+            'taux_taxe_personnalise': forms.NumberInput(attrs={
+                'class': 'form-control', 'step': '0.01', 'min': '0', 'placeholder': '0.00'
+            }),
+            'province': forms.Select(attrs={'class': 'form-select', 'id': 'id_province'}),
+            # ✅ Unite_vente — select dynamique
+            'unite_vente': forms.Select(attrs={'class': 'form-select', 'id': 'id_unite_vente'}),
+            'stock': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': '0',
+                'placeholder': 'Laissez vide si non applicable'
+            }),
+            'stock_alerte': forms.NumberInput(attrs={
+                'class': 'form-control', 'min': '0',
+                'placeholder': 'Notification quand stock bas'
+            }),
+            'actif': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
         if self.user:
             self.fields['categorie'].queryset = Categorie.objects.filter(user=self.user)
+            # ✅ Unités : globales + personnalisées de l'utilisateur
+            self.fields['unite_vente'].queryset = UniteVente.pour_user(self.user)
+        else:
+            self.fields['unite_vente'].queryset = UniteVente.objects.filter(user__isnull=True)
 
-        # Champs optionnels
-        self.fields['stock'].required              = False
-        self.fields['stock_alerte'].required       = False
-        self.fields['description'].required        = False
-        self.fields['province'].required           = False
-        self.fields['type_taxe'].required          = False
+        self.fields['unite_vente'].empty_label  = "--- Choisir une unité ---"
+        self.fields['unite_vente'].required     = False
+
+        self.fields['stock'].required               = False
+        self.fields['stock_alerte'].required        = False
+        self.fields['description'].required         = False
+        self.fields['province'].required            = False
+        self.fields['type_taxe'].required           = False
         self.fields['taux_taxe_personnalise'].required = False
 
-        # Initialiser les provinces selon le pays
         self.fields['province'].queryset = Province.objects.none()
         if 'pays' in self.data:
             try:
                 pays_id = int(self.data.get('pays'))
                 self.fields['province'].queryset = Province.objects.filter(
-                    pays_id=pays_id
-                ).order_by('nom')
+                    pays_id=pays_id).order_by('nom')
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk and self.instance.pays:
             self.fields['province'].queryset = Province.objects.filter(
-                pays=self.instance.pays
-            ).order_by('nom')
+                pays=self.instance.pays).order_by('nom')
 
-        # Initialiser les types de taxe selon le pays
         self.fields['type_taxe'].queryset = TypeTaxe.objects.none()
         if 'pays' in self.data:
             try:
                 pays_id = int(self.data.get('pays'))
-                self.fields['type_taxe'].queryset = TypeTaxe.objects.filter(
-                    pays_id=pays_id
-                )
+                self.fields['type_taxe'].queryset = TypeTaxe.objects.filter(pays_id=pays_id)
             except (ValueError, TypeError):
                 pass
         elif self.instance.pk and self.instance.pays:
-            self.fields['type_taxe'].queryset = TypeTaxe.objects.filter(
-                pays=self.instance.pays
-            )
-
-        # Messages d'aide
-        self.fields['stock'].help_text             = "Laissez vide si vous ne gérez pas le stock"
-        self.fields['stock_alerte'].help_text      = "Notification quand le stock est bas"
-        self.fields['pays'].help_text              = "Détermine la devise et la TVA"
-        self.fields['taux_taxe_personnalise'].help_text = "Rempli automatiquement selon le pays"
+            self.fields['type_taxe'].queryset = TypeTaxe.objects.filter(pays=self.instance.pays)
 
         self.fields['reference'].widget.attrs.update({'autofocus': 'autofocus'})
 
@@ -145,7 +153,7 @@ class ProduitForm(forms.ModelForm):
         if province and pays and province.pays != pays:
             self.add_error('province', "Cette province n'appartient pas au pays sélectionné")
 
-        stock       = cleaned_data.get('stock')
+        stock        = cleaned_data.get('stock')
         stock_alerte = cleaned_data.get('stock_alerte')
         if stock is not None and stock_alerte is not None:
             if stock_alerte > stock:
@@ -156,7 +164,7 @@ class ProduitForm(forms.ModelForm):
 
 class CategorieForm(forms.ModelForm):
     class Meta:
-        model = Categorie
+        model  = Categorie
         fields = ['nom', 'description']
         widgets = {
             'nom': forms.TextInput(attrs={
@@ -164,8 +172,7 @@ class CategorieForm(forms.ModelForm):
                 'placeholder': 'Ex: Informatique, Design, Marketing...'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 3,
+                'class': 'form-control', 'rows': 3,
                 'placeholder': 'Description de la catégorie (optionnel)'
             }),
         }

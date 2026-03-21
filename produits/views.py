@@ -1,12 +1,13 @@
 import json
+import re
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Sum, Q, Prefetch
+from django.db.models import Count, Q, Prefetch
 from django.http import JsonResponse
 from django.template.loader import render_to_string
-from .models import Produit, Categorie, Pays, Province, TypeTaxe, TauxTaxe
+from .models import Produit, Categorie, Pays, Province, TypeTaxe, TauxTaxe, UniteVente
 from .forms import ProduitForm, CategorieForm
 
 
@@ -19,7 +20,7 @@ def liste_produits(request):
     produits = Produit.objects.filter(
         user=request.user, actif=True
     ).select_related(
-        'categorie', 'pays', 'province', 'type_taxe'
+        'categorie', 'pays', 'province', 'type_taxe', 'unite_vente'
     ).prefetch_related('type_taxe__taux')
 
     if categorie_id:
@@ -88,7 +89,7 @@ def ajouter_produit(request):
 @login_required
 def modifier_produit(request, pk):
     produit = get_object_or_404(
-        Produit.objects.select_related('pays', 'province', 'type_taxe'),
+        Produit.objects.select_related('pays', 'province', 'type_taxe', 'unite_vente'),
         pk=pk, user=request.user
     )
 
@@ -176,7 +177,6 @@ def ajouter_categorie(request):
             if not nom:
                 return JsonResponse({'erreur': 'Le nom est obligatoire.'}, status=400)
 
-            # Vérifier doublon pour cet utilisateur
             if Categorie.objects.filter(user=request.user, nom__iexact=nom).exists():
                 return JsonResponse(
                     {'erreur': f'La catégorie "{nom}" existe déjà.'},
@@ -187,7 +187,7 @@ def ajouter_categorie(request):
             categorie.save()
             return JsonResponse({'id': categorie.pk, 'nom': categorie.nom})
 
-        # Requête normale (formulaire classique depuis liste_categories)
+        # Requête normale
         form = CategorieForm(request.POST, user=request.user)
         if form.is_valid():
             categorie      = form.save(commit=False)
@@ -243,6 +243,46 @@ def supprimer_categorie(request, pk):
     return render(request, 'produits/categories/supprimer.html', {'categorie': categorie})
 
 
+# ─── UNITÉS DE VENTE ──────────────────────────
+@login_required
+def ajouter_unite_vente(request):
+    """API AJAX pour créer une unité de vente personnalisée."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            data = request.POST
+
+        nom  = data.get('nom', '').strip()
+        code = data.get('code', '').strip()
+
+        if not nom:
+            return JsonResponse({'erreur': 'Le nom est obligatoire.'}, status=400)
+
+        # Générer un code si vide
+        if not code:
+            code = re.sub(r'[^a-z0-9]', '_', nom.lower())[:20]
+
+        # Vérifier unicité pour cet utilisateur
+        if UniteVente.objects.filter(user=request.user, nom__iexact=nom).exists():
+            return JsonResponse({'erreur': f'L\'unité "{nom}" existe déjà.'}, status=400)
+
+        unite = UniteVente.objects.create(
+            user  = request.user,
+            nom   = nom,
+            code  = code,
+            ordre = 50,
+        )
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'id': unite.pk, 'nom': unite.nom, 'code': unite.code})
+
+        messages.success(request, f'✅ Unité "{unite.nom}" créée.')
+        return redirect('liste_produits')
+
+    return JsonResponse({'erreur': 'Méthode non autorisée.'}, status=405)
+
+
 # ─── API TAXES & PRODUITS ──────────────────────────
 @login_required
 def get_types_taxe_ajax(request):
@@ -285,5 +325,6 @@ def get_produit_ajax(request, pk):
         'prix_ht':     float(produit.prix_ht),
         'tva':         float(produit.taux_tva),
         'devise':      produit.devise_symbole,
-        'unite':       produit.get_unite_display(),
+        # ✅ unite_label au lieu de get_unite_display()
+        'unite':       produit.unite_label,
     })

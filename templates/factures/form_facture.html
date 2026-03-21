@@ -36,7 +36,7 @@
                         </div>
                     </div>
 
-                    <!-- Dropdown taxes (Canada et autres pays multi-taxes) -->
+                    <!-- Dropdown taxes -->
                     <div class="col-md-6" id="taxe-client-container" style="display:none;">
                         <label class="form-label fw-semibold">
                             Type de taxe
@@ -153,11 +153,13 @@
                                     <small class="text-warning devise-warning d-none"></small>
                                 </td>
                                 <td>
+                                    {# ✅ readonly supprimé — TVA modifiable #}
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-tva"
                                            value="{{ ligne.tva|stringformat:'g' }}"
                                            class="form-control form-control-sm tva-input"
-                                           step="0.01" min="0" readonly>
+                                           step="0.01" min="0"
+                                           onchange="calculerTotaux()" onkeyup="calculerTotaux()">
                                 </td>
                                 <td>
                                     <span class="ligne-ttc fw-semibold text-primary small">
@@ -224,11 +226,13 @@
                                     <small class="text-warning devise-warning d-none"></small>
                                 </td>
                                 <td>
+                                    {# ✅ readonly supprimé — TVA modifiable #}
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-tva"
                                            value="0"
                                            class="form-control form-control-sm tva-input"
-                                           step="0.01" min="0" readonly>
+                                           step="0.01" min="0"
+                                           onchange="calculerTotaux()" onkeyup="calculerTotaux()">
                                 </td>
                                 <td>
                                     <span class="ligne-ttc fw-semibold text-primary small">0 FCFA</span>
@@ -309,19 +313,11 @@ let paysClient     = '';
 let tauxTvaClient  = 0;
 let typeTaxeClient = 'TVA';
 
-// ══════════════════════════════════════════════════
-// NETTOYER UN NOMBRE venant de Django (ex: "1 500,00" → 1500.00)
-// ══════════════════════════════════════════════════
 function nettoyerNombre(valeur) {
     if (!valeur) return '0';
-    return String(valeur)
-        .replace(/\s/g, '')      // supprimer espaces (séparateurs de milliers)
-        .replace(',', '.');      // virgule → point décimal
+    return String(valeur).replace(/\s/g, '').replace(',', '.');
 }
 
-// ══════════════════════════════════════════════════
-// CHARGER INFOS CLIENT
-// ══════════════════════════════════════════════════
 function chargerInfosClient(clientId, callback) {
     if (!clientId) return;
     fetch(`/clients/api/${clientId}/info/`)
@@ -341,16 +337,14 @@ function chargerInfosClient(clientId, callback) {
             document.getElementById('resume-client-text').textContent =
                 `${data.pays_nom} — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
 
-            // ✅ CORRECTION : Toujours afficher le conteneur de taxe
             const taxeContainer = document.getElementById('taxe-client-container');
             const selectTaxe    = document.getElementById('select-taxe-client');
             const taxeInfo      = document.getElementById('taxe-client-info');
-            
-            taxeContainer.style.display = 'block';  // ✅ Toujours visible
+
+            taxeContainer.style.display = 'block';
             selectTaxe.innerHTML = '<option value="">-- Choisir la taxe --</option>';
 
             if (data.taxes && data.taxes.length > 0) {
-                // ✅ Cas multi-taxes (Canada, etc.)
                 data.taxes.forEach(t => {
                     const opt = document.createElement('option');
                     opt.value        = t.taux_defaut;
@@ -359,31 +353,34 @@ function chargerInfosClient(clientId, callback) {
                     opt.textContent  = `${t.nom} (${t.code}) — ${t.taux_defaut}%`;
                     selectTaxe.appendChild(opt);
                 });
-
                 taxeInfo.textContent = `${data.taxes.length} taxe(s) pour ${data.pays_nom}`;
 
-                // Sélectionner automatiquement si une seule taxe
                 if (data.taxes.length === 1) {
                     selectTaxe.selectedIndex = 1;
                     appliquerTaxeSelectionnee();
+                } else if (tauxTvaClient > 0) {
+                    for (let i = 1; i < selectTaxe.options.length; i++) {
+                        if (parseFloat(selectTaxe.options[i].value) === tauxTvaClient) {
+                            selectTaxe.selectedIndex = i;
+                            appliquerTaxeSelectionnee();
+                            break;
+                        }
+                    }
                 }
-                // Pour les pays avec plusieurs taxes, ne pas sélectionner automatiquement
-                // L'utilisateur doit choisir
-                
             } else {
-                // ✅ Cas taxe unique (France, Belgique, etc.)
-                const opt = document.createElement('option');
-                opt.value        = tauxTvaClient;
-                opt.dataset.code = typeTaxeClient;
-                opt.dataset.nom  = typeTaxeClient;
-                opt.textContent  = `${typeTaxeClient} — ${tauxTvaClient}%`;
-                opt.selected = true;  // Sélectionner automatiquement
-                selectTaxe.appendChild(opt);
-                
-                taxeInfo.textContent = `Taxe unique pour ${data.pays_nom}`;
-                
-                // ✅ Appliquer automatiquement la taxe
-                appliquerTaxeSelectionnee();
+                if (tauxTvaClient > 0) {
+                    const opt = document.createElement('option');
+                    opt.value        = tauxTvaClient;
+                    opt.dataset.code = typeTaxeClient;
+                    opt.dataset.nom  = typeTaxeClient;
+                    opt.textContent  = `${typeTaxeClient} — ${tauxTvaClient}%`;
+                    opt.selected     = true;
+                    selectTaxe.appendChild(opt);
+                    taxeInfo.textContent = `Taxe pour ${data.pays_nom}`;
+                    appliquerTaxeSelectionnee();
+                } else {
+                    taxeContainer.style.display = 'none';
+                }
             }
 
             document.getElementById('label-tva').textContent  = typeTaxeClient;
@@ -402,19 +399,13 @@ function chargerInfosClient(clientId, callback) {
         .catch(err => console.error('Erreur API client:', err));
 }
 
-// ══════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(el => new bootstrap.Tooltip(el));
 
-    // Synchroniser TOTAL_FORMS avec les lignes affichées
     const nbLignes   = document.querySelectorAll('#lignes-body tr.ligne-row').length;
     const totalForms = document.querySelector('#id_lignes-TOTAL_FORMS');
-    if (totalForms && nbLignes > 0) {
-        totalForms.value = nbLignes;
-    }
+    if (totalForms && nbLignes > 0) totalForms.value = nbLignes;
 
     const clientSelect = document.getElementById('id_client');
     if (clientSelect && clientSelect.value) {
@@ -424,9 +415,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ══════════════════════════════════════════════════
-// CHANGEMENT CLIENT
-// ══════════════════════════════════════════════════
 const clientSelectEl = document.getElementById('id_client');
 if (clientSelectEl) {
     clientSelectEl.addEventListener('change', function() {
@@ -446,12 +434,11 @@ function appliquerTaxeSelectionnee() {
     tauxTvaClient  = taux;
     typeTaxeClient = opt.dataset.code || 'TVA';
 
-    document.getElementById('id_taux_taxe').value     = taux;
-    document.getElementById('id_type_taxe').value     = typeTaxeClient;
-    document.getElementById('label-tva').textContent  = `${opt.dataset.nom} (${typeTaxeClient})`;
-    document.getElementById('taxe-client-info').textContent = `✅ ${taux}% appliqué sur toutes les lignes`;
+    document.getElementById('id_taux_taxe').value    = taux;
+    document.getElementById('id_type_taxe').value    = typeTaxeClient;
+    document.getElementById('label-tva').textContent = `${opt.dataset.nom} (${typeTaxeClient})`;
+    document.getElementById('taxe-client-info').textContent = `✅ ${taux}% appliqué — modifiable ligne par ligne`;
 
-    // Mettre à jour TVA sur toutes les lignes existantes
     document.querySelectorAll('.tva-input').forEach(i => i.value = taux);
     calculerTotaux();
 }
@@ -464,9 +451,6 @@ function resetClientInfo() {
     document.getElementById('taxe-client-container').style.display = 'none';
 }
 
-// ══════════════════════════════════════════════════
-// SÉLECTION PRODUIT → REMPLISSAGE AUTOMATIQUE
-// ══════════════════════════════════════════════════
 document.addEventListener('change', function(e) {
     if (!e.target.classList.contains('select-produit')) return;
     const select = e.target;
@@ -484,7 +468,6 @@ document.addEventListener('change', function(e) {
         return;
     }
 
-    // ✅ Nettoyer prix et tva (supprimer espaces, virgule → point)
     const prix          = nettoyerNombre(option.dataset.prix);
     const tvaProduit    = nettoyerNombre(option.dataset.tva);
     const description   = option.dataset.description || option.dataset.nom || '';
@@ -493,7 +476,6 @@ document.addEventListener('change', function(e) {
     row.querySelector('.description-input').value    = description;
     row.querySelector('.quantite-input').value       = '1';
     row.querySelector('.prix-unitaire').value        = prix;
-    // ✅ TVA : priorité à la taxe du client sélectionnée, sinon celle du produit
     row.querySelector('.tva-input').value            = tauxTvaClient > 0 ? tauxTvaClient : tvaProduit;
     row.querySelector('.devise-symbole').textContent = deviseClient;
 
@@ -511,9 +493,6 @@ document.addEventListener('change', function(e) {
     calculerTotaux();
 });
 
-// ══════════════════════════════════════════════════
-// CALCUL DES TOTAUX
-// ══════════════════════════════════════════════════
 function calculerTotaux() {
     let totalHT = 0, totalTVA = 0;
     document.querySelectorAll('#lignes-body tr.ligne-row').forEach(row => {
@@ -534,9 +513,6 @@ function calculerTotaux() {
     document.getElementById('total-ttc').textContent = ttc.toLocaleString('fr-FR')      + ' ' + deviseGlobale;
 }
 
-// ══════════════════════════════════════════════════
-// SUPPRIMER UNE LIGNE
-// ══════════════════════════════════════════════════
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.btn-supprimer-ligne')) return;
     const row = e.target.closest('tr');
@@ -547,9 +523,6 @@ document.addEventListener('click', function(e) {
     calculerTotaux();
 });
 
-// ══════════════════════════════════════════════════
-// AJOUTER UNE LIGNE
-// ══════════════════════════════════════════════════
 document.getElementById('btn-ajouter-ligne').addEventListener('click', function() {
     const totalForms  = document.querySelector('#id_lignes-TOTAL_FORMS');
     const index       = parseInt(totalForms.value);
@@ -581,9 +554,12 @@ document.getElementById('btn-ajouter-ligne').addEventListener('click', function(
             </div>
             <small class="text-warning devise-warning d-none"></small>
         </td>
-        <td><input type="number" name="lignes-${index}-tva"
+        <td>
+            <input type="number" name="lignes-${index}-tva"
                class="form-control form-control-sm tva-input"
-               step="0.01" min="0" value="${tauxTvaClient}" readonly></td>
+               step="0.01" min="0" value="${tauxTvaClient}"
+               onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+        </td>
         <td><span class="ligne-ttc fw-semibold text-primary small">0 ${deviseClient}</span></td>
         <td class="text-center">
             <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
@@ -602,5 +578,8 @@ document.getElementById('btn-ajouter-ligne').addEventListener('click', function(
 input[readonly] { background-color: #f8f9fa; }
 .border-warning { border-color: #ffc107 !important; background-color: #fff3cd !important; }
 #total-ht, #total-tva, #total-ttc { transition: all 0.3s ease; }
+/* ✅ Style TVA modifiable */
+.tva-input { background-color: #fff9e6 !important; }
+.tva-input:focus { background-color: #fff3cd !important; }
 </style>
 {% endblock %}

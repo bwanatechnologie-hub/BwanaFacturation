@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/types-taxe/', views.get_types_taxe_ajax, name='api_types_taxe'),
     path('api/taux-taxe/', views.get_taux_taxe_ajax, name='api_taux_taxe'),
     path('api/produit/<int:pk>/', views.get_produit_ajax, name='api_produit'),  # ← ajout
-
+    path('unites/ajouter/', views.ajouter_unite_vente, name='ajouter_unite_vente'),
     # Catégories
     path('categories/', views.liste_categories, name='liste_categories'),
     path('categories/ajouter/', views.ajouter_categorie, name='ajouter_categorie'),

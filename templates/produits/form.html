@@ -19,6 +19,7 @@
                     {% csrf_token %}
 
                     <div class="row g-3">
+
                         <!-- Référence -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
@@ -54,7 +55,6 @@
                             <label class="form-label fw-semibold">Catégorie</label>
                             {{ form.categorie }}
                             <div class="mt-2">
-                                {# ✅ Remplacé : target="_blank" → data-bs-toggle="modal" #}
                                 <a href="#" class="small" id="lien-nouvelle-categorie"
                                    data-bs-toggle="modal" data-bs-target="#modalNouvelleCategorie">
                                     <i class="bi bi-plus-circle"></i> Nouvelle catégorie
@@ -62,10 +62,16 @@
                             </div>
                         </div>
 
-                        <!-- Unité de vente -->
+                        <!-- ✅ Unité de vente avec modal -->
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Unité de vente</label>
-                            {{ form.unite }}
+                            {{ form.unite_vente }}
+                            <div class="mt-2">
+                                <a href="#" class="small" id="lien-nouvelle-unite"
+                                   data-bs-toggle="modal" data-bs-target="#modalNouvelleUnite">
+                                    <i class="bi bi-plus-circle"></i> Nouvelle unité
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Prix HT avec devise -->
@@ -80,7 +86,7 @@
                             <small class="text-muted">Le prix hors taxes</small>
                         </div>
 
-                        <!-- Devise -->
+                        <!-- Devise / Pays -->
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">
                                 Devise
@@ -143,68 +149,100 @@
 {# ══════════════════════════════════════════════════════════════ #}
 {# MODAL — Nouvelle catégorie                                      #}
 {# ══════════════════════════════════════════════════════════════ #}
-<div class="modal fade" id="modalNouvelleCategorie" tabindex="-1"
-     aria-labelledby="modalNouvelleCateggorieLabel" aria-hidden="true">
+<div class="modal fade" id="modalNouvelleCategorie" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalNouvelleCateggorieLabel">
+                <h5 class="modal-title">
                     <i class="bi bi-tag me-2"></i>Nouvelle catégorie
                 </h5>
                 <button type="button" class="btn-close btn-close-white"
-                        data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body p-4">
-                {# Zone d'alerte (erreurs / succès) #}
-                <div id="modal-alert" class="alert d-none" role="alert"></div>
-
+                <div id="modal-cat-alert" class="alert d-none" role="alert"></div>
                 <div class="mb-3">
-                    <label for="modal-cat-nom" class="form-label fw-semibold">
-                        Nom de la catégorie <span class="text-danger">*</span>
+                    <label class="form-label fw-semibold">
+                        Nom <span class="text-danger">*</span>
                     </label>
                     <input type="text" id="modal-cat-nom" class="form-control"
                            placeholder="Ex : Fournitures bureau" maxlength="100" autocomplete="off">
                 </div>
-
                 <div class="mb-3">
-                    <label for="modal-cat-desc" class="form-label fw-semibold">
+                    <label class="form-label fw-semibold">
                         Description <span class="text-muted small">(optionnel)</span>
                     </label>
                     <textarea id="modal-cat-desc" class="form-control" rows="2"
-                              placeholder="Description de la catégorie…"></textarea>
+                              placeholder="Description..."></textarea>
                 </div>
             </div>
-
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary"
-                        data-bs-dismiss="modal">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x me-1"></i>Annuler
                 </button>
                 <button type="button" class="btn btn-primary" id="btn-sauvegarder-categorie">
-                    <span id="btn-cat-spinner"
-                          class="spinner-border spinner-border-sm me-1 d-none"
-                          role="status" aria-hidden="true"></span>
-                    <i class="bi bi-check-lg me-1" id="btn-cat-icon"></i>
-                    Enregistrer
+                    <span id="btn-cat-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+                    <i class="bi bi-check-lg me-1" id="btn-cat-icon"></i>Enregistrer
                 </button>
             </div>
-
         </div>
     </div>
 </div>
+
+
 {# ══════════════════════════════════════════════════════════════ #}
+{# MODAL — Nouvelle unité de vente                                 #}
+{# ══════════════════════════════════════════════════════════════ #}
+<div class="modal fade" id="modalNouvelleUnite" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-rulers me-2"></i>Nouvelle unité de vente
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="modal-unite-alert" class="alert d-none" role="alert"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Nom <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="modal-unite-nom" class="form-control"
+                           placeholder="Ex: Sac de 25kg, Palette, Carton 12..." maxlength="100">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Code <span class="text-muted small">(optionnel)</span>
+                    </label>
+                    <input type="text" id="modal-unite-code" class="form-control"
+                           placeholder="Ex: sac25, pal, ctn12..." maxlength="50">
+                    <small class="text-muted">Généré automatiquement si laissé vide</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x me-1"></i>Annuler
+                </button>
+                <button type="button" class="btn btn-success" id="btn-sauvegarder-unite">
+                    <span id="btn-unite-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+                    <i class="bi bi-check-lg me-1" id="btn-unite-icon"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ── Tooltips Bootstrap ────────────────────────────────────────
+    // ── Tooltips Bootstrap
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(el => new bootstrap.Tooltip(el));
 
-    // ── Gestion pays / devise ────────────────────────────────────
+    // ── Gestion pays / devise
     const paysSelect        = document.getElementById('id_pays');
     const provinceContainer = document.getElementById('province-container');
     const provinceSelect    = document.getElementById('id_province');
@@ -246,105 +284,127 @@ document.addEventListener('DOMContentLoaded', function () {
     updatePays();
 
 
-    // ── Modal nouvelle catégorie ─────────────────────────────────
-    const modalEl       = document.getElementById('modalNouvelleCategorie');
-    const inputNom      = document.getElementById('modal-cat-nom');
-    const inputDesc     = document.getElementById('modal-cat-desc');
-    const btnSave       = document.getElementById('btn-sauvegarder-categorie');
-    const alertBox      = document.getElementById('modal-alert');
-    const spinner       = document.getElementById('btn-cat-spinner');
-    const btnIcon       = document.getElementById('btn-cat-icon');
+    // ══════════════════════════════════════════
+    // MODAL — Nouvelle catégorie
+    // ══════════════════════════════════════════
+    const modalCat    = document.getElementById('modalNouvelleCategorie');
+    const inputCatNom = document.getElementById('modal-cat-nom');
+    const inputCatDesc = document.getElementById('modal-cat-desc');
+    const btnCat      = document.getElementById('btn-sauvegarder-categorie');
+    const alertCat    = document.getElementById('modal-cat-alert');
+    const spinCat     = document.getElementById('btn-cat-spinner');
+    const iconCat     = document.getElementById('btn-cat-icon');
 
-    // Réinitialiser le modal à chaque ouverture
-    modalEl.addEventListener('show.bs.modal', function () {
-        inputNom.value  = '';
-        inputDesc.value = '';
-        inputNom.classList.remove('is-invalid');
-        alertBox.className = 'alert d-none';
-        alertBox.textContent = '';
+    modalCat.addEventListener('show.bs.modal', () => {
+        inputCatNom.value  = '';
+        inputCatDesc.value = '';
+        inputCatNom.classList.remove('is-invalid');
+        alertCat.className = 'alert d-none';
+    });
+    modalCat.addEventListener('shown.bs.modal', () => inputCatNom.focus());
+    inputCatNom.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); btnCat.click(); }
     });
 
-    // Focus automatique sur le champ nom
-    modalEl.addEventListener('shown.bs.modal', function () {
-        inputNom.focus();
-    });
-
-    // Permettre la soumission avec la touche Entrée
-    inputNom.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); btnSave.click(); }
-    });
-
-    // Sauvegarde via fetch (AJAX)
-    btnSave.addEventListener('click', async function () {
-        const nom  = inputNom.value.trim();
-        const desc = inputDesc.value.trim();
-
-        // Validation côté client
-        if (!nom) {
-            inputNom.classList.add('is-invalid');
-            inputNom.focus();
-            return;
-        }
-        inputNom.classList.remove('is-invalid');
-
-        // UI — état chargement
-        spinner.classList.remove('d-none');
-        btnIcon.classList.add('d-none');
-        btnSave.disabled = true;
-
+    btnCat.addEventListener('click', async () => {
+        const nom  = inputCatNom.value.trim();
+        const desc = inputCatDesc.value.trim();
+        if (!nom) { inputCatNom.classList.add('is-invalid'); return; }
+        inputCatNom.classList.remove('is-invalid');
+        spinCat.classList.remove('d-none');
+        iconCat.classList.add('d-none');
+        btnCat.disabled = true;
         try {
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            const response = await fetch("{% url 'ajouter_categorie' %}", {
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const resp = await fetch("{% url 'ajouter_categorie' %}", {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken':  csrfToken,
-                    'X-Requested-With': 'XMLHttpRequest',   // ← signal AJAX pour la vue
-                },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
                 body: JSON.stringify({ nom, description: desc }),
             });
-
-            const data = await response.json();
-
-            if (response.ok && data.id) {
-                // ✅ Succès — ajouter l'option dans le select
-                const select  = document.getElementById('id_categorie');
-                const option  = new Option(data.nom, data.id, true, true);
-                select.appendChild(option);
-
-                // Fermer le modal après un court délai
-                const bsModal = bootstrap.Modal.getInstance(modalEl);
-                bsModal.hide();
-
-                // Badge de confirmation sous le lien
-                const lien  = document.getElementById('lien-nouvelle-categorie');
+            const data = await resp.json();
+            if (resp.ok && data.id) {
+                document.getElementById('id_categorie').appendChild(new Option(data.nom, data.id, true, true));
+                bootstrap.Modal.getInstance(modalCat).hide();
                 const badge = document.createElement('span');
-                badge.className   = 'badge bg-success ms-2';
+                badge.className = 'badge bg-success ms-2';
                 badge.textContent = `✅ "${data.nom}" ajoutée`;
-                lien.after(badge);
+                document.getElementById('lien-nouvelle-categorie').after(badge);
                 setTimeout(() => badge.remove(), 3000);
-
             } else {
-                // ❌ Erreur serveur
-                const msg = data.erreur || data.nom?.[0] || 'Une erreur est survenue.';
-                showAlert('danger', msg);
+                alertCat.className   = 'alert alert-danger';
+                alertCat.textContent = data.erreur || 'Une erreur est survenue.';
             }
-
-        } catch (err) {
-            showAlert('danger', 'Impossible de contacter le serveur. Veuillez réessayer.');
-            console.error(err);
+        } catch {
+            alertCat.className   = 'alert alert-danger';
+            alertCat.textContent = 'Impossible de contacter le serveur.';
         } finally {
-            spinner.classList.add('d-none');
-            btnIcon.classList.remove('d-none');
-            btnSave.disabled = false;
+            spinCat.classList.add('d-none');
+            iconCat.classList.remove('d-none');
+            btnCat.disabled = false;
         }
     });
 
-    function showAlert(type, message) {
-        alertBox.className   = `alert alert-${type}`;
-        alertBox.textContent = message;
-    }
+
+    // ══════════════════════════════════════════
+    // MODAL — Nouvelle unité de vente
+    // ══════════════════════════════════════════
+    const modalUnite    = document.getElementById('modalNouvelleUnite');
+    const inputUniteNom = document.getElementById('modal-unite-nom');
+    const inputUniteCode = document.getElementById('modal-unite-code');
+    const btnUnite      = document.getElementById('btn-sauvegarder-unite');
+    const alertUnite    = document.getElementById('modal-unite-alert');
+    const spinUnite     = document.getElementById('btn-unite-spinner');
+    const iconUnite     = document.getElementById('btn-unite-icon');
+
+    modalUnite.addEventListener('show.bs.modal', () => {
+        inputUniteNom.value  = '';
+        inputUniteCode.value = '';
+        inputUniteNom.classList.remove('is-invalid');
+        alertUnite.className = 'alert d-none';
+    });
+    modalUnite.addEventListener('shown.bs.modal', () => inputUniteNom.focus());
+    inputUniteNom.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); btnUnite.click(); }
+    });
+
+    btnUnite.addEventListener('click', async () => {
+        const nom  = inputUniteNom.value.trim();
+        const code = inputUniteCode.value.trim();
+        if (!nom) { inputUniteNom.classList.add('is-invalid'); return; }
+        inputUniteNom.classList.remove('is-invalid');
+        spinUnite.classList.remove('d-none');
+        iconUnite.classList.add('d-none');
+        btnUnite.disabled = true;
+        try {
+            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const resp = await fetch("{% url 'ajouter_unite_vente' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ nom, code }),
+            });
+            const data = await resp.json();
+            if (resp.ok && data.id) {
+                document.getElementById('id_unite_vente').appendChild(new Option(data.nom, data.id, true, true));
+                bootstrap.Modal.getInstance(modalUnite).hide();
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-success ms-2';
+                badge.textContent = `✅ "${data.nom}" ajoutée`;
+                document.getElementById('lien-nouvelle-unite').after(badge);
+                setTimeout(() => badge.remove(), 3000);
+            } else {
+                alertUnite.className   = 'alert alert-danger';
+                alertUnite.textContent = data.erreur || 'Une erreur est survenue.';
+            }
+        } catch {
+            alertUnite.className   = 'alert alert-danger';
+            alertUnite.textContent = 'Impossible de contacter le serveur.';
+        } finally {
+            spinUnite.classList.add('d-none');
+            iconUnite.classList.remove('d-none');
+            btnUnite.disabled = false;
+        }
+    });
+
 });
 </script>
 
@@ -353,11 +413,9 @@ document.addEventListener('DOMContentLoaded', function () {
 input[readonly], select[disabled] { background-color: #f8f9fa; cursor: not-allowed; }
 .input-group { flex-wrap: nowrap; }
 #province-container { transition: all 0.3s ease; }
-
-/* Modal — finitions */
-#modalNouvelleCategorie .modal-header { border-bottom: none; }
-#modalNouvelleCategorie .modal-footer { border-top: 1px solid #e9ecef; }
-#modal-cat-nom.is-invalid { border-color: #dc3545; }
-#modal-cat-nom.is-invalid:focus { box-shadow: 0 0 0 .25rem rgba(220,53,69,.25); }
+#modalNouvelleCategorie .modal-header,
+#modalNouvelleUnite .modal-header { border-bottom: none; }
+#modalNouvelleCategorie .modal-footer,
+#modalNouvelleUnite .modal-footer { border-top: 1px solid #e9ecef; }
 </style>
 {% endblock %}

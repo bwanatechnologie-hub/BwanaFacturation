@@ -1,0 +1,750 @@
+[
+{
+  "model": "produits.typetaxe",
+  "pk": 1,
+  "fields": {
+    "pays": 34,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "Taxe sur la valeur ajoutée - taux standard",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 2,
+  "fields": {
+    "pays": 34,
+    "nom": "TVA réduite",
+    "code": "TVA-R",
+    "description": "TVA taux réduit",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 3,
+  "fields": {
+    "pays": 35,
+    "nom": "Mehrwertsteuer",
+    "code": "MwSt",
+    "description": "Taxe sur la valeur ajoutée allemande",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 4,
+  "fields": {
+    "pays": 33,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "UK Value Added Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 5,
+  "fields": {
+    "pays": 24,
+    "nom": "TPS (Taxe sur les produits et services)",
+    "code": "TPS",
+    "description": "Taxe fédérale canadienne",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 6,
+  "fields": {
+    "pays": 24,
+    "nom": "TVQ (Taxe de vente du Québec)",
+    "code": "TVQ",
+    "description": "Taxe provinciale québécoise",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 7,
+  "fields": {
+    "pays": 24,
+    "nom": "TVH (Taxe de vente harmonisée)",
+    "code": "TVH",
+    "description": "Taxe harmonisée (TPS + TVP)",
+    "est_taxe_composee": true
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 8,
+  "fields": {
+    "pays": 25,
+    "nom": "Sales Tax",
+    "code": "ST",
+    "description": "State Sales Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 9,
+  "fields": {
+    "pays": 1,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Burkina Faso",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 10,
+  "fields": {
+    "pays": 2,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Côte d'Ivoire",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 11,
+  "fields": {
+    "pays": 3,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Sénégal",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 12,
+  "fields": {
+    "pays": 4,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Mali",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 13,
+  "fields": {
+    "pays": 5,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Niger",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 14,
+  "fields": {
+    "pays": 6,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Togo",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 15,
+  "fields": {
+    "pays": 7,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Bénin",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 16,
+  "fields": {
+    "pays": 8,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Cameroun",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 17,
+  "fields": {
+    "pays": 9,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Gabon",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 18,
+  "fields": {
+    "pays": 12,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Maroc",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 19,
+  "fields": {
+    "pays": 14,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Tunisie",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 20,
+  "fields": {
+    "pays": 16,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "South Africa VAT",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 21,
+  "fields": {
+    "pays": 17,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "Nigeria VAT",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 22,
+  "fields": {
+    "pays": 54,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "Indian GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 23,
+  "fields": {
+    "pays": 27,
+    "nom": "ICMS",
+    "code": "ICMS",
+    "description": "Imposto sobre Circulação de Mercadorias",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 24,
+  "fields": {
+    "pays": 27,
+    "nom": "ISS",
+    "code": "ISS",
+    "description": "Imposto Sobre Serviços",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 25,
+  "fields": {
+    "pays": 27,
+    "nom": "IPI",
+    "code": "IPI",
+    "description": "Imposto sobre Produtos Industrializados",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 26,
+  "fields": {
+    "pays": 65,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "Australian GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 27,
+  "fields": {
+    "pays": 66,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "New Zealand GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 28,
+  "fields": {
+    "pays": 52,
+    "nom": "Consumption Tax",
+    "code": "CT",
+    "description": "Japanese Consumption Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 29,
+  "fields": {
+    "pays": 26,
+    "nom": "IVA",
+    "code": "IVA",
+    "description": "Impuesto al Valor Agregado",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 1,
+  "fields": {
+    "type_taxe": 1,
+    "region": "France métropolitaine",
+    "code_region": "FR",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 2,
+  "fields": {
+    "type_taxe": 1,
+    "region": "Corse",
+    "code_region": "COR",
+    "taux": "10.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 3,
+  "fields": {
+    "type_taxe": 2,
+    "region": "France",
+    "code_region": "FR",
+    "taux": "5.50",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 4,
+  "fields": {
+    "type_taxe": 3,
+    "region": "Allemagne",
+    "code_region": "DE",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 5,
+  "fields": {
+    "type_taxe": 3,
+    "region": "Allemagne réduit",
+    "code_region": "DE-R",
+    "taux": "7.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 6,
+  "fields": {
+    "type_taxe": 4,
+    "region": "Royaume-Uni",
+    "code_region": "UK",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 7,
+  "fields": {
+    "type_taxe": 5,
+    "region": "Canada",
+    "code_region": "CA",
+    "taux": "5.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 8,
+  "fields": {
+    "type_taxe": 6,
+    "region": "Québec",
+    "code_region": "QC",
+    "taux": "9.98",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 9,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Ontario",
+    "code_region": "ON",
+    "taux": "13.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 10,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Nouveau-Brunswick",
+    "code_region": "NB",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 11,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Nouvelle-Écosse",
+    "code_region": "NS",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 12,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Île-du-Prince-Édouard",
+    "code_region": "PE",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 13,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Terre-Neuve",
+    "code_region": "NL",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 14,
+  "fields": {
+    "type_taxe": 8,
+    "region": "California",
+    "code_region": "CA",
+    "taux": "7.25",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 15,
+  "fields": {
+    "type_taxe": 8,
+    "region": "New York",
+    "code_region": "NY",
+    "taux": "8.88",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 16,
+  "fields": {
+    "type_taxe": 8,
+    "region": "Texas",
+    "code_region": "TX",
+    "taux": "6.25",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 17,
+  "fields": {
+    "type_taxe": 8,
+    "region": "Florida",
+    "code_region": "FL",
+    "taux": "6.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 18,
+  "fields": {
+    "type_taxe": 9,
+    "region": "Burkina Faso",
+    "code_region": "BF",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 19,
+  "fields": {
+    "type_taxe": 10,
+    "region": "Côte d'Ivoire",
+    "code_region": "CI",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 20,
+  "fields": {
+    "type_taxe": 11,
+    "region": "Sénégal",
+    "code_region": "SN",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 21,
+  "fields": {
+    "type_taxe": 12,
+    "region": "Mali",
+    "code_region": "ML",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 22,
+  "fields": {
+    "type_taxe": 13,
+    "region": "Niger",
+    "code_region": "NE",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 23,
+  "fields": {
+    "type_taxe": 14,
+    "region": "Togo",
+    "code_region": "TG",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 24,
+  "fields": {
+    "type_taxe": 15,
+    "region": "Bénin",
+    "code_region": "BJ",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 25,
+  "fields": {
+    "type_taxe": 16,
+    "region": "Cameroun",
+    "code_region": "CM",
+    "taux": "19.25",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 26,
+  "fields": {
+    "type_taxe": 17,
+    "region": "Gabon",
+    "code_region": "GA",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 27,
+  "fields": {
+    "type_taxe": 18,
+    "region": "Maroc",
+    "code_region": "MA",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 28,
+  "fields": {
+    "type_taxe": 19,
+    "region": "Tunisie",
+    "code_region": "TN",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 29,
+  "fields": {
+    "type_taxe": 20,
+    "region": "Afrique du Sud",
+    "code_region": "ZA",
+    "taux": "15.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 30,
+  "fields": {
+    "type_taxe": 21,
+    "region": "Nigeria",
+    "code_region": "NG",
+    "taux": "7.50",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 31,
+  "fields": {
+    "type_taxe": 22,
+    "region": "Inde standard",
+    "code_region": "IN",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 32,
+  "fields": {
+    "type_taxe": 22,
+    "region": "Inde réduit",
+    "code_region": "IN-R",
+    "taux": "12.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 33,
+  "fields": {
+    "type_taxe": 23,
+    "region": "São Paulo",
+    "code_region": "SP",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 34,
+  "fields": {
+    "type_taxe": 23,
+    "region": "Rio de Janeiro",
+    "code_region": "RJ",
+    "taux": "18.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 35,
+  "fields": {
+    "type_taxe": 24,
+    "region": "Brésil",
+    "code_region": "BR",
+    "taux": "5.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 36,
+  "fields": {
+    "type_taxe": 26,
+    "region": "Australie",
+    "code_region": "AU",
+    "taux": "10.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 37,
+  "fields": {
+    "type_taxe": 27,
+    "region": "Nouvelle-Zélande",
+    "code_region": "NZ",
+    "taux": "15.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 38,
+  "fields": {
+    "type_taxe": 28,
+    "region": "Japon",
+    "code_region": "JP",
+    "taux": "10.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 39,
+  "fields": {
+    "type_taxe": 29,
+    "region": "Mexique",
+    "code_region": "MX",
+    "taux": "16.00",
+    "est_defaut": true
+  }
+}
+]

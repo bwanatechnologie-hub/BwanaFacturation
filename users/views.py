@@ -22,8 +22,6 @@ def inscription(request):
         return redirect('tableau_de_bord')
 
     if request.method == 'POST':
-
-        # ✅ Vérifier que le checkbox conditions est coché
         if not request.POST.get('terms'):
             form = InscriptionForm(request.POST)
             messages.error(request,
@@ -61,8 +59,7 @@ def inscription(request):
                 messages.success(request, "Compte créé avec succès !")
                 return redirect('tableau_de_bord')
 
-            return render(request, 'users/activation_envoyee.html',
-                          {'email': user.email})
+            return render(request, 'users/activation_envoyee.html', {'email': user.email})
     else:
         form = InscriptionForm()
 
@@ -98,7 +95,6 @@ def connexion(request):
         email    = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
 
-        # ✅ Récupérer IP et User-Agent pour l'historique
         ip = (request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
               or request.META.get('REMOTE_ADDR', ''))
         ua = request.META.get('HTTP_USER_AGENT', '')
@@ -115,8 +111,6 @@ def connexion(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-
-                    # ✅ Enregistrer connexion réussie
                     try:
                         from .admin_models import LoginHistory
                         LoginHistory.objects.create(
@@ -125,17 +119,14 @@ def connexion(request):
                         )
                     except Exception:
                         pass
-
                     next_url = request.GET.get('next', 'tableau_de_bord')
-                    messages.success(request,
-                        f"✅ Bienvenue {user.first_name or user.username} !")
+                    messages.success(request, f"✅ Bienvenue {user.first_name or user.username} !")
                     return redirect(next_url)
                 else:
                     messages.error(request,
                         "⚠️ Votre compte n'est pas encore activé. "
                         "Vérifiez votre email de confirmation.")
             else:
-                # ✅ Enregistrer tentative échouée
                 try:
                     from .admin_models import LoginHistory
                     failed_user = User.objects.filter(username=username).first()
@@ -157,11 +148,56 @@ def deconnexion(request):
 
 
 # ══════════════════════════════════════════
-# PROFIL
+# PROFIL — avec logo et infos entreprise
 # ══════════════════════════════════════════
 @login_required
 def profil(request):
-    return render(request, 'users/profil.html', {'user': request.user})
+    from .models import ProfilUtilisateur
+    profil_obj, _ = ProfilUtilisateur.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # ── Infos utilisateur
+        request.user.first_name = request.POST.get('first_name', '').strip()
+        request.user.last_name  = request.POST.get('last_name', '').strip()
+        request.user.email      = request.POST.get('email', '').strip()
+        request.user.save()
+
+        # ── Infos entreprise
+        profil_obj.nom_entreprise       = request.POST.get('nom_entreprise', '').strip()
+        profil_obj.telephone            = request.POST.get('telephone', '').strip()
+        profil_obj.email_entreprise     = request.POST.get('email_entreprise', '').strip()
+        profil_obj.site_web             = request.POST.get('site_web', '').strip()
+        profil_obj.adresse              = request.POST.get('adresse', '').strip()
+        profil_obj.ville                = request.POST.get('ville', '').strip()
+        profil_obj.code_postal          = request.POST.get('code_postal', '').strip()
+        profil_obj.pays                 = request.POST.get('pays', '').strip()
+        profil_obj.mention_legale       = request.POST.get('mention_legale', '').strip()
+        profil_obj.conditions_paiement  = request.POST.get('conditions_paiement', '').strip()
+
+        # ── Logo
+        if 'logo' in request.FILES:
+            # Supprimer l'ancien logo
+            if profil_obj.logo:
+                import os
+                if os.path.isfile(profil_obj.logo.path):
+                    os.remove(profil_obj.logo.path)
+            profil_obj.logo = request.FILES['logo']
+
+        # ── Supprimer le logo
+        if request.POST.get('supprimer_logo') == '1' and profil_obj.logo:
+            import os
+            if os.path.isfile(profil_obj.logo.path):
+                os.remove(profil_obj.logo.path)
+            profil_obj.logo = None
+
+        profil_obj.save()
+        messages.success(request, "✅ Profil mis à jour avec succès !")
+        return redirect('profil')
+
+    return render(request, 'users/profil.html', {
+        'user':   request.user,
+        'profil': profil_obj,
+    })
 
 
 # ══════════════════════════════════════════
@@ -175,7 +211,6 @@ def password_reset_request(request):
             uid   = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             reset_url = f"{settings.SITE_URL}/users/password-reset/{uid}/{token}/"
-
             html_message = render_to_string(
                 'users/emails/reset_password_email.html',
                 {'user': user, 'reset_url': reset_url}
@@ -190,9 +225,7 @@ def password_reset_request(request):
             )
         except User.DoesNotExist:
             pass
-
         return render(request, 'users/password_reset_envoye.html')
-
     return render(request, 'users/password_reset.html')
 
 
@@ -213,20 +246,16 @@ def password_reset_confirm(request, uidb64, token):
     else:
         form = SetPasswordForm(user) if validlink else None
 
-    # ✅ Classes Bootstrap sur les champs
     if form:
         form.fields['new_password1'].widget.attrs.update({
-            'class': 'form-control form-control-lg',
-            'placeholder': '••••••••'
+            'class': 'form-control form-control-lg', 'placeholder': '••••••••'
         })
         form.fields['new_password2'].widget.attrs.update({
-            'class': 'form-control form-control-lg',
-            'placeholder': '••••••••'
+            'class': 'form-control form-control-lg', 'placeholder': '••••••••'
         })
 
     return render(request, 'users/password_reset_confirm.html', {
-        'form':      form,
-        'validlink': validlink,
+        'form': form, 'validlink': validlink,
     })
 
 
@@ -239,7 +268,6 @@ def password_reset_succes(request):
 # ══════════════════════════════════════════
 def conditions_utilisation(request):
     return render(request, 'users/conditions_utilisation.html')
-
 
 def politique_confidentialite(request):
     return render(request, 'users/politique_confidentialite.html')
