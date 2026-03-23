@@ -6,53 +6,67 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4">
+                <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+                    <i class="bi bi-person-badge me-2" style="color: #1e3a5f;"></i>
+                    {{ titre }}
+                </h5>
+            </div>
             <div class="card-body p-4">
                 <form method="post" id="clientForm" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <div class="row g-3">
+                    <div class="row g-4">
 
                         <!-- ── IDENTITÉ ── -->
                         <div class="col-12">
-                            <h6 class="fw-bold text-primary mb-1">
+                            <h6 class="fw-bold mb-1" style="color: #1e3a5f;">
                                 <i class="bi bi-person me-2"></i>Identité
                             </h6>
-                            <hr class="mt-1">
+                            <hr class="mt-1" style="border-color: #e0e0e0;">
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Nom <span class="text-danger">*</span>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-person me-1"></i>Nom <span class="text-danger">*</span>
                             </label>
                             {{ form.nom }}
                             {% if form.nom.errors %}
-                                <div class="text-danger small">{{ form.nom.errors }}</div>
+                                <div class="text-danger small mt-1">{{ form.nom.errors }}</div>
                             {% endif %}
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Prénom</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-person me-1"></i>Prénom
+                            </label>
                             {{ form.prenom }}
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Entreprise</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-building me-1"></i>Entreprise
+                            </label>
                             {{ form.entreprise }}
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Email</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </label>
                             {{ form.email }}
                             {% if form.email.errors %}
-                                <div class="text-danger small">{{ form.email.errors }}</div>
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
                             {% endif %}
                         </div>
 
                         <!-- ── TÉLÉPHONE ── -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Téléphone</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-telephone me-1"></i>Téléphone
+                            </label>
                             <div class="input-group">
                                 {{ form.indicatif }}
                                 {{ form.telephone }}
@@ -62,15 +76,15 @@
 
                         <!-- ── LOGO ── -->
                         <div class="col-12">
-                            <h6 class="fw-bold text-primary mb-1 mt-2">
+                            <h6 class="fw-bold mb-1 mt-2" style="color: #1e3a5f;">
                                 <i class="bi bi-image me-2"></i>Logo
                             </h6>
-                            <hr class="mt-1">
+                            <hr class="mt-1" style="border-color: #e0e0e0;">
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Logo client
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-upload me-1"></i>Logo client
                                 <i class="bi bi-info-circle text-muted ms-1"
                                    data-bs-toggle="tooltip"
                                    title="Utilisé dans les PDF de devis et factures"></i>
@@ -82,41 +96,39 @@
                         <!-- Aperçu logo existant -->
                         {% if client.logo %}
                         <div class="col-md-6 d-flex align-items-center">
-                            <div>
-                                <label class="form-label fw-semibold">Logo actuel</label><br>
+                            <div class="p-2 rounded" style="background: #f8f9fa;">
+                                <label class="form-label fw-semibold small mb-1" style="color: #1e3a5f;">Logo actuel</label><br>
                                 <img src="{{ client.logo.url }}"
                                      alt="Logo" height="60"
-                                     class="rounded border p-1">
+                                     class="rounded border p-1" style="background: white;">
                             </div>
                         </div>
                         {% endif %}
 
                         <!-- ── ADRESSE ── -->
                         <div class="col-12">
-                            <h6 class="fw-bold text-primary mb-1 mt-2">
+                            <h6 class="fw-bold mb-1 mt-2" style="color: #1e3a5f;">
                                 <i class="bi bi-geo-alt me-2"></i>Adresse
                             </h6>
-                            <hr class="mt-1">
+                            <hr class="mt-1" style="border-color: #e0e0e0;">
                         </div>
 
                         <!-- Pays -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Pays
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-globe2 me-1"></i>Pays
                                 <i class="bi bi-info-circle text-muted ms-1"
                                    data-bs-toggle="tooltip"
                                    title="Détermine la devise et la TVA pour les devis/factures"></i>
                             </label>
                             {{ form.pays_obj }}
-                            <small class="text-muted" id="devise-info">
-                                Détermine la devise et la TVA
-                            </small>
+                            <small class="text-muted" id="devise-info">Détermine la devise et la TVA</small>
                         </div>
 
                         <!-- Province / État -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Province / État / Région
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-map me-1"></i>Province / État / Région
                             </label>
                             {{ form.province }}
                             <small class="text-muted">Ex: Québec, Ontario, California...</small>
@@ -124,41 +136,50 @@
 
                         <!-- Ville -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Ville</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-building me-1"></i>Ville
+                            </label>
                             {{ form.ville }}
                         </div>
 
                         <!-- Code postal -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Code postal</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-envelope me-1"></i>Code postal
+                            </label>
                             {{ form.code_postal }}
                         </div>
 
                         <!-- Adresse complète -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Adresse complète</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-house me-1"></i>Adresse complète
+                            </label>
                             {{ form.adresse }}
                         </div>
 
                         <!-- Badge devise/TVA détectés -->
                         <div class="col-12" id="pays-badge" style="display:none;">
-                            <div class="alert alert-info py-2 small mb-0">
-                                <i class="bi bi-info-circle me-2"></i>
+                            <div class="alert alert-info py-2 small mb-0" style="border-radius: 12px; background: #e8f0fe; border: none;">
+                                <i class="bi bi-info-circle-fill me-2" style="color: #1e3a5f;"></i>
                                 <span id="pays-badge-text"></span>
                             </div>
                         </div>
 
                     </div>
 
-                    <hr class="my-4">
+                    <hr class="my-4" style="border-color: #e0e0e0;">
 
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-check-lg me-2"></i>{{ bouton }}
-                        </button>
-                        <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary px-4">
-                            <i class="bi bi-x me-2"></i>Annuler
-                        </a>
+                    <div class="d-flex gap-2 justify-content-between flex-wrap">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn px-4 py-2 fw-bold" 
+                                    style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none; border-radius: 10px;">
+                                <i class="bi bi-check-lg me-2"></i>{{ bouton }}
+                            </button>
+                            <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary px-4 py-2">
+                                <i class="bi bi-x me-2"></i>Annuler
+                            </a>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -173,18 +194,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(el => new bootstrap.Tooltip(el));
 
-    const paysSelect  = document.getElementById('id_pays_obj');
-    const deviseInfo  = document.getElementById('devise-info');
-    const paysBadge   = document.getElementById('pays-badge');
+    const paysSelect = document.getElementById('id_pays_obj');
+    const deviseInfo = document.getElementById('devise-info');
+    const paysBadge = document.getElementById('pays-badge');
     const paysBadgeText = document.getElementById('pays-badge-text');
 
     // ── Données pays depuis Django (devise + TVA)
     const paysData = {
         {% for pays in pays_list %}
         '{{ pays.id }}': {
-            'nom':    '{{ pays.nom }}',
+            'nom': '{{ pays.nom }}',
             'devise': '{{ pays.symbole_devise }}',
-            'tva':    {{ pays.types_taxe.first.taux_par_defaut|default:0 }},
+            'tva': {{ pays.types_taxe.first.taux_par_defaut|default:0 }},
             'type_taxe': '{% if pays.types_taxe.first %}{{ pays.types_taxe.first.code }}{% endif %}',
         },
         {% endfor %}
@@ -194,24 +215,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const paysId = paysSelect.value;
 
         if (!paysId) {
-            deviseInfo.textContent  = 'Détermine la devise et la TVA';
-            paysBadge.style.display = 'none';
+            if (deviseInfo) deviseInfo.textContent = 'Détermine la devise et la TVA';
+            if (paysBadge) paysBadge.style.display = 'none';
             return;
         }
 
         const pays = paysData[paysId];
         if (!pays) return;
 
-        deviseInfo.textContent = `${pays.nom} — ${pays.devise}`;
+        if (deviseInfo) deviseInfo.textContent = `${pays.nom} — ${pays.devise}`;
 
-        if (pays.tva > 0) {
-            paysBadge.style.display  = 'block';
-            paysBadgeText.textContent =
-                `Devise : ${pays.devise}  |  ${pays.type_taxe} : ${pays.tva}%  — utilisés dans les devis/factures`;
-        } else {
-            paysBadge.style.display  = 'block';
-            paysBadgeText.textContent =
-                `Devise : ${pays.devise} — utilisée dans les devis/factures`;
+        if (paysBadge && paysBadgeText) {
+            paysBadge.style.display = 'block';
+            if (pays.tva > 0) {
+                paysBadgeText.textContent = `💱 Devise : ${pays.devise}  |  📊 ${pays.type_taxe} : ${pays.tva}%  — utilisés dans les devis/factures`;
+            } else {
+                paysBadgeText.textContent = `💱 Devise : ${pays.devise} — utilisée dans les devis/factures`;
+            }
         }
     }
 
@@ -223,13 +243,115 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Style des champs de formulaire */
+.form-control, .form-select, .input-group-text {
+    border: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Style des labels */
+.form-label {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+/* Style de l'indicatif */
 #id_indicatif {
     min-width: 200px;
-    border-radius: 0.375rem 0 0 0.375rem;
+    border-radius: 8px 0 0 8px;
+    border-right: none;
 }
+
 #id_telephone {
-    border-radius: 0 0.375rem 0.375rem 0;
+    border-radius: 0 8px 8px 0;
 }
-.input-group { flex-wrap: nowrap; }
+
+.input-group {
+    flex-wrap: nowrap;
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Badge info */
+.alert-info {
+    background-color: #e8f0fe;
+    border: none;
+    color: #1e3a5f;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    .form-label {
+        font-size: 0.85rem;
+    }
+    .d-flex.gap-2.justify-content-between {
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+    .d-flex.gap-2.justify-content-between > div {
+        width: 100%;
+    }
+    .d-flex.gap-2.justify-content-between .btn {
+        flex: 1;
+    }
+    #id_indicatif {
+        min-width: 150px;
+    }
+}
+
+@media (max-width: 575px) {
+    .row.g-4 > [class*="col-"] {
+        width: 100%;
+    }
+    .input-group {
+        flex-wrap: wrap;
+    }
+    .input-group .form-control {
+        width: 100%;
+        border-radius: 8px !important;
+        margin-top: 5px;
+    }
+    .input-group .input-group-text {
+        width: 100%;
+        border-radius: 8px !important;
+        justify-content: center;
+    }
+    #id_indicatif {
+        width: 100%;
+        border-radius: 8px !important;
+        border-right: 1px solid #e0e0e0;
+    }
+}
 </style>
 {% endblock %}

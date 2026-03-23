@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}{{ u.get_full_name }} — Admin{% endblock %}
+{% load static %}
+
+{% block title %}{{ u.get_full_name }} — Administration{% endblock %}
 {% block page_title %}⚙️ {{ u.get_full_name|default:u.username }}{% endblock %}
 
 {% block content %}
@@ -8,67 +10,79 @@
 <div class="row g-4 mb-4">
 
     <!-- Carte infos utilisateur -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center p-4">
-                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
-                     style="width:70px;height:70px;font-size:1.5rem;">
-                    {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width: 90px; height: 90px; background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+                    <span class="text-white fs-1 fw-bold">
+                        {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                    </span>
                 </div>
-                <h5 class="fw-bold">{{ u.get_full_name|default:u.username }}</h5>
+                <h5 class="fw-bold mb-1" style="color: #1e3a5f;">{{ u.get_full_name|default:u.username }}</h5>
                 <div class="text-muted small mb-2">@{{ u.username }}</div>
                 <div class="mb-3">
                     {% if u.is_superuser %}
-                        <span class="badge bg-warning text-dark">Administrateur</span>
+                        <span class="badge" style="background: #ffc107; color: #1e3a5f;">Administrateur</span>
                     {% elif u.is_active %}
-                        <span class="badge bg-success">Actif</span>
+                        <span class="badge" style="background: #2d6a9f; color: white;">Actif</span>
                     {% else %}
                         <span class="badge bg-danger">Inactif</span>
                     {% endif %}
                 </div>
-                <div class="text-muted small">
-                    <i class="bi bi-envelope me-1"></i>{{ u.email }}<br>
-                    <i class="bi bi-calendar me-1"></i>Inscrit le {{ u.date_joined|date:"d/m/Y" }}<br>
-                    <i class="bi bi-clock me-1"></i>Dernière connexion :
-                    {% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}Jamais{% endif %}
+                <div class="text-muted small text-start">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-envelope" style="color: #1e3a5f;"></i>
+                        <span>{{ u.email|default:"Non renseigné" }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-calendar" style="color: #1e3a5f;"></i>
+                        <span>Inscrit le {{ u.date_joined|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock" style="color: #1e3a5f;"></i>
+                        <span>Dernière connexion :
+                            {% if u.last_login %}{{ u.last_login|date:"d/m/Y H:i" }}{% else %}Jamais{% endif %}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Stats utilisateur -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-bar-chart me-2 text-primary"></i>Statistiques
+                <h6 class="fw-bold mb-3" style="color: #1e3a5f;">
+                    <i class="bi bi-bar-chart me-2" style="color: #1e3a5f;"></i>Statistiques
                 </h6>
-                <div class="d-flex justify-content-between py-2 border-bottom">
+                <div class="d-flex justify-content-between py-2 border-bottom" style="border-color: #e0e0e0 !important;">
                     <span class="text-muted">Clients</span>
-                    <span class="fw-semibold">{{ nb_clients }}</span>
+                    <span class="fw-semibold" style="color: #344e65;">{{ nb_clients }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
+                <div class="d-flex justify-content-between py-2 border-bottom" style="border-color: #e0e0e0 !important;">
                     <span class="text-muted">Devis</span>
-                    <span class="fw-semibold">{{ nb_devis }}</span>
+                    <span class="fw-semibold" style="color: #344e65;">{{ nb_devis }}</span>
                 </div>
-                <div class="d-flex justify-content-between py-2 border-bottom">
+                <div class="d-flex justify-content-between py-2 border-bottom" style="border-color: #e0e0e0 !important;">
                     <span class="text-muted">Factures</span>
-                    <span class="fw-semibold">{{ nb_factures }}</span>
+                    <span class="fw-semibold" style="color: #344e65;">{{ nb_factures }}</span>
                 </div>
                 <div class="d-flex justify-content-between py-2">
                     <span class="text-muted">CA total</span>
-                    <span class="fw-bold text-primary">{{ ca_user|floatformat:0 }}</span>
+                    <span class="fw-bold" style="color: #2d6a9f;">{{ ca_user|floatformat:0 }} FCFA</span>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Actions -->
-    <div class="col-md-4">
+    <div class="col-12 col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-lightning me-2 text-warning"></i>Actions
+                <h6 class="fw-bold mb-3" style="color: #344e65;">
+                    <i class="bi bi-lightning me-2" style="color: #ffc107;"></i>Actions
                 </h6>
                 <div class="d-grid gap-2">
                     {% if not u.is_superuser %}
@@ -105,7 +119,8 @@
 
                     <!-- Supprimer -->
                     <a href="{% url 'admin_supprimer_user' u.pk %}"
-                       class="btn btn-danger">
+                       class="btn btn-danger"
+                       onclick="return confirm('Supprimer définitivement le compte de {{ u.get_full_name|default:u.username }} ?')">
                         <i class="bi bi-trash me-2"></i>Supprimer le compte
                     </a>
                     {% endif %}
@@ -117,41 +132,55 @@
 
 <!-- Derniers devis -->
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <h6 class="fw-bold mb-3">
-            <i class="bi bi-file-text me-2 text-primary"></i>
+    <div class="card-header bg-white border-0 pt-4">
+        <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+            <i class="bi bi-file-text me-2" style="color: #1e3a5f;"></i>
             Devis ({{ nb_devis }})
         </h6>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-sm table-hover">
-                <thead class="table-light">
-                    <tr>
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light" style="background: #f8f9fa;">
+                    <tr style="color: #1e3a5f;">
                         <th>Numéro</th>
                         <th>Client</th>
                         <th>Total TTC</th>
                         <th>Statut</th>
                         <th>Date</th>
-                    </tr>
+                     </tr>
                 </thead>
                 <tbody>
                     {% for d in devis|slice:":10" %}
                     <tr>
-                        <td>{{ d.numero }}</td>
-                        <td>{{ d.client.nom }}</td>
-                        <td>{{ d.calculer_total_ttc|floatformat:0 }}</td>
-                        <td>
+                        <td data-label="Numéro">
+                            <a href="{% url 'detail_devis' d.pk %}" 
+                               class="text-decoration-none fw-semibold" style="color: #1e3a5f;">
+                                {{ d.numero }}
+                            </a>
+                        </td>
+                        <td data-label="Client">{{ d.client.nom }}</td>
+                        <td data-label="Total TTC" class="fw-semibold" style="color: #2d6a9f;">
+                            {{ d.calculer_total_ttc|floatformat:0 }} FCFA
+                        </td>
+                        <td data-label="Statut">
                             {% if d.statut == 'en_attente' %}
-                                <span class="badge bg-secondary">En attente</span>
+                                <span class="badge" style="background: #344e65; color: white;">En attente</span>
                             {% elif d.statut == 'accepte' %}
-                                <span class="badge bg-success">Accepté</span>
+                                <span class="badge" style="background: #2d6a9f; color: white;">Accepté</span>
                             {% else %}
                                 <span class="badge bg-danger">Refusé</span>
                             {% endif %}
                         </td>
-                        <td class="small text-muted">{{ d.date_creation|date:"d/m/Y" }}</td>
+                        <td data-label="Date" class="small text-muted">{{ d.date_creation|date:"d/m/Y" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="text-center text-muted">Aucun devis</td></tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-file-text fs-4 d-block mb-2"></i>
+                            Aucun devis
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -161,41 +190,55 @@
 
 <!-- Dernières factures -->
 <div class="card border-0 shadow-sm">
-    <div class="card-body">
-        <h6 class="fw-bold mb-3">
-            <i class="bi bi-receipt me-2 text-success"></i>
+    <div class="card-header bg-white border-0 pt-4">
+        <h6 class="fw-bold mb-0" style="color: #2d6a9f;">
+            <i class="bi bi-receipt me-2" style="color: #2d6a9f;"></i>
             Factures ({{ nb_factures }})
         </h6>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-sm table-hover">
-                <thead class="table-light">
-                    <tr>
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light" style="background: #f8f9fa;">
+                    <tr style="color: #1e3a5f;">
                         <th>Numéro</th>
                         <th>Client</th>
                         <th>Total TTC</th>
                         <th>Statut</th>
                         <th>Date</th>
-                    </tr>
+                     </tr>
                 </thead>
                 <tbody>
                     {% for f in factures|slice:":10" %}
                     <tr>
-                        <td>{{ f.numero }}</td>
-                        <td>{{ f.client.nom }}</td>
-                        <td>{{ f.calculer_total_ttc|floatformat:0 }}</td>
-                        <td>
+                        <td data-label="Numéro">
+                            <a href="{% url 'detail_facture' f.pk %}" 
+                               class="text-decoration-none fw-semibold" style="color: #2d6a9f;">
+                                {{ f.numero }}
+                            </a>
+                        </td>
+                        <td data-label="Client">{{ f.client.nom }}</td>
+                        <td data-label="Total TTC" class="fw-semibold" style="color: #2d6a9f;">
+                            {{ f.calculer_total_ttc|floatformat:0 }} FCFA
+                        </td>
+                        <td data-label="Statut">
                             {% if f.statut == 'non_payee' %}
                                 <span class="badge bg-danger">Non payée</span>
                             {% elif f.statut == 'payee' %}
-                                <span class="badge bg-success">Payée</span>
+                                <span class="badge" style="background: #2d6a9f; color: white;">Payée</span>
                             {% else %}
                                 <span class="badge bg-secondary">Annulée</span>
                             {% endif %}
                         </td>
-                        <td class="small text-muted">{{ f.date_creation|date:"d/m/Y" }}</td>
+                        <td data-label="Date" class="small text-muted">{{ f.date_creation|date:"d/m/Y" }}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="text-center text-muted">Aucune facture</td></tr>
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-receipt fs-4 d-block mb-2"></i>
+                            Aucune facture
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -203,9 +246,104 @@
     </div>
 </div>
 
-<div class="mt-3">
+<div class="mt-4">
     <a href="{% url 'admin_liste_users' %}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-2"></i>Retour à la liste
     </a>
 </div>
+
+<style>
+/* Style des cartes */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Animation */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* Boutons */
+.btn {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+}
+
+/* Ajustements petits écrans */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    .card-header {
+        padding: 1rem !important;
+    }
+    .d-grid.gap-2 {
+        gap: 0.5rem !important;
+    }
+}
+</style>
 {% endblock %}

@@ -15,31 +15,33 @@
 <input type="hidden" name="taux_taxe" id="id_taux_taxe" value="{{ form.taux_taxe.value|default:'0' }}">
 
 <div class="row g-4">
-    <div class="col-md-8">
+    <div class="col-12 col-lg-8">
 
         <!-- INFOS GÉNÉRALES -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-info-circle me-2 text-primary"></i>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-info-circle me-2" style="color: #1e3a5f;"></i>
                     Informations générales
                 </h6>
+            </div>
+            <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Client <span class="text-danger">*</span>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-person me-1"></i>Client <span class="text-danger">*</span>
                         </label>
                         {{ form.client }}
-                        <div id="client-info" class="mt-1 d-none">
-                            <span class="badge bg-info text-dark" id="client-devise-badge"></span>
-                            <span class="badge bg-secondary ms-1" id="client-pays-badge"></span>
+                        <div id="client-info" class="mt-2 d-none">
+                            <span class="badge" id="client-devise-badge" style="background: #2d6a9f;"></span>
+                            <span class="badge ms-1" id="client-pays-badge" style="background: #344e65;"></span>
                         </div>
                     </div>
 
                     <!-- Dropdown taxes -->
-                    <div class="col-md-6" id="taxe-client-container" style="display:none;">
-                        <label class="form-label fw-semibold">
-                            Type de taxe
+                    <div class="col-12 col-md-6" id="taxe-client-container" style="display:none;">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-receipt me-1"></i>Type de taxe
                             <i class="bi bi-info-circle text-muted ms-1"
                                data-bs-toggle="tooltip"
                                title="Sélectionnez la taxe applicable selon le pays du client"></i>
@@ -50,18 +52,22 @@
                         <small class="text-muted" id="taxe-client-info"></small>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">
-                            Date d'échéance <span class="text-danger">*</span>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-calendar-check me-1"></i>Échéance <span class="text-danger">*</span>
                         </label>
                         {{ form.date_echeance }}
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Statut</label>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-tag me-1"></i>Statut
+                        </label>
                         {{ form.statut }}
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Notes</label>
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-pencil-square me-1"></i>Notes
+                        </label>
                         {{ form.notes }}
                     </div>
                 </div>
@@ -69,32 +75,33 @@
         </div>
 
         <!-- LIGNES PRODUITS -->
-        <div class="card">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-list-ul me-2 text-primary"></i>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-list-ul me-2" style="color: #1e3a5f;"></i>
                     Produits / Services
                 </h6>
-
+            </div>
+            <div class="card-body">
                 {{ formset.management_form }}
 
-                <div class="alert alert-info small d-flex align-items-center gap-2" id="debug-info">
-                    <i class="bi bi-info-circle"></i>
+                <div class="alert alert-info small d-flex align-items-center gap-2" id="debug-info" style="border-radius: 12px; background: #e8f0fe; border: none;">
+                    <i class="bi bi-info-circle-fill" style="color: #1e3a5f;"></i>
                     <span>Sélectionnez un client puis un produit</span>
                 </div>
 
                 <div class="table-responsive">
                     <table class="table align-middle" id="tableau-lignes">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:28%">Produit</th>
-                                <th style="width:22%">Description</th>
-                                <th style="width:9%">Qté</th>
+                        <thead class="bg-light" style="background: #f8f9fa;">
+                            <tr style="color: #1e3a5f;">
+                                <th style="width:30%">Produit</th>
+                                <th style="width:20%">Description</th>
+                                <th style="width:10%">Qté</th>
                                 <th style="width:18%">Prix HT</th>
-                                <th style="width:8%">TVA%</th>
-                                <th style="width:11%">Total TTC</th>
-                                <th style="width:4%"></th>
-                            </tr>
+                                <th style="width:10%">TVA%</th>
+                                <th style="width:10%">Total TTC</th>
+                                <th style="width:2%"></th>
+                             </tr>
                         </thead>
                         <tbody id="lignes-body">
 
@@ -102,9 +109,9 @@
                             {# ── MODE MODIFICATION ── #}
                             {% for ligne in lignes_existantes %}
                             <tr class="ligne-row" id="row-{{ forloop.counter0 }}">
-                                <td>
+                                <td data-label="Produit">
                                     <select name="lignes-{{ forloop.counter0 }}-produit"
-                                            class="form-select select-produit"
+                                            class="form-select form-select-sm select-produit"
                                             id="id_lignes-{{ forloop.counter0 }}-produit"
                                             data-row="{{ forloop.counter0 }}">
                                         <option value="">--- Sélectionnez ---</option>
@@ -118,27 +125,27 @@
                                                 data-pays-code="{{ produit.pays.code|default:'' }}"
                                                 data-type-taxe="{{ produit.description_taxe|default:'' }}"
                                                 {% if ligne.produit_id == produit.id %}selected{% endif %}>
-                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }} (TVA {{ produit.taux_tva }}%)
+                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }}
                                         </option>
                                         {% endfor %}
                                     </select>
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Description">
                                     <input type="text"
                                            name="lignes-{{ forloop.counter0 }}-description"
                                            value="{{ ligne.description }}"
                                            class="form-control form-control-sm description-input"
                                            placeholder="Description">
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Qté">
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-quantite"
                                            value="{{ ligne.quantite|stringformat:'g' }}"
                                            class="form-control form-control-sm quantite-input"
                                            step="0.01" min="0"
                                            onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Prix HT">
                                     <div class="input-group input-group-sm">
                                         <input type="number"
                                                name="lignes-{{ forloop.counter0 }}-prix_unitaire"
@@ -151,36 +158,35 @@
                                         </span>
                                     </div>
                                     <small class="text-warning devise-warning d-none"></small>
-                                </td>
-                                <td>
-                                    {# ✅ readonly supprimé — TVA modifiable #}
+                                 </td>
+                                <td data-label="TVA%">
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-tva"
                                            value="{{ ligne.tva|stringformat:'g' }}"
                                            class="form-control form-control-sm tva-input"
                                            step="0.01" min="0"
                                            onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-                                </td>
-                                <td>
-                                    <span class="ligne-ttc fw-semibold text-primary small">
+                                 </td>
+                                <td data-label="Total TTC">
+                                    <span class="ligne-ttc fw-semibold" style="color: #2d6a9f;">
                                         {{ ligne.total_ttc|floatformat:0 }} {% if ligne.produit %}{{ ligne.produit.devise_symbole }}{% else %}FCFA{% endif %}
                                     </span>
-                                </td>
+                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne" title="Supprimer">
                                         <i class="bi bi-trash"></i>
                                     </button>
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                             {% endfor %}
 
                         {% else %}
                             {# ── MODE CRÉATION ── #}
                             {% for ligne_form in formset %}
                             <tr class="ligne-row" id="row-{{ forloop.counter0 }}">
-                                <td>
+                                <td data-label="Produit">
                                     <select name="lignes-{{ forloop.counter0 }}-produit"
-                                            class="form-select select-produit"
+                                            class="form-select form-select-sm select-produit"
                                             id="id_lignes-{{ forloop.counter0 }}-produit"
                                             data-row="{{ forloop.counter0 }}">
                                         <option value="">--- Sélectionnez ---</option>
@@ -193,27 +199,27 @@
                                                 data-devise="{{ produit.devise_symbole }}"
                                                 data-pays-code="{{ produit.pays.code|default:'' }}"
                                                 data-type-taxe="{{ produit.description_taxe|default:'' }}">
-                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }} (TVA {{ produit.taux_tva }}%)
+                                            {{ produit.nom }} — {{ produit.prix_ht }} {{ produit.devise_symbole }}
                                         </option>
                                         {% endfor %}
                                     </select>
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Description">
                                     <input type="text"
                                            name="lignes-{{ forloop.counter0 }}-description"
                                            value=""
                                            class="form-control form-control-sm description-input"
                                            placeholder="Description">
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Qté">
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-quantite"
                                            value="1"
                                            class="form-control form-control-sm quantite-input"
                                            step="0.01" min="0"
                                            onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-                                </td>
-                                <td>
+                                 </td>
+                                <td data-label="Prix HT">
                                     <div class="input-group input-group-sm">
                                         <input type="number"
                                                name="lignes-{{ forloop.counter0 }}-prix_unitaire"
@@ -224,33 +230,32 @@
                                         <span class="input-group-text devise-symbole bg-light">FCFA</span>
                                     </div>
                                     <small class="text-warning devise-warning d-none"></small>
-                                </td>
-                                <td>
-                                    {# ✅ readonly supprimé — TVA modifiable #}
+                                 </td>
+                                <td data-label="TVA%">
                                     <input type="number"
                                            name="lignes-{{ forloop.counter0 }}-tva"
                                            value="0"
                                            class="form-control form-control-sm tva-input"
                                            step="0.01" min="0"
                                            onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-                                </td>
-                                <td>
-                                    <span class="ligne-ttc fw-semibold text-primary small">0 FCFA</span>
-                                </td>
+                                 </td>
+                                <td data-label="Total TTC">
+                                    <span class="ligne-ttc fw-semibold" style="color: #2d6a9f;">0 FCFA</span>
+                                 </td>
                                 <td class="text-center">
                                     {% if ligne_form.DELETE %}
                                         <div style="display:none">{{ ligne_form.DELETE }}</div>
                                     {% endif %}
-                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne" title="Supprimer">
                                         <i class="bi bi-trash"></i>
                                     </button>
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                             {% endfor %}
                         {% endif %}
 
                         </tbody>
-                    </table>
+                     </table>
                 </div>
 
                 <div class="d-flex gap-2 mt-3">
@@ -265,16 +270,17 @@
         </div>
     </div>
 
-    <!-- RÉSUMÉ -->
-    <div class="col-md-4">
-        <div class="card sticky-top" style="top: 80px;">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-calculator me-2 text-primary"></i>
+    <!-- RÉSUMÉ STICKY -->
+    <div class="col-12 col-lg-4">
+        <div class="card sticky-top shadow-sm" style="top: 80px; border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-calculator me-2" style="color: #1e3a5f;"></i>
                     Résumé
                 </h6>
-
-                <div id="resume-client" class="alert alert-light py-2 small d-none mb-3">
+            </div>
+            <div class="card-body">
+                <div id="resume-client" class="alert alert-light py-2 small d-none mb-3" style="border-radius: 12px;">
                     <i class="bi bi-person me-1"></i>
                     <span id="resume-client-text"></span>
                 </div>
@@ -287,17 +293,18 @@
                     <span class="text-muted" id="label-tva">TVA</span>
                     <span id="total-tva" class="fw-semibold">0 FCFA</span>
                 </div>
-                <hr>
+                <hr class="my-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-bold fs-5">Total TTC</span>
-                    <span id="total-ttc" class="fw-bold fs-5 text-primary">0 FCFA</span>
+                    <span id="total-ttc" class="fw-bold fs-5" style="color: #2d6a9f;">0 FCFA</span>
                 </div>
 
-                <hr>
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                <hr class="my-3">
+                <button type="submit" class="btn w-100 py-2 fw-bold mb-2" 
+                        style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none; border-radius: 10px;">
                     <i class="bi bi-check-lg me-2"></i>{{ bouton }}
                 </button>
-                <a href="{% url 'liste_factures' %}" class="btn btn-outline-secondary w-100 mt-2">
+                <a href="{% url 'liste_factures' %}" class="btn btn-outline-secondary w-100" style="border-radius: 10px;">
                     Annuler
                 </a>
             </div>
@@ -329,81 +336,117 @@ function chargerInfosClient(clientId, callback) {
             typeTaxeClient = data.type_taxe || 'TVA';
             deviseGlobale  = deviseClient;
 
-            document.getElementById('client-info').classList.remove('d-none');
-            document.getElementById('client-devise-badge').textContent = `💱 ${deviseClient}`;
-            document.getElementById('client-pays-badge').textContent   = data.pays_nom || '';
+            const clientInfo = document.getElementById('client-info');
+            if (clientInfo) clientInfo.classList.remove('d-none');
+            const deviseBadge = document.getElementById('client-devise-badge');
+            if (deviseBadge) deviseBadge.textContent = `💱 ${deviseClient}`;
+            const paysBadge = document.getElementById('client-pays-badge');
+            if (paysBadge) paysBadge.textContent = data.pays_nom || '';
 
-            document.getElementById('resume-client').classList.remove('d-none');
-            document.getElementById('resume-client-text').textContent =
-                `${data.pays_nom} — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+            const resumeClient = document.getElementById('resume-client');
+            const resumeText = document.getElementById('resume-client-text');
+            if (resumeClient && resumeText) {
+                resumeClient.classList.remove('d-none');
+                resumeText.textContent = `${data.pays_nom} — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+            }
 
             const taxeContainer = document.getElementById('taxe-client-container');
-            const selectTaxe    = document.getElementById('select-taxe-client');
-            const taxeInfo      = document.getElementById('taxe-client-info');
+            const selectTaxe = document.getElementById('select-taxe-client');
+            const taxeInfo = document.getElementById('taxe-client-info');
 
-            taxeContainer.style.display = 'block';
-            selectTaxe.innerHTML = '<option value="">-- Choisir la taxe --</option>';
-
-            if (data.taxes && data.taxes.length > 0) {
-                data.taxes.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value        = t.taux_defaut;
-                    opt.dataset.code = t.code;
-                    opt.dataset.nom  = t.nom;
-                    opt.textContent  = `${t.nom} (${t.code}) — ${t.taux_defaut}%`;
-                    selectTaxe.appendChild(opt);
-                });
-                taxeInfo.textContent = `${data.taxes.length} taxe(s) pour ${data.pays_nom}`;
-
-                if (data.taxes.length === 1) {
-                    selectTaxe.selectedIndex = 1;
-                    appliquerTaxeSelectionnee();
-                } else if (tauxTvaClient > 0) {
-                    for (let i = 1; i < selectTaxe.options.length; i++) {
-                        if (parseFloat(selectTaxe.options[i].value) === tauxTvaClient) {
-                            selectTaxe.selectedIndex = i;
-                            appliquerTaxeSelectionnee();
-                            break;
-                        }
+            if (taxeContainer) taxeContainer.style.display = 'block';
+            if (selectTaxe) {
+                selectTaxe.innerHTML = '<option value="">-- Choisir la taxe --</option>';
+                if (data.taxes && data.taxes.length > 0) {
+                    data.taxes.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.taux_defaut;
+                        opt.dataset.code = t.code;
+                        opt.dataset.nom = t.nom;
+                        opt.textContent = `${t.nom} (${t.code}) — ${t.taux_defaut}%`;
+                        selectTaxe.appendChild(opt);
+                    });
+                    if (taxeInfo) taxeInfo.textContent = `${data.taxes.length} taxe(s) pour ${data.pays_nom}`;
+                    if (data.taxes.length === 1 && selectTaxe.options[1]) {
+                        selectTaxe.selectedIndex = 1;
+                        appliquerTaxeSelectionnee();
                     }
-                }
-            } else {
-                if (tauxTvaClient > 0) {
+                } else if (tauxTvaClient > 0) {
                     const opt = document.createElement('option');
-                    opt.value        = tauxTvaClient;
+                    opt.value = tauxTvaClient;
                     opt.dataset.code = typeTaxeClient;
-                    opt.dataset.nom  = typeTaxeClient;
-                    opt.textContent  = `${typeTaxeClient} — ${tauxTvaClient}%`;
-                    opt.selected     = true;
+                    opt.dataset.nom = typeTaxeClient;
+                    opt.textContent = `${typeTaxeClient} — ${tauxTvaClient}%`;
+                    opt.selected = true;
                     selectTaxe.appendChild(opt);
-                    taxeInfo.textContent = `Taxe pour ${data.pays_nom}`;
+                    if (taxeInfo) taxeInfo.textContent = `Taxe pour ${data.pays_nom}`;
                     appliquerTaxeSelectionnee();
-                } else {
+                } else if (taxeContainer) {
                     taxeContainer.style.display = 'none';
                 }
             }
 
-            document.getElementById('label-tva').textContent  = typeTaxeClient;
-            document.getElementById('id_pays').value          = paysClient;
-            document.getElementById('id_type_taxe').value     = typeTaxeClient;
-            document.getElementById('id_taux_taxe').value     = tauxTvaClient;
+            const labelTva = document.getElementById('label-tva');
+            if (labelTva) labelTva.textContent = typeTaxeClient;
+            
+            const idPays = document.getElementById('id_pays');
+            const idTypeTaxe = document.getElementById('id_type_taxe');
+            const idTauxTaxe = document.getElementById('id_taux_taxe');
+            if (idPays) idPays.value = paysClient;
+            if (idTypeTaxe) idTypeTaxe.value = typeTaxeClient;
+            if (idTauxTaxe) idTauxTaxe.value = tauxTvaClient;
 
             document.querySelectorAll('.devise-symbole').forEach(s => s.textContent = deviseClient);
 
-            document.getElementById('debug-info').innerHTML =
-                `<i class="bi bi-check-circle me-1 text-success"></i>
-                 Client : <strong>${data.nom}</strong> — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+            const debugInfo = document.getElementById('debug-info');
+            if (debugInfo) {
+                debugInfo.innerHTML = `<i class="bi bi-check-circle-fill me-1" style="color: #1e3a5f;"></i>
+                     Client : <strong>${data.nom}</strong> — ${deviseClient} — ${typeTaxeClient} ${tauxTvaClient}%`;
+            }
 
             if (callback) callback();
         })
         .catch(err => console.error('Erreur API client:', err));
 }
 
+function appliquerTaxeSelectionnee() {
+    const sel = document.getElementById('select-taxe-client');
+    if (!sel || !sel.value) return;
+    const taux = parseFloat(sel.value) || 0;
+    const opt = sel.options[sel.selectedIndex];
+    tauxTvaClient = taux;
+    typeTaxeClient = opt?.dataset?.code || 'TVA';
+
+    const idTauxTaxe = document.getElementById('id_taux_taxe');
+    const idTypeTaxe = document.getElementById('id_type_taxe');
+    const labelTva = document.getElementById('label-tva');
+    const taxeInfo = document.getElementById('taxe-client-info');
+    
+    if (idTauxTaxe) idTauxTaxe.value = taux;
+    if (idTypeTaxe) idTypeTaxe.value = typeTaxeClient;
+    if (labelTva) labelTva.textContent = `${opt?.dataset?.nom || typeTaxeClient} (${typeTaxeClient})`;
+    if (taxeInfo) taxeInfo.textContent = `✅ ${taux}% appliqué — modifiable ligne par ligne`;
+
+    document.querySelectorAll('.tva-input').forEach(i => i.value = taux);
+    calculerTotaux();
+}
+
+function resetClientInfo() {
+    deviseClient = deviseGlobale = 'FCFA';
+    tauxTvaClient = 0;
+    const clientInfo = document.getElementById('client-info');
+    const resumeClient = document.getElementById('resume-client');
+    const taxeContainer = document.getElementById('taxe-client-container');
+    if (clientInfo) clientInfo.classList.add('d-none');
+    if (resumeClient) resumeClient.classList.add('d-none');
+    if (taxeContainer) taxeContainer.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(el => new bootstrap.Tooltip(el));
 
-    const nbLignes   = document.querySelectorAll('#lignes-body tr.ligne-row').length;
+    const nbLignes = document.querySelectorAll('#lignes-body tr.ligne-row').length;
     const totalForms = document.querySelector('#id_lignes-TOTAL_FORMS');
     if (totalForms && nbLignes > 0) totalForms.value = nbLignes;
 
@@ -418,7 +461,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const clientSelectEl = document.getElementById('id_client');
 if (clientSelectEl) {
     clientSelectEl.addEventListener('change', function() {
-        if (!this.value) { resetClientInfo(); return; }
+        if (!this.value) { resetClientInfo(); calculerTotaux(); return; }
         chargerInfosClient(this.value, calculerTotaux);
     });
 }
@@ -426,69 +469,61 @@ if (clientSelectEl) {
 const selectTaxeClient = document.getElementById('select-taxe-client');
 if (selectTaxeClient) selectTaxeClient.addEventListener('change', appliquerTaxeSelectionnee);
 
-function appliquerTaxeSelectionnee() {
-    const sel = document.getElementById('select-taxe-client');
-    if (!sel || !sel.value) return;
-    const taux = parseFloat(sel.value) || 0;
-    const opt  = sel.options[sel.selectedIndex];
-    tauxTvaClient  = taux;
-    typeTaxeClient = opt.dataset.code || 'TVA';
-
-    document.getElementById('id_taux_taxe').value    = taux;
-    document.getElementById('id_type_taxe').value    = typeTaxeClient;
-    document.getElementById('label-tva').textContent = `${opt.dataset.nom} (${typeTaxeClient})`;
-    document.getElementById('taxe-client-info').textContent = `✅ ${taux}% appliqué — modifiable ligne par ligne`;
-
-    document.querySelectorAll('.tva-input').forEach(i => i.value = taux);
-    calculerTotaux();
-}
-
-function resetClientInfo() {
-    deviseClient = deviseGlobale = 'FCFA';
-    tauxTvaClient = 0;
-    document.getElementById('client-info').classList.add('d-none');
-    document.getElementById('resume-client').classList.add('d-none');
-    document.getElementById('taxe-client-container').style.display = 'none';
-}
-
 document.addEventListener('change', function(e) {
     if (!e.target.classList.contains('select-produit')) return;
     const select = e.target;
     const option = select.options[select.selectedIndex];
-    const row    = select.closest('tr');
+    const row = select.closest('tr');
 
     if (!option || !option.value) {
-        row.querySelector('.prix-unitaire').value        = '0';
-        row.querySelector('.tva-input').value            = tauxTvaClient || '0';
-        row.querySelector('.description-input').value   = '';
-        row.querySelector('.devise-symbole').textContent = deviseClient;
-        row.querySelector('.ligne-ttc').textContent      = '0 ' + deviseClient;
-        row.querySelector('.devise-warning').classList.add('d-none');
+        const prixInput = row.querySelector('.prix-unitaire');
+        const tvaInput = row.querySelector('.tva-input');
+        const descInput = row.querySelector('.description-input');
+        const deviseSpan = row.querySelector('.devise-symbole');
+        const ttcSpan = row.querySelector('.ligne-ttc');
+        if (prixInput) prixInput.value = '0';
+        if (tvaInput) tvaInput.value = tauxTvaClient || '0';
+        if (descInput) descInput.value = '';
+        if (deviseSpan) deviseSpan.textContent = deviseClient;
+        if (ttcSpan) ttcSpan.textContent = '0 ' + deviseClient;
+        row.querySelector('.devise-warning')?.classList.add('d-none');
         calculerTotaux();
         return;
     }
 
-    const prix          = nettoyerNombre(option.dataset.prix);
-    const tvaProduit    = nettoyerNombre(option.dataset.tva);
-    const description   = option.dataset.description || option.dataset.nom || '';
+    const prix = nettoyerNombre(option.dataset.prix);
+    const tvaProduit = nettoyerNombre(option.dataset.tva);
+    const description = option.dataset.description || option.dataset.nom || '';
     const deviseProduit = option.dataset.devise || 'FCFA';
 
-    row.querySelector('.description-input').value    = description;
-    row.querySelector('.quantite-input').value       = '1';
-    row.querySelector('.prix-unitaire').value        = prix;
-    row.querySelector('.tva-input').value            = tauxTvaClient > 0 ? tauxTvaClient : tvaProduit;
-    row.querySelector('.devise-symbole').textContent = deviseClient;
-
+    const descInput = row.querySelector('.description-input');
+    const quantiteInput = row.querySelector('.quantite-input');
+    const prixInput = row.querySelector('.prix-unitaire');
+    const tvaInput = row.querySelector('.tva-input');
+    const deviseSpan = row.querySelector('.devise-symbole');
     const warning = row.querySelector('.devise-warning');
+
+    if (descInput) descInput.value = description;
+    if (quantiteInput) quantiteInput.value = '1';
+    if (prixInput) prixInput.value = prix;
+    if (tvaInput) tvaInput.value = tauxTvaClient > 0 ? tauxTvaClient : tvaProduit;
+    if (deviseSpan) deviseSpan.textContent = deviseClient;
+
     if (deviseProduit !== deviseClient && deviseProduit !== '') {
-        warning.classList.remove('d-none');
-        warning.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Prix en ${deviseProduit} — vérifiez en ${deviseClient}`;
-        row.querySelector('.prix-unitaire').removeAttribute('readonly');
-        row.querySelector('.prix-unitaire').classList.add('border-warning');
+        if (warning) {
+            warning.classList.remove('d-none');
+            warning.innerHTML = `<i class="bi bi-exclamation-triangle"></i> Prix en ${deviseProduit} — vérifiez en ${deviseClient}`;
+        }
+        if (prixInput) {
+            prixInput.removeAttribute('readonly');
+            prixInput.classList.add('border-warning');
+        }
     } else {
-        warning.classList.add('d-none');
-        row.querySelector('.prix-unitaire').setAttribute('readonly', true);
-        row.querySelector('.prix-unitaire').classList.remove('border-warning');
+        if (warning) warning.classList.add('d-none');
+        if (prixInput) {
+            prixInput.setAttribute('readonly', true);
+            prixInput.classList.remove('border-warning');
+        }
     }
     calculerTotaux();
 });
@@ -497,89 +532,186 @@ function calculerTotaux() {
     let totalHT = 0, totalTVA = 0;
     document.querySelectorAll('#lignes-body tr.ligne-row').forEach(row => {
         if (row.style.display === 'none') return;
-        const qte    = parseFloat(row.querySelector('.quantite-input')?.value)  || 0;
-        const pu     = parseFloat(row.querySelector('.prix-unitaire')?.value)   || 0;
-        const tva    = parseFloat(row.querySelector('.tva-input')?.value)       || 0;
+        const qte = parseFloat(row.querySelector('.quantite-input')?.value) || 0;
+        const pu = parseFloat(row.querySelector('.prix-unitaire')?.value) || 0;
+        const tva = parseFloat(row.querySelector('.tva-input')?.value) || 0;
         const devise = (row.querySelector('.devise-symbole')?.textContent || deviseGlobale).trim();
         if (devise) deviseGlobale = devise;
-        const ht = qte * pu, tvaM = ht * tva / 100, ttc = ht + tvaM;
-        totalHT += ht; totalTVA += tvaM;
+        const ht = qte * pu;
+        const tvaM = ht * tva / 100;
+        const ttc = ht + tvaM;
+        totalHT += ht;
+        totalTVA += tvaM;
         const span = row.querySelector('.ligne-ttc');
         if (span) span.textContent = ttc.toLocaleString('fr-FR') + ' ' + devise;
     });
     const ttc = totalHT + totalTVA;
-    document.getElementById('total-ht').textContent  = totalHT.toLocaleString('fr-FR')  + ' ' + deviseGlobale;
-    document.getElementById('total-tva').textContent = totalTVA.toLocaleString('fr-FR') + ' ' + deviseGlobale;
-    document.getElementById('total-ttc').textContent = ttc.toLocaleString('fr-FR')      + ' ' + deviseGlobale;
+    const totalHtSpan = document.getElementById('total-ht');
+    const totalTvaSpan = document.getElementById('total-tva');
+    const totalTtcSpan = document.getElementById('total-ttc');
+    if (totalHtSpan) totalHtSpan.textContent = totalHT.toLocaleString('fr-FR') + ' ' + deviseGlobale;
+    if (totalTvaSpan) totalTvaSpan.textContent = totalTVA.toLocaleString('fr-FR') + ' ' + deviseGlobale;
+    if (totalTtcSpan) totalTtcSpan.textContent = ttc.toLocaleString('fr-FR') + ' ' + deviseGlobale;
 }
 
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.btn-supprimer-ligne')) return;
-    const row = e.target.closest('tr');
+    const btn = e.target.closest('.btn-supprimer-ligne');
+    if (!btn) return;
+    const row = btn.closest('tr');
     const del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
-    if (del) { del.checked = true; row.style.display = 'none'; } else row.remove();
-    document.querySelector('#id_lignes-TOTAL_FORMS').value =
-        document.querySelectorAll('#lignes-body tr.ligne-row').length;
+    if (del) { del.checked = true; row.style.display = 'none'; } 
+    else { row.remove(); }
+    const totalForms = document.querySelector('#id_lignes-TOTAL_FORMS');
+    if (totalForms) totalForms.value = document.querySelectorAll('#lignes-body tr.ligne-row').length;
     calculerTotaux();
 });
 
-document.getElementById('btn-ajouter-ligne').addEventListener('click', function() {
-    const totalForms  = document.querySelector('#id_lignes-TOTAL_FORMS');
-    const index       = parseInt(totalForms.value);
-    const firstSelect = document.querySelector('.select-produit');
-    const optionsHTML = firstSelect ? firstSelect.innerHTML : '<option value="">--- Sélectionnez ---</option>';
+const btnAjouter = document.getElementById('btn-ajouter-ligne');
+if (btnAjouter) {
+    btnAjouter.addEventListener('click', function() {
+        const totalForms = document.querySelector('#id_lignes-TOTAL_FORMS');
+        const index = parseInt(totalForms?.value || 0);
+        const firstSelect = document.querySelector('.select-produit');
+        const optionsHTML = firstSelect ? firstSelect.innerHTML : '<option value="">--- Sélectionnez ---</option>';
 
-    const newRow = document.createElement('tr');
-    newRow.className = 'ligne-row';
-    newRow.id = `row-${index}`;
-    newRow.innerHTML = `
-        <td>
-            <select name="lignes-${index}-produit" class="form-select select-produit"
-                    id="id_lignes-${index}-produit" data-row="${index}">
-                ${optionsHTML}
-            </select>
-        </td>
-        <td><input type="text" name="lignes-${index}-description"
-               class="form-control form-control-sm description-input" placeholder="Description"></td>
-        <td><input type="number" name="lignes-${index}-quantite"
-               class="form-control form-control-sm quantite-input"
-               step="0.01" min="0" value="1"
-               onchange="calculerTotaux()" onkeyup="calculerTotaux()"></td>
-        <td>
-            <div class="input-group input-group-sm">
-                <input type="number" name="lignes-${index}-prix_unitaire"
-                       class="form-control prix-unitaire" step="0.01" min="0" value="0"
+        const newRow = document.createElement('tr');
+        newRow.className = 'ligne-row';
+        newRow.id = `row-${index}`;
+        newRow.innerHTML = `
+            <td data-label="Produit">
+                <select name="lignes-${index}-produit" class="form-select form-select-sm select-produit"
+                        id="id_lignes-${index}-produit" data-row="${index}">
+                    ${optionsHTML}
+                </select>
+             </td>
+            <td data-label="Description">
+                <input type="text" name="lignes-${index}-description"
+                       class="form-control form-control-sm description-input" placeholder="Description">
+             </td>
+            <td data-label="Qté">
+                <input type="number" name="lignes-${index}-quantite"
+                       class="form-control form-control-sm quantite-input"
+                       step="0.01" min="0" value="1"
                        onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-                <span class="input-group-text devise-symbole bg-light">${deviseClient}</span>
-            </div>
-            <small class="text-warning devise-warning d-none"></small>
-        </td>
-        <td>
-            <input type="number" name="lignes-${index}-tva"
-               class="form-control form-control-sm tva-input"
-               step="0.01" min="0" value="${tauxTvaClient}"
-               onchange="calculerTotaux()" onkeyup="calculerTotaux()">
-        </td>
-        <td><span class="ligne-ttc fw-semibold text-primary small">0 ${deviseClient}</span></td>
-        <td class="text-center">
-            <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne">
-                <i class="bi bi-trash"></i>
-            </button>
-        </td>`;
+             </td>
+            <td data-label="Prix HT">
+                <div class="input-group input-group-sm">
+                    <input type="number" name="lignes-${index}-prix_unitaire"
+                           class="form-control prix-unitaire" step="0.01" min="0" value="0"
+                           onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+                    <span class="input-group-text devise-symbole bg-light">${deviseClient}</span>
+                </div>
+                <small class="text-warning devise-warning d-none"></small>
+             </td>
+            <td data-label="TVA%">
+                <input type="number" name="lignes-${index}-tva"
+                       class="form-control form-control-sm tva-input"
+                       step="0.01" min="0" value="${tauxTvaClient}"
+                       onchange="calculerTotaux()" onkeyup="calculerTotaux()">
+             </td>
+            <td data-label="Total TTC">
+                <span class="ligne-ttc fw-semibold" style="color: #2d6a9f;">0 ${deviseClient}</span>
+             </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-supprimer-ligne" title="Supprimer">
+                    <i class="bi bi-trash"></i>
+                </button>
+             </td>`;
 
-    document.getElementById('lignes-body').appendChild(newRow);
-    totalForms.value = index + 1;
-    newRow.querySelector('.select-produit').value = '';
-    calculerTotaux();
-});
+        document.getElementById('lignes-body').appendChild(newRow);
+        if (totalForms) totalForms.value = index + 1;
+        newRow.querySelector('.select-produit').value = '';
+        calculerTotaux();
+    });
+}
 </script>
 
 <style>
+/* Style des champs */
 input[readonly] { background-color: #f8f9fa; }
 .border-warning { border-color: #ffc107 !important; background-color: #fff3cd !important; }
-#total-ht, #total-tva, #total-ttc { transition: all 0.3s ease; }
-/* ✅ Style TVA modifiable */
 .tva-input { background-color: #fff9e6 !important; }
 .tva-input:focus { background-color: #fff3cd !important; }
+
+/* Transitions */
+#total-ht, #total-tva, #total-ttc { transition: all 0.3s ease; }
+
+/* Animation */
+.card { animation: fadeInUp 0.4s ease-out; border-radius: 16px; }
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tooltips personnalisés */
+.tooltip-inner { 
+    max-width: 300px; 
+    padding: 8px 12px; 
+    background-color: #1e3a5f; 
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+    }
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+    .table td .input-group {
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+    }
+    .table td .input-group .form-control {
+        width: auto;
+        text-align: right;
+    }
+}
+
+/* Ajustements petits écrans */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    .form-label {
+        font-size: 0.85rem;
+    }
+    .input-group-sm .form-control, .input-group-sm .input-group-text {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.4rem;
+    }
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
 </style>
 {% endblock %}

@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Administration — Bwana{% endblock %}
+{% load static %}
+
+{% block title %}Administration — Bwana Facturation{% endblock %}
 {% block page_title %}⚙️ Administration{% endblock %}
 
 {% block content %}
 
 <!-- Bannière admin -->
-<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
-    <i class="bi bi-shield-lock-fill fs-4"></i>
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4" style="border-radius: 16px; background: #fff3cd; border: none;">
+    <i class="bi bi-shield-lock-fill fs-4" style="color: #856404;"></i>
     <div>
         <strong>Zone administrateur</strong> — Vous êtes connecté en tant que
         <strong>{{ user.get_full_name|default:user.username }}</strong>.
@@ -17,19 +19,25 @@
 <!-- ✅ ACCÈS RAPIDES -->
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
-        <a href="{% url 'admin_liste_users' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+        <a href="{% url 'admin_liste_users' %}" class="card border-0 shadow-sm text-decoration-none h-100 transition-card">
             <div class="card-body text-center py-3">
-                <i class="bi bi-people-fill fs-2 text-primary mb-2 d-block"></i>
-                <div class="fw-semibold text-dark">Utilisateurs</div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                     style="width: 50px; height: 50px; background: rgba(30, 58, 95, 0.1);">
+                    <i class="bi bi-people-fill fs-3" style="color: #1e3a5f;"></i>
+                </div>
+                <div class="fw-semibold" style="color: #1e3a5f;">Utilisateurs</div>
                 <div class="small text-muted">Gérer les comptes</div>
             </div>
         </a>
     </div>
     <div class="col-6 col-md-3">
-        <a href="{% url 'admin_historique_connexions' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+        <a href="{% url 'admin_historique_connexions' %}" class="card border-0 shadow-sm text-decoration-none h-100 transition-card">
             <div class="card-body text-center py-3">
-                <i class="bi bi-clock-history fs-2 text-info mb-2 d-block"></i>
-                <div class="fw-semibold text-dark">Connexions</div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                     style="width: 50px; height: 50px; background: rgba(45, 106, 159, 0.1);">
+                    <i class="bi bi-clock-history fs-3" style="color: #2d6a9f;"></i>
+                </div>
+                <div class="fw-semibold" style="color: #2d6a9f;">Connexions</div>
                 <div class="small text-muted">
                     {{ connexions_aujourd }} aujourd'hui
                 </div>
@@ -37,10 +45,13 @@
         </a>
     </div>
     <div class="col-6 col-md-3">
-        <a href="{% url 'admin_annonces' %}" class="card border-0 shadow-sm text-decoration-none h-100">
+        <a href="{% url 'admin_annonces' %}" class="card border-0 shadow-sm text-decoration-none h-100 transition-card">
             <div class="card-body text-center py-3">
-                <i class="bi bi-megaphone-fill fs-2 text-success mb-2 d-block"></i>
-                <div class="fw-semibold text-dark">Annonces</div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                     style="width: 50px; height: 50px; background: rgba(52, 78, 101, 0.1);">
+                    <i class="bi bi-megaphone-fill fs-3" style="color: #344e65;"></i>
+                </div>
+                <div class="fw-semibold" style="color: #344e65;">Annonces</div>
                 <div class="small text-muted">
                     {{ nb_annonces }} active{% if nb_annonces != 1 %}s{% endif %}
                 </div>
@@ -49,15 +60,16 @@
     </div>
     <div class="col-6 col-md-3">
         <a href="{% url 'admin_maintenance' %}"
-           class="card border-0 shadow-sm text-decoration-none h-100
-                  {% if maintenance.actif %}border-danger{% endif %}">
+           class="card border-0 shadow-sm text-decoration-none h-100 transition-card {% if maintenance.actif %}border-danger{% endif %}">
             <div class="card-body text-center py-3">
-                <i class="bi bi-tools fs-2 mb-2 d-block
-                   {% if maintenance.actif %}text-danger{% else %}text-secondary{% endif %}"></i>
-                <div class="fw-semibold text-dark">Maintenance</div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                     style="width: 50px; height: 50px; background: {% if maintenance.actif %}rgba(220, 53, 69, 0.1){% else %}rgba(108, 117, 125, 0.1){% endif %};">
+                    <i class="bi bi-tools fs-3" style="color: {% if maintenance.actif %}#dc3545{% else %}#6c757d{% endif %};"></i>
+                </div>
+                <div class="fw-semibold" style="color: {% if maintenance.actif %}#dc3545{% else %}#6c757d{% endif %};">Maintenance</div>
                 <div class="small">
                     {% if maintenance.actif %}
-                        <span class="text-danger fw-bold">● ACTIF</span>
+                        <span class="fw-bold" style="color: #dc3545;">● ACTIF</span>
                     {% else %}
                         <span class="text-muted">Désactivée</span>
                     {% endif %}
@@ -72,10 +84,10 @@
     <div class="col-6 col-md-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body text-center">
-                <div class="fs-1 fw-bold text-primary">{{ nb_users }}</div>
+                <div class="fs-1 fw-bold" style="color: #1e3a5f;">{{ nb_users }}</div>
                 <div class="text-muted small">Utilisateurs</div>
                 <div class="small mt-1">
-                    <span class="badge bg-success">{{ nb_actifs }} actifs</span>
+                    <span class="badge" style="background: #2d6a9f; color: white;">{{ nb_actifs }} actifs</span>
                     <span class="badge bg-danger ms-1">{{ nb_inactifs }} inactifs</span>
                 </div>
             </div>
@@ -84,7 +96,7 @@
     <div class="col-6 col-md-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body text-center">
-                <div class="fs-1 fw-bold text-warning">{{ nb_devis }}</div>
+                <div class="fs-1 fw-bold" style="color: #344e65;">{{ nb_devis }}</div>
                 <div class="text-muted small">Devis total</div>
             </div>
         </div>
@@ -92,7 +104,7 @@
     <div class="col-6 col-md-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body text-center">
-                <div class="fs-1 fw-bold text-success">{{ nb_factures }}</div>
+                <div class="fs-1 fw-bold" style="color: #2d6a9f;">{{ nb_factures }}</div>
                 <div class="text-muted small">Factures total</div>
             </div>
         </div>
@@ -100,7 +112,7 @@
     <div class="col-6 col-md-3">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body text-center">
-                <div class="fs-1 fw-bold" style="color:#1e3a5f;">{{ ca_total|floatformat:0 }}</div>
+                <div class="fs-1 fw-bold" style="color: #1e3a5f;">{{ ca_total|floatformat:0 }}</div>
                 <div class="text-muted small">CA total (toutes devises)</div>
             </div>
         </div>
@@ -110,96 +122,102 @@
 <div class="row g-4">
 
     <!-- Derniers inscrits -->
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-person-plus me-2 text-primary"></i>Derniers inscrits
-                    </h6>
-                    <a href="{% url 'admin_liste_users' %}" class="btn btn-sm btn-outline-primary">
-                        Voir tous
-                    </a>
+            <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-person-plus me-2" style="color: #1e3a5f;"></i>Derniers inscrits
+                </h6>
+                <a href="{% url 'admin_liste_users' %}" class="btn btn-sm" style="background: #1e3a5f; color: white;">
+                    Voir tous
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light" style="background: #f8f9fa;">
+                            <tr style="color: #1e3a5f;">
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Statut</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in derniers_users %}
+                            <tr>
+                                <td data-label="Nom">
+                                    <div class="fw-semibold">{{ u.get_full_name|default:u.username }}</div>
+                                 </td>
+                                <td data-label="Email" class="small text-muted">{{ u.email|default:"-" }} </td>
+                                <td data-label="Statut">
+                                    {% if u.is_active %}
+                                        <span class="badge" style="background: #2d6a9f; color: white;">Actif</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactif</span>
+                                    {% endif %}
+                                    {% if u.is_superuser %}
+                                        <span class="badge ms-1" style="background: #ffc107; color: #1e3a5f;">Admin</span>
+                                    {% endif %}
+                                 </td>
+                                <td data-label="Action" class="text-center">
+                                    <a href="{% url 'admin_detail_user' u.pk %}"
+                                       class="btn btn-sm btn-outline-secondary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                 </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <table class="table table-sm table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nom</th>
-                            <th>Email</th>
-                            <th>Statut</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for u in derniers_users %}
-                        <tr>
-                            <td>{{ u.get_full_name|default:u.username }}</td>
-                            <td class="small text-muted">{{ u.email }}</td>
-                            <td>
-                                {% if u.is_active %}
-                                    <span class="badge bg-success">Actif</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inactif</span>
-                                {% endif %}
-                                {% if u.is_superuser %}
-                                    <span class="badge bg-warning text-dark ms-1">Admin</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'admin_detail_user' u.pk %}"
-                                   class="btn btn-sm btn-outline-secondary py-0 px-1">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
 
     <!-- Top utilisateurs -->
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold mb-0">
-                        <i class="bi bi-trophy me-2 text-warning"></i>Top utilisateurs
-                    </h6>
-                    <a href="{% url 'admin_liste_users' %}" class="btn btn-sm btn-outline-warning">
-                        Voir tous
-                    </a>
+            <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0" style="color: #2d6a9f;">
+                    <i class="bi bi-trophy me-2" style="color: #2d6a9f;"></i>Top utilisateurs
+                </h6>
+                <a href="{% url 'admin_liste_users' %}" class="btn btn-sm" style="background: #2d6a9f; color: white;">
+                    Voir tous
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light" style="background: #f8f9fa;">
+                            <tr style="color: #1e3a5f;">
+                                <th>Utilisateur</th>
+                                <th class="text-center">Devis</th>
+                                <th class="text-center">Factures</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users_actifs %}
+                            <tr>
+                                <td data-label="Utilisateur">{{ u.get_full_name|default:u.username }} </td>
+                                <td data-label="Devis" class="text-center fw-semibold" style="color: #344e65;">{{ u.nb_devis }} </td>
+                                <td data-label="Factures" class="text-center fw-semibold" style="color: #2d6a9f;">{{ u.nb_factures }} </td>
+                                <td data-label="Action" class="text-center">
+                                    <a href="{% url 'admin_detail_user' u.pk %}"
+                                       class="btn btn-sm btn-outline-secondary" title="Voir">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                 </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">Aucun utilisateur actif</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <table class="table table-sm table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Utilisateur</th>
-                            <th class="text-center">Devis</th>
-                            <th class="text-center">Factures</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for u in users_actifs %}
-                        <tr>
-                            <td>{{ u.get_full_name|default:u.username }}</td>
-                            <td class="text-center">{{ u.nb_devis }}</td>
-                            <td class="text-center">{{ u.nb_factures }}</td>
-                            <td>
-                                <a href="{% url 'admin_detail_user' u.pk %}"
-                                   class="btn btn-sm btn-outline-secondary py-0 px-1">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">Aucun utilisateur</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             </div>
         </div>
     </div>
@@ -207,10 +225,12 @@
     <!-- Actions rapides -->
     <div class="col-12">
         <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">
-                    <i class="bi bi-lightning-fill me-2 text-warning"></i>Actions rapides
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #344e65;">
+                    <i class="bi bi-lightning-fill me-2" style="color: #ffc107;"></i>Actions rapides
                 </h6>
+            </div>
+            <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{% url 'admin_liste_users' %}?filtre=inactifs"
                        class="btn btn-outline-danger btn-sm">
@@ -251,4 +271,103 @@
     </div>
 
 </div>
+
+<style>
+/* Transition pour les cartes d'accès */
+.transition-card {
+    transition: all 0.2s ease;
+}
+
+.transition-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Style des cartes */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Animation */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+}
+
+/* Ajustements petits écrans */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    .card-header {
+        padding: 1rem !important;
+    }
+    .d-flex.flex-wrap.gap-2 {
+        justify-content: center;
+    }
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+</style>
 {% endblock %}

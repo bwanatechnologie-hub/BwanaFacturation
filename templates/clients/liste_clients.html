@@ -1,99 +1,294 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Clients{% endblock %}
 {% block page_title %}Gestion des Clients{% endblock %}
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <span class="text-muted">{{ nb_clients }} client(s) au total</span>
-    <a href="{% url 'ajouter_client' %}" class="btn btn-primary">
+<!-- En-tête avec statistiques -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <h5 class="fw-bold mb-0" style="color: #1e3a5f;">
+            <i class="bi bi-people me-2" style="color: #1e3a5f;"></i>Liste des clients
+        </h5>
+        <span class="text-muted small">{{ nb_clients }} client(s) au total</span>
+    </div>
+    <a href="{% url 'ajouter_client' %}" class="btn" style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
         <i class="bi bi-person-plus me-2"></i>Ajouter un client
     </a>
 </div>
 
 <!-- Barre de recherche -->
-<div class="card mb-4">
+<div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <form method="get">
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" name="q" class="form-control"
+        <form method="get" class="d-flex gap-2">
+            <div class="input-group flex-grow-1">
+                <span class="input-group-text bg-light border-end-0">
+                    <i class="bi bi-search" style="color: #1e3a5f;"></i>
+                </span>
+                <input type="text" name="q" class="form-control border-start-0"
                        placeholder="Rechercher par nom, entreprise ou email..."
                        value="{{ recherche }}">
-                <button type="submit" class="btn btn-primary">Rechercher</button>
-                {% if recherche %}
-                    <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x"></i>
-                    </a>
-                {% endif %}
             </div>
+            <button type="submit" class="btn" style="background: #1e3a5f; color: white; border: none;">
+                <i class="bi bi-search me-1"></i>Rechercher
+            </button>
+            {% if recherche %}
+                <a href="{% url 'liste_clients' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            {% endif %}
         </form>
     </div>
 </div>
 
 <!-- Liste des clients -->
-<div class="card">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+            <i class="bi bi-people me-2" style="color: #1e3a5f;"></i>Clients
+        </h5>
+    </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Nom / Entreprise</th>
-                    <th>Email</th>
-                    <th>Téléphone</th>
-                    <th>Ville</th>
-                    <th>Date ajout</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for client in clients %}
-                <tr>
-                    <td>
-                        <div class="fw-semibold">{{ client.nom }} {{ client.prenom }}</div>
-                        {% if client.entreprise %}
-                            <small class="text-muted">
-                                <i class="bi bi-building me-1"></i>{{ client.entreprise }}
-                            </small>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if client.email %}
-                            <a href="mailto:{{ client.email }}">{{ client.email }}</a>
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ client.telephone|default:"—" }}</td>
-                    <td>{{ client.ville|default:"—" }}</td>
-                    <td>{{ client.date_creation|date:"d/m/Y" }}</td>
-                    <td class="text-center">
-                        <a href="{% url 'detail_client' client.pk %}"
-                           class="btn btn-sm btn-outline-info me-1" title="Voir">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="{% url 'modifier_client' client.pk %}"
-                           class="btn btn-sm btn-outline-warning me-1" title="Modifier">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{% url 'supprimer_client' client.pk %}"
-                           class="btn btn-sm btn-outline-danger" title="Supprimer">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
-                        <i class="bi bi-people fs-3 d-block mb-2"></i>
-                        Aucun client trouvé.
-                        <a href="{% url 'ajouter_client' %}">Ajouter le premier client</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light" style="background: #f8f9fa;">
+                    <tr style="color: #1e3a5f;">
+                        <th style="width: 25%">Nom / Entreprise</th>
+                        <th style="width: 20%">Email</th>
+                        <th style="width: 15%">Téléphone</th>
+                        <th style="width: 15%">Ville</th>
+                        <th style="width: 15%">Date ajout</th>
+                        <th style="width: 10%" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td data-label="Nom / Entreprise">
+                            <div class="fw-semibold" style="color: #1e3a5f;">{{ client.nom }} {{ client.prenom }}</div>
+                            {% if client.entreprise %}
+                                <small class="text-muted">
+                                    <i class="bi bi-building me-1"></i>{{ client.entreprise }}
+                                </small>
+                            {% endif %}
+                         </td>
+                        <td data-label="Email">
+                            {% if client.email %}
+                                <a href="mailto:{{ client.email }}" class="text-decoration-none" style="color: #2d6a9f;">
+                                    <i class="bi bi-envelope me-1"></i>{{ client.email }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                         </td>
+                        <td data-label="Téléphone">
+                            {% if client.telephone %}
+                                <i class="bi bi-telephone me-1 text-muted"></i>{{ client.telephone }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                         </td>
+                        <td data-label="Ville">
+                            {% if client.ville %}
+                                <i class="bi bi-geo-alt me-1 text-muted"></i>{{ client.ville }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                         </td>
+                        <td data-label="Date ajout">
+                            <i class="bi bi-calendar3 me-1 text-muted"></i>{{ client.date_creation|date:"d/m/Y" }}
+                         </td>
+                        <td data-label="Actions" class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{% url 'detail_client' client.pk %}"
+                                   class="btn btn-sm btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'modifier_client' client.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'supprimer_client' client.pk %}"
+                                   class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                   onclick="return confirm('Supprimer définitivement ce client ?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                         </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-people display-1 text-muted" style="color: #344e65 !important;"></i>
+                            <h5 class="mt-3" style="color: #344e65;">Aucun client</h5>
+                            <p class="text-muted mb-3">Commencez par ajouter votre premier client</p>
+                            <a href="{% url 'ajouter_client' %}" class="btn" 
+                               style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
+                                <i class="bi bi-plus-circle me-1"></i>Ajouter un client
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<style>
+/* Style des cartes */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Style des boutons d'action */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-info {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-info:hover {
+    background-color: #2d6a9f;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #1e3a5f;
+    border-color: #1e3a5f;
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive pour tableaux sur mobile */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+    }
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+    .table td .d-flex {
+        justify-content: flex-end;
+    }
+}
+
+/* Barre de recherche responsive */
+@media (max-width: 575px) {
+    form.d-flex {
+        flex-direction: column;
+        gap: 8px;
+    }
+    form.d-flex .input-group {
+        width: 100%;
+    }
+    form.d-flex .btn {
+        width: 100%;
+    }
+    .card-body {
+        padding: 1rem !important;
+    }
+    .card-header {
+        padding: 1rem !important;
+    }
+}
+
+/* Ajustements très petits écrans */
+@media (max-width: 480px) {
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+    .table td {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+}
+</style>
 {% endblock %}

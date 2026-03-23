@@ -1,117 +1,424 @@
 {% extends 'base.html' %}
-{% block title %}Utilisateurs — Admin{% endblock %}
+{% load static %}
+
+{% block title %}Utilisateurs — Administration{% endblock %}
 {% block page_title %}⚙️ Gestion des utilisateurs{% endblock %}
 
 {% block content %}
 
 <!-- Filtres et recherche -->
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-2 align-items-center">
-            <div class="col-md-5">
+    <div class="card-body py-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-5">
+                <label class="form-label fw-semibold small text-uppercase mb-2" style="color: #1e3a5f; letter-spacing: 0.5px;">
+                    <i class="bi bi-search me-1"></i>Recherche
+                </label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" class="form-control"
-                           placeholder="Rechercher par nom ou email..."
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search" style="color: #1e3a5f;"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0"
+                           placeholder="Rechercher par nom, prénom ou email..."
                            value="{{ recherche }}">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold small text-uppercase mb-2" style="color: #1e3a5f; letter-spacing: 0.5px;">
+                    <i class="bi bi-funnel me-1"></i>Filtre
+                </label>
                 <select name="filtre" class="form-select" onchange="this.form.submit()">
-                    <option value="">Tous les utilisateurs</option>
-                    <option value="actifs"     {% if filtre == 'actifs' %}selected{% endif %}>Actifs seulement</option>
-                    <option value="inactifs"   {% if filtre == 'inactifs' %}selected{% endif %}>Inactifs seulement</option>
-                    <option value="superusers" {% if filtre == 'superusers' %}selected{% endif %}>Administrateurs</option>
+                    <option value="">📋 Tous les utilisateurs</option>
+                    <option value="actifs"     {% if filtre == 'actifs' %}selected{% endif %}>✅ Actifs seulement</option>
+                    <option value="inactifs"   {% if filtre == 'inactifs' %}selected{% endif %}>❌ Inactifs seulement</option>
+                    <option value="superusers" {% if filtre == 'superusers' %}selected{% endif %}>👑 Administrateurs</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+            <div class="col-6 col-md-2">
+                <button type="submit" class="btn w-100 py-2" style="background: #1e3a5f; color: white; border: none;">
+                    <i class="bi bi-funnel me-2"></i>Filtrer
+                </button>
             </div>
-            <div class="col-md-2">
-                <a href="{% url 'admin_liste_users' %}" class="btn btn-outline-secondary w-100">
-                    Réinitialiser
+            <div class="col-6 col-md-2">
+                <a href="{% url 'admin_liste_users' %}" class="btn btn-outline-secondary w-100 py-2">
+                    <i class="bi bi-arrow-repeat me-2"></i>Réinitialiser
                 </a>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Statistiques rapides -->
+<div class="row g-4 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 h-100">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
+                 style="width: 50px; height: 50px; background: rgba(30, 58, 95, 0.1);">
+                <i class="bi bi-people-fill fs-3" style="color: #1e3a5f;"></i>
+            </div>
+            <div class="fs-2 fw-bold" style="color: #1e3a5f;">{{ total_users }}</div>
+            <div class="text-muted small">Total utilisateurs</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 h-100">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
+                 style="width: 50px; height: 50px; background: rgba(45, 106, 159, 0.1);">
+                <i class="bi bi-check-circle-fill fs-3" style="color: #2d6a9f;"></i>
+            </div>
+            <div class="fs-2 fw-bold" style="color: #2d6a9f;">{{ total_actifs }}</div>
+            <div class="text-muted small">Comptes actifs</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 h-100">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
+                 style="width: 50px; height: 50px; background: rgba(220, 53, 69, 0.1);">
+                <i class="bi bi-x-circle-fill fs-3" style="color: #dc3545;"></i>
+            </div>
+            <div class="fs-2 fw-bold text-danger">{{ total_inactifs }}</div>
+            <div class="text-muted small">Comptes inactifs</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 h-100">
+            <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
+                 style="width: 50px; height: 50px; background: rgba(52, 78, 101, 0.1);">
+                <i class="bi bi-shield-fill-check fs-3" style="color: #344e65;"></i>
+            </div>
+            <div class="fs-2 fw-bold" style="color: #344e65;">{{ total_admins }}</div>
+            <div class="text-muted small">Administrateurs</div>
+        </div>
+    </div>
+</div>
+
 <!-- Tableau utilisateurs -->
 <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-4 px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+                <i class="bi bi-table me-2" style="color: #1e3a5f;"></i>Liste des utilisateurs
+            </h5>
+            <span class="badge" style="background: #e8f0fe; color: #1e3a5f;">
+                {{ users|length }} utilisateur(s) affiché(s)
+            </span>
+        </div>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>Email</th>
-                        <th>Inscrit le</th>
-                        <th class="text-center">Devis</th>
-                        <th class="text-center">Factures</th>
-                        <th class="text-center">Statut</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
+            <table class="table table-hover mb-0 align-middle">
+                <thead style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                    <tr style="color: #1e3a5f;">
+                        <th class="py-3 px-4">Utilisateur</th>
+                        <th class="py-3">Email</th>
+                        <th class="py-3">Inscrit le</th>
+                        <th class="text-center py-3" style="width: 80px;">Devis</th>
+                        <th class="text-center py-3" style="width: 80px;">Factures</th>
+                        <th class="text-center py-3" style="width: 100px;">Statut</th>
+                        <th class="text-center py-3" style="width: 120px;">Actions</th>
+                      </tr>
                 </thead>
                 <tbody>
                     {% for u in users %}
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
-                                     style="width:32px;height:32px;font-size:0.8rem;flex-shrink:0;">
-                                    {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                    <tr class="border-bottom">
+                        <td class="py-3 px-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                                     style="width: 44px; height: 44px; background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+                                    <span class="text-white fw-semibold">
+                                        {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                                    </span>
                                 </div>
                                 <div>
-                                    <div class="fw-semibold">{{ u.get_full_name|default:u.username }}</div>
+                                    <div class="fw-semibold" style="color: #1e3a5f;">{{ u.get_full_name|default:u.username }}</div>
                                     <div class="text-muted small">@{{ u.username }}</div>
                                 </div>
                             </div>
-                        </td>
-                        <td class="small">{{ u.email }}</td>
-                        <td class="small text-muted">{{ u.date_joined|date:"d/m/Y" }}</td>
-                        <td class="text-center">{{ u.nb_devis }}</td>
-                        <td class="text-center">{{ u.nb_factures }}</td>
-                        <td class="text-center">
-                            {% if u.is_superuser %}
-                                <span class="badge bg-warning text-dark">Admin</span>
-                            {% elif u.is_active %}
-                                <span class="badge bg-success">Actif</span>
+                          </td>
+                        <td class="py-3">
+                            {% if u.email %}
+                                <a href="mailto:{{ u.email }}" class="text-decoration-none" style="color: #2d6a9f;">
+                                    <i class="bi bi-envelope me-1"></i>{{ u.email }}
+                                </a>
                             {% else %}
-                                <span class="badge bg-danger">Inactif</span>
+                                <span class="text-muted">—</span>
                             {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <div class="d-flex gap-1 justify-content-center">
+                          </td>
+                        <td class="py-3 text-muted small">
+                            <i class="bi bi-calendar3 me-1"></i>{{ u.date_joined|date:"d/m/Y" }}
+                          </td>
+                        <td class="text-center py-3">
+                            <span class="fw-semibold" style="color: #344e65;">{{ u.nb_devis }}</span>
+                          </td>
+                        <td class="text-center py-3">
+                            <span class="fw-semibold" style="color: #2d6a9f;">{{ u.nb_factures }}</span>
+                          </td>
+                        <td class="text-center py-3">
+                            {% if u.is_superuser %}
+                                <span class="badge px-3 py-2" style="background: #ffc107; color: #1e3a5f;">
+                                    <i class="bi bi-shield-check me-1"></i>Admin
+                                </span>
+                            {% elif u.is_active %}
+                                <span class="badge px-3 py-2" style="background: #2d6a9f; color: white;">
+                                    <i class="bi bi-check-circle me-1"></i>Actif
+                                </span>
+                            {% else %}
+                                <span class="badge px-3 py-2 bg-danger">
+                                    <i class="bi bi-x-circle me-1"></i>Inactif
+                                </span>
+                            {% endif %}
+                          </td>
+                        <td class="text-center py-3">
+                            <div class="d-flex gap-2 justify-content-center">
                                 <a href="{% url 'admin_detail_user' u.pk %}"
-                                   class="btn btn-sm btn-outline-primary"
-                                   title="Voir détail">
+                                   class="btn btn-sm btn-outline-primary" title="Voir détail">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 {% if not u.is_superuser %}
                                 <a href="{% url 'admin_toggle_user' u.pk %}"
                                    class="btn btn-sm {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
-                                   title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}">
-                                    <i class="bi bi-{% if u.is_active %}pause{% else %}play{% endif %}"></i>
+                                   title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}"
+                                   onclick="return confirm('{% if u.is_active %}Désactiver le compte de {{ u.get_full_name|default:u.username }} ?{% else %}Activer le compte de {{ u.get_full_name|default:u.username }} ?{% endif %}')">
+                                    <i class="bi bi-{% if u.is_active %}pause-circle{% else %}play-circle{% endif %}"></i>
                                 </a>
                                 <a href="{% url 'admin_supprimer_user' u.pk %}"
                                    class="btn btn-sm btn-outline-danger"
-                                   title="Supprimer">
+                                   title="Supprimer"
+                                   onclick="return confirm('Supprimer définitivement le compte de {{ u.get_full_name|default:u.username }} ?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
                                 {% endif %}
                             </div>
-                        </td>
+                          </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            Aucun utilisateur trouvé
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-people display-1 text-muted" style="color: #344e65 !important;"></i>
+                            <h5 class="mt-3" style="color: #344e65;">Aucun utilisateur trouvé</h5>
+                            <p class="text-muted mb-0">Aucun utilisateur ne correspond à votre recherche</p>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>
+              </table>
         </div>
     </div>
 </div>
+
+<!-- Pagination -->
+{% if users.has_other_pages %}
+<div class="d-flex justify-content-center mt-4">
+    <nav aria-label="Navigation des pages">
+        <ul class="pagination">
+            {% if users.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill mx-1" 
+                   href="?page={{ users.previous_page_number }}{% if recherche %}&q={{ recherche }}{% endif %}{% if filtre %}&filtre={{ filtre }}{% endif %}"
+                   style="color: #1e3a5f;">
+                    <i class="bi bi-chevron-left"></i> Précédent
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in users.paginator.page_range %}
+                {% if users.number == num %}
+                <li class="page-item active">
+                    <span class="page-link rounded-pill mx-1" 
+                          style="background: #1e3a5f; border-color: #1e3a5f;">{{ num }}</span>
+                </li>
+                {% elif num > users.number|add:'-4' and num < users.number|add:'4' %}
+                <li class="page-item">
+                    <a class="page-link rounded-pill mx-1" 
+                       href="?page={{ num }}{% if recherche %}&q={{ recherche }}{% endif %}{% if filtre %}&filtre={{ filtre }}{% endif %}"
+                       style="color: #1e3a5f;">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if users.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill mx-1" 
+                   href="?page={{ users.next_page_number }}{% if recherche %}&q={{ recherche }}{% endif %}{% if filtre %}&filtre={{ filtre }}{% endif %}"
+                   style="color: #1e3a5f;">
+                    Suivant <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<style>
+/* Style des cartes */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Animation */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.8em;
+    font-weight: 500;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+/* Boutons */
+.btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-sm:hover {
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: #1e3a5f;
+    border-color: #1e3a5f;
+}
+
+.btn-outline-primary:hover {
+    background-color: #1e3a5f;
+    color: white;
+}
+
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #1e3a5f;
+}
+
+.btn-outline-success {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-success:hover {
+    background-color: #2d6a9f;
+    color: white;
+}
+
+/* Pagination */
+.page-link {
+    border-radius: 20px;
+    margin: 0 3px;
+    transition: all 0.2s ease;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 1rem;
+}
+
+.page-link:hover {
+    background-color: #e8f0fe;
+    color: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.page-item.active .page-link {
+    background-color: #1e3a5f;
+    border-color: #1e3a5f;
+}
+
+/* Table */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.75rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+    .table td .d-flex {
+        justify-content: flex-end;
+    }
+    .page-link {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Ajustements petits écrans */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+    .card-header {
+        padding: 1rem !important;
+    }
+    .row.g-4.mb-4 {
+        margin-top: 0;
+    }
+    .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.7rem;
+    }
+}
+</style>
 {% endblock %}

@@ -6,11 +6,11 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-box-seam me-2 text-primary"></i>
+    <div class="col-12 col-lg-10">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+                    <i class="bi bi-box-seam me-2" style="color: #1e3a5f;"></i>
                     {{ titre }}
                 </h5>
             </div>
@@ -18,78 +18,85 @@
                 <form method="post" id="produitForm">
                     {% csrf_token %}
 
-                    <div class="row g-3">
+                    <div class="row g-4">
 
                         <!-- Référence -->
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">
-                                Référence <span class="text-danger">*</span>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-upc-scan me-1"></i>Référence <span class="text-danger">*</span>
                             </label>
                             {{ form.reference }}
                             {% if form.reference.errors %}
-                                <div class="text-danger small">{{ form.reference.errors }}</div>
+                                <div class="text-danger small mt-1">{{ form.reference.errors }}</div>
                             {% endif %}
                             <small class="text-muted">Ex: REF-001</small>
                         </div>
 
                         <!-- Nom du produit -->
                         <div class="col-md-8">
-                            <label class="form-label fw-semibold">
-                                Nom du produit <span class="text-danger">*</span>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-tag me-1"></i>Nom du produit <span class="text-danger">*</span>
                             </label>
                             {{ form.nom }}
                             {% if form.nom.errors %}
-                                <div class="text-danger small">{{ form.nom.errors }}</div>
+                                <div class="text-danger small mt-1">{{ form.nom.errors }}</div>
                             {% endif %}
                         </div>
 
                         <!-- Description -->
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Description</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-file-text me-1"></i>Description
+                            </label>
                             {{ form.description }}
                             <small class="text-muted">Description détaillée du produit/service</small>
                         </div>
 
                         <!-- Catégorie -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Catégorie</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-folder me-1"></i>Catégorie
+                            </label>
                             {{ form.categorie }}
                             <div class="mt-2">
-                                <a href="#" class="small" id="lien-nouvelle-categorie"
-                                   data-bs-toggle="modal" data-bs-target="#modalNouvelleCategorie">
-                                    <i class="bi bi-plus-circle"></i> Nouvelle catégorie
+                                <a href="#" class="small text-decoration-none" id="lien-nouvelle-categorie"
+                                   style="color: #2d6a9f;" data-bs-toggle="modal" data-bs-target="#modalNouvelleCategorie">
+                                    <i class="bi bi-plus-circle me-1"></i>Nouvelle catégorie
                                 </a>
                             </div>
                         </div>
 
-                        <!-- ✅ Unité de vente avec modal -->
+                        <!-- Unité de vente avec modal -->
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Unité de vente</label>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-rulers me-1"></i>Unité de vente
+                            </label>
                             {{ form.unite_vente }}
                             <div class="mt-2">
-                                <a href="#" class="small" id="lien-nouvelle-unite"
-                                   data-bs-toggle="modal" data-bs-target="#modalNouvelleUnite">
-                                    <i class="bi bi-plus-circle"></i> Nouvelle unité
+                                <a href="#" class="small text-decoration-none" id="lien-nouvelle-unite"
+                                   style="color: #2d6a9f;" data-bs-toggle="modal" data-bs-target="#modalNouvelleUnite">
+                                    <i class="bi bi-plus-circle me-1"></i>Nouvelle unité
                                 </a>
                             </div>
+                            <small class="text-muted">Ou créez votre propre unité</small>
                         </div>
 
                         <!-- Prix HT avec devise -->
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">
-                                Prix HT <span class="text-danger">*</span>
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-currency-dollar me-1"></i>Prix HT <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light" id="devise-label">prix</span>
+                                <span class="input-group-text bg-light border-end-0" id="devise-label" style="background: #f8f9fa;">FCFA</span>
                                 {{ form.prix_ht }}
                             </div>
                             <small class="text-muted">Le prix hors taxes</small>
                         </div>
 
-                        <!-- Devise / Pays -->
+                        <!-- Pays / Devise -->
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">
-                                Devise
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-globe2 me-1"></i>Pays / Devise
                                 <i class="bi bi-info-circle text-muted ms-1"
                                    data-bs-toggle="tooltip"
                                    title="Le pays détermine la devise et la TVA automatiquement"></i>
@@ -100,8 +107,8 @@
 
                         <!-- Province (Canada uniquement) -->
                         <div class="col-md-4" id="province-container" style="display: none;">
-                            <label class="form-label fw-semibold">
-                                Province (Canada)
+                            <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                                <i class="bi bi-map me-1"></i>Province (Canada)
                                 <i class="bi bi-info-circle text-muted ms-1"
                                    data-bs-toggle="tooltip"
                                    title="Détermine la TVH/TPS/TVQ"></i>
@@ -113,27 +120,28 @@
                         <div class="col-12">
                             <div class="form-check form-switch">
                                 {{ form.actif }}
-                                <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                <label class="form-check-label" for="{{ form.actif.id_for_label }}" style="color: #1e3a5f;">
                                     Produit actif
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <hr class="my-4">
+                    <hr class="my-4" style="border-color: #e0e0e0;">
 
-                    <div class="d-flex gap-2 justify-content-between">
-                        <div>
-                            <button type="submit" class="btn btn-primary px-4">
+                    <div class="d-flex gap-2 justify-content-between flex-wrap">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn px-4 py-2 fw-bold" 
+                                    style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
                                 <i class="bi bi-check-lg me-2"></i>{{ bouton }}
                             </button>
-                            <a href="{% url 'liste_produits' %}" class="btn btn-outline-secondary px-4">
+                            <a href="{% url 'liste_produits' %}" class="btn btn-outline-secondary px-4 py-2">
                                 <i class="bi bi-x me-2"></i>Annuler
                             </a>
                         </div>
                         {% if produit %}
                         <a href="{% url 'dupliquer_produit' produit.pk %}"
-                           class="btn btn-outline-info"
+                           class="btn btn-outline-info px-4 py-2"
                            onclick="return confirm('Créer une copie de ce produit ?')">
                             <i class="bi bi-files me-2"></i>Dupliquer
                         </a>
@@ -152,24 +160,23 @@
 <div class="modal fade" id="modalNouvelleCategorie" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f);">
+                <h5 class="modal-title text-white">
                     <i class="bi bi-tag me-2"></i>Nouvelle catégorie
                 </h5>
-                <button type="button" class="btn-close btn-close-white"
-                        data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <div id="modal-cat-alert" class="alert d-none" role="alert"></div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">
+                    <label class="form-label fw-semibold" style="color: #1e3a5f;">
                         Nom <span class="text-danger">*</span>
                     </label>
                     <input type="text" id="modal-cat-nom" class="form-control"
                            placeholder="Ex : Fournitures bureau" maxlength="100" autocomplete="off">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">
+                    <label class="form-label fw-semibold" style="color: #1e3a5f;">
                         Description <span class="text-muted small">(optionnel)</span>
                     </label>
                     <textarea id="modal-cat-desc" class="form-control" rows="2"
@@ -180,7 +187,8 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x me-1"></i>Annuler
                 </button>
-                <button type="button" class="btn btn-primary" id="btn-sauvegarder-categorie">
+                <button type="button" class="btn" id="btn-sauvegarder-categorie"
+                        style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
                     <span id="btn-cat-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
                     <i class="bi bi-check-lg me-1" id="btn-cat-icon"></i>Enregistrer
                 </button>
@@ -196,24 +204,23 @@
 <div class="modal fade" id="modalNouvelleUnite" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2d6a9f, #344e65);">
+                <h5 class="modal-title text-white">
                     <i class="bi bi-rulers me-2"></i>Nouvelle unité de vente
                 </h5>
-                <button type="button" class="btn-close btn-close-white"
-                        data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <div id="modal-unite-alert" class="alert d-none" role="alert"></div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">
+                    <label class="form-label fw-semibold" style="color: #1e3a5f;">
                         Nom <span class="text-danger">*</span>
                     </label>
                     <input type="text" id="modal-unite-nom" class="form-control"
                            placeholder="Ex: Sac de 25kg, Palette, Carton 12..." maxlength="100">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">
+                    <label class="form-label fw-semibold" style="color: #1e3a5f;">
                         Code <span class="text-muted small">(optionnel)</span>
                     </label>
                     <input type="text" id="modal-unite-code" class="form-control"
@@ -225,7 +232,8 @@
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x me-1"></i>Annuler
                 </button>
-                <button type="button" class="btn btn-success" id="btn-sauvegarder-unite">
+                <button type="button" class="btn" id="btn-sauvegarder-unite"
+                        style="background: linear-gradient(135deg, #2d6a9f, #344e65); color: white;">
                     <span id="btn-unite-spinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
                     <i class="bi bi-check-lg me-1" id="btn-unite-icon"></i>Enregistrer
                 </button>
@@ -233,7 +241,6 @@
         </div>
     </div>
 </div>
-
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -260,28 +267,30 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     function updatePays() {
-        const paysId = paysSelect.value;
+        const paysId = paysSelect ? paysSelect.value : null;
         if (!paysId) {
-            deviseLabel.textContent         = 'prix';
-            deviseHelper.textContent        = 'Sélectionnez le pays';
-            provinceContainer.style.display = 'none';
+            if (deviseLabel) deviseLabel.textContent = 'FCFA';
+            if (deviseHelper) deviseHelper.textContent = 'Sélectionnez le pays';
+            if (provinceContainer) provinceContainer.style.display = 'none';
             return;
         }
         const pays = paysData[paysId];
         if (!pays) return;
-        deviseLabel.textContent  = pays.devise;
-        deviseHelper.textContent = `${pays.nom} — ${pays.devise}`;
+        if (deviseLabel) deviseLabel.textContent = pays.devise;
+        if (deviseHelper) deviseHelper.textContent = `${pays.nom} — ${pays.devise}`;
         if (pays.code === 'CA') {
-            provinceContainer.style.display = 'block';
+            if (provinceContainer) provinceContainer.style.display = 'block';
             if (provinceSelect) provinceSelect.disabled = false;
         } else {
-            provinceContainer.style.display = 'none';
+            if (provinceContainer) provinceContainer.style.display = 'none';
             if (provinceSelect) { provinceSelect.value = ''; provinceSelect.disabled = true; }
         }
     }
 
-    paysSelect.addEventListener('change', updatePays);
-    updatePays();
+    if (paysSelect) {
+        paysSelect.addEventListener('change', updatePays);
+        updatePays();
+    }
 
 
     // ══════════════════════════════════════════
@@ -295,54 +304,79 @@ document.addEventListener('DOMContentLoaded', function () {
     const spinCat     = document.getElementById('btn-cat-spinner');
     const iconCat     = document.getElementById('btn-cat-icon');
 
-    modalCat.addEventListener('show.bs.modal', () => {
-        inputCatNom.value  = '';
-        inputCatDesc.value = '';
-        inputCatNom.classList.remove('is-invalid');
-        alertCat.className = 'alert d-none';
-    });
-    modalCat.addEventListener('shown.bs.modal', () => inputCatNom.focus());
-    inputCatNom.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); btnCat.click(); }
-    });
-
-    btnCat.addEventListener('click', async () => {
-        const nom  = inputCatNom.value.trim();
-        const desc = inputCatDesc.value.trim();
-        if (!nom) { inputCatNom.classList.add('is-invalid'); return; }
-        inputCatNom.classList.remove('is-invalid');
-        spinCat.classList.remove('d-none');
-        iconCat.classList.add('d-none');
-        btnCat.disabled = true;
-        try {
-            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const resp = await fetch("{% url 'ajouter_categorie' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ nom, description: desc }),
+    if (modalCat) {
+        modalCat.addEventListener('show.bs.modal', () => {
+            if (inputCatNom) inputCatNom.value = '';
+            if (inputCatDesc) inputCatDesc.value = '';
+            if (inputCatNom) inputCatNom.classList.remove('is-invalid');
+            if (alertCat) alertCat.className = 'alert d-none';
+        });
+        modalCat.addEventListener('shown.bs.modal', () => {
+            if (inputCatNom) inputCatNom.focus();
+        });
+        if (inputCatNom) {
+            inputCatNom.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); if (btnCat) btnCat.click(); }
             });
-            const data = await resp.json();
-            if (resp.ok && data.id) {
-                document.getElementById('id_categorie').appendChild(new Option(data.nom, data.id, true, true));
-                bootstrap.Modal.getInstance(modalCat).hide();
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-success ms-2';
-                badge.textContent = `✅ "${data.nom}" ajoutée`;
-                document.getElementById('lien-nouvelle-categorie').after(badge);
-                setTimeout(() => badge.remove(), 3000);
-            } else {
-                alertCat.className   = 'alert alert-danger';
-                alertCat.textContent = data.erreur || 'Une erreur est survenue.';
-            }
-        } catch {
-            alertCat.className   = 'alert alert-danger';
-            alertCat.textContent = 'Impossible de contacter le serveur.';
-        } finally {
-            spinCat.classList.add('d-none');
-            iconCat.classList.remove('d-none');
-            btnCat.disabled = false;
         }
-    });
+    }
+
+    if (btnCat) {
+        btnCat.addEventListener('click', async () => {
+            const nom  = inputCatNom ? inputCatNom.value.trim() : '';
+            const desc = inputCatDesc ? inputCatDesc.value.trim() : '';
+            if (!nom) {
+                if (inputCatNom) inputCatNom.classList.add('is-invalid');
+                return;
+            }
+            if (inputCatNom) inputCatNom.classList.remove('is-invalid');
+            if (spinCat) spinCat.classList.remove('d-none');
+            if (iconCat) iconCat.classList.add('d-none');
+            btnCat.disabled = true;
+            try {
+                const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                const resp = await fetch("{% url 'ajouter_categorie' %}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': csrf, 
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    },
+                    body: JSON.stringify({ nom, description: desc }),
+                });
+                const data = await resp.json();
+                if (resp.ok && data.id) {
+                    const categorieSelect = document.getElementById('id_categorie');
+                    if (categorieSelect) {
+                        categorieSelect.appendChild(new Option(data.nom, data.id, true, true));
+                    }
+                    bootstrap.Modal.getInstance(modalCat).hide();
+                    const lien = document.getElementById('lien-nouvelle-categorie');
+                    if (lien) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-success ms-2';
+                        badge.textContent = `✅ "${data.nom}" ajoutée`;
+                        lien.after(badge);
+                        setTimeout(() => badge.remove(), 3000);
+                    }
+                } else {
+                    if (alertCat) {
+                        alertCat.className = 'alert alert-danger';
+                        alertCat.textContent = data.erreur || 'Une erreur est survenue.';
+                    }
+                }
+            } catch {
+                if (alertCat) {
+                    alertCat.className = 'alert alert-danger';
+                    alertCat.textContent = 'Impossible de contacter le serveur.';
+                }
+            } finally {
+                if (spinCat) spinCat.classList.add('d-none');
+                if (iconCat) iconCat.classList.remove('d-none');
+                btnCat.disabled = false;
+            }
+        });
+    }
 
 
     // ══════════════════════════════════════════
@@ -356,66 +390,209 @@ document.addEventListener('DOMContentLoaded', function () {
     const spinUnite     = document.getElementById('btn-unite-spinner');
     const iconUnite     = document.getElementById('btn-unite-icon');
 
-    modalUnite.addEventListener('show.bs.modal', () => {
-        inputUniteNom.value  = '';
-        inputUniteCode.value = '';
-        inputUniteNom.classList.remove('is-invalid');
-        alertUnite.className = 'alert d-none';
-    });
-    modalUnite.addEventListener('shown.bs.modal', () => inputUniteNom.focus());
-    inputUniteNom.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); btnUnite.click(); }
-    });
-
-    btnUnite.addEventListener('click', async () => {
-        const nom  = inputUniteNom.value.trim();
-        const code = inputUniteCode.value.trim();
-        if (!nom) { inputUniteNom.classList.add('is-invalid'); return; }
-        inputUniteNom.classList.remove('is-invalid');
-        spinUnite.classList.remove('d-none');
-        iconUnite.classList.add('d-none');
-        btnUnite.disabled = true;
-        try {
-            const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const resp = await fetch("{% url 'ajouter_unite_vente' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf, 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ nom, code }),
+    if (modalUnite) {
+        modalUnite.addEventListener('show.bs.modal', () => {
+            if (inputUniteNom) inputUniteNom.value = '';
+            if (inputUniteCode) inputUniteCode.value = '';
+            if (inputUniteNom) inputUniteNom.classList.remove('is-invalid');
+            if (alertUnite) alertUnite.className = 'alert d-none';
+        });
+        modalUnite.addEventListener('shown.bs.modal', () => {
+            if (inputUniteNom) inputUniteNom.focus();
+        });
+        if (inputUniteNom) {
+            inputUniteNom.addEventListener('keydown', e => {
+                if (e.key === 'Enter') { e.preventDefault(); if (btnUnite) btnUnite.click(); }
             });
-            const data = await resp.json();
-            if (resp.ok && data.id) {
-                document.getElementById('id_unite_vente').appendChild(new Option(data.nom, data.id, true, true));
-                bootstrap.Modal.getInstance(modalUnite).hide();
-                const badge = document.createElement('span');
-                badge.className = 'badge bg-success ms-2';
-                badge.textContent = `✅ "${data.nom}" ajoutée`;
-                document.getElementById('lien-nouvelle-unite').after(badge);
-                setTimeout(() => badge.remove(), 3000);
-            } else {
-                alertUnite.className   = 'alert alert-danger';
-                alertUnite.textContent = data.erreur || 'Une erreur est survenue.';
-            }
-        } catch {
-            alertUnite.className   = 'alert alert-danger';
-            alertUnite.textContent = 'Impossible de contacter le serveur.';
-        } finally {
-            spinUnite.classList.add('d-none');
-            iconUnite.classList.remove('d-none');
-            btnUnite.disabled = false;
         }
-    });
+    }
+
+    if (btnUnite) {
+        btnUnite.addEventListener('click', async () => {
+            const nom  = inputUniteNom ? inputUniteNom.value.trim() : '';
+            const code = inputUniteCode ? inputUniteCode.value.trim() : '';
+            if (!nom) {
+                if (inputUniteNom) inputUniteNom.classList.add('is-invalid');
+                return;
+            }
+            if (inputUniteNom) inputUniteNom.classList.remove('is-invalid');
+            if (spinUnite) spinUnite.classList.remove('d-none');
+            if (iconUnite) iconUnite.classList.add('d-none');
+            btnUnite.disabled = true;
+            try {
+                const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                const resp = await fetch("{% url 'ajouter_unite_vente' %}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': csrf, 
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    },
+                    body: JSON.stringify({ nom, code }),
+                });
+                const data = await resp.json();
+                if (resp.ok && data.id) {
+                    const uniteSelect = document.getElementById('id_unite_vente');
+                    if (uniteSelect) {
+                        uniteSelect.appendChild(new Option(data.nom, data.id, true, true));
+                    }
+                    bootstrap.Modal.getInstance(modalUnite).hide();
+                    const lien = document.getElementById('lien-nouvelle-unite');
+                    if (lien) {
+                        const badge = document.createElement('span');
+                        badge.className = 'badge bg-success ms-2';
+                        badge.textContent = `✅ "${data.nom}" ajoutée`;
+                        lien.after(badge);
+                        setTimeout(() => badge.remove(), 3000);
+                    }
+                } else {
+                    if (alertUnite) {
+                        alertUnite.className = 'alert alert-danger';
+                        alertUnite.textContent = data.erreur || 'Une erreur est survenue.';
+                    }
+                }
+            } catch {
+                if (alertUnite) {
+                    alertUnite.className = 'alert alert-danger';
+                    alertUnite.textContent = 'Impossible de contacter le serveur.';
+                }
+            } finally {
+                if (spinUnite) spinUnite.classList.add('d-none');
+                if (iconUnite) iconUnite.classList.remove('d-none');
+                btnUnite.disabled = false;
+            }
+        });
+    }
 
 });
 </script>
 
 <style>
-.tooltip-inner { max-width: 300px; padding: 8px 12px; background-color: #1e3a5f; }
-input[readonly], select[disabled] { background-color: #f8f9fa; cursor: not-allowed; }
-.input-group { flex-wrap: nowrap; }
-#province-container { transition: all 0.3s ease; }
-#modalNouvelleCategorie .modal-header,
-#modalNouvelleUnite .modal-header { border-bottom: none; }
-#modalNouvelleCategorie .modal-footer,
-#modalNouvelleUnite .modal-footer { border-top: 1px solid #e9ecef; }
+.tooltip-inner { 
+    max-width: 300px; 
+    padding: 8px 12px; 
+    background-color: #1e3a5f; 
+}
+input[readonly], select[disabled] { 
+    background-color: #f8f9fa; 
+    cursor: not-allowed; 
+}
+.input-group { 
+    flex-wrap: nowrap; 
+}
+#province-container { 
+    transition: all 0.3s ease; 
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style des modales */
+.modal-header {
+    border-bottom: none;
+    padding: 1.2rem 1.5rem;
+}
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+}
+.modal-content {
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+    border-radius: 16px;
+    overflow: hidden;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style des champs */
+.form-control, .form-select, .input-group-text {
+    border: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Style des boutons */
+.btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
+}
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #1e3a5f;
+    border-color: #1e3a5f;
+}
+.btn-outline-info {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+.btn-outline-info:hover {
+    background-color: #2d6a9f;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    .form-label {
+        font-size: 0.9rem;
+    }
+    .d-flex.gap-2.justify-content-between {
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+    .d-flex.gap-2.justify-content-between > div {
+        width: 100%;
+    }
+    .d-flex.gap-2.justify-content-between .btn {
+        flex: 1;
+    }
+}
+@media (max-width: 575px) {
+    .row.g-4 > [class*="col-"] {
+        width: 100%;
+    }
+    .input-group {
+        flex-wrap: wrap;
+    }
+    .input-group .form-control {
+        width: 100%;
+        border-radius: 8px !important;
+        margin-top: 5px;
+    }
+    .input-group .input-group-text {
+        width: 100%;
+        border-radius: 8px !important;
+        justify-content: center;
+    }
+}
 </style>
 {% endblock %}

@@ -8,28 +8,34 @@
 <div class="container-fluid px-0">
     <!-- Statistiques rapides - 2 cartes -->
     <div class="row g-3 mb-4">
-        <div class="col-sm-6">
-            <div class="card bg-primary text-white">
+        <div class="col-6 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title mb-1 opacity-75">Total produits</h6>
-                            <h2 class="mb-0">{{ total_produits }}</h2>
+                            <h6 class="card-title mb-1 opacity-75" style="color: #1e3a5f;">Total produits</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #1e3a5f;">{{ total_produits }}</h2>
                         </div>
-                        <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 48px; height: 48px; background: rgba(30, 58, 95, 0.1);">
+                            <i class="bi bi-box-seam fs-4" style="color: #1e3a5f;"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="card bg-info text-white">
+        <div class="col-6 col-sm-6">
+            <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title mb-1 opacity-75">Catégories</h6>
-                            <h2 class="mb-0">{{ categories|length }}</h2>
+                            <h6 class="card-title mb-1 opacity-75" style="color: #2d6a9f;">Catégories</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #2d6a9f;">{{ categories|length }}</h2>
                         </div>
-                        <i class="bi bi-tags fs-1 opacity-50"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width: 48px; height: 48px; background: rgba(45, 106, 159, 0.1);">
+                            <i class="bi bi-tags fs-4" style="color: #2d6a9f;"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -37,26 +43,30 @@
     </div>
 
     <!-- Filtres et actions -->
-    <div class="card mb-4">
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
                 <div class="d-flex gap-2 flex-wrap">
                     <a href="{% url 'liste_produits' %}" 
-                       class="btn btn-sm {% if not categorie_active %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                       class="btn btn-sm {% if not categorie_active %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                       style="{% if not categorie_active %}background: #1e3a5f; border-color: #1e3a5f;{% endif %}">
                         <i class="bi bi-grid"></i> Tous
                     </a>
                     {% for cat in categories %}
                         <a href="?categorie={{ cat.id }}" 
-                           class="btn btn-sm {% if categorie_active == cat.id %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                           class="btn btn-sm {% if categorie_active == cat.id %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                           style="{% if categorie_active == cat.id %}background: #1e3a5f; border-color: #1e3a5f;{% endif %}">
                             <i class="bi bi-folder"></i> {{ cat.nom }} ({{ cat.nb_produits }})
                         </a>
                     {% endfor %}
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{% url 'ajouter_categorie' %}" class="btn btn-sm btn-outline-info">
+                    <a href="{% url 'ajouter_categorie' %}" class="btn btn-sm" 
+                       style="background: #344e65; color: white;">
                         <i class="bi bi-folder-plus"></i> Catégorie
                     </a>
-                    <a href="{% url 'ajouter_produit' %}" class="btn btn-sm btn-success">
+                    <a href="{% url 'ajouter_produit' %}" class="btn btn-sm" 
+                       style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
                         <i class="bi bi-plus-circle"></i> Nouveau produit
                     </a>
                 </div>
@@ -65,12 +75,12 @@
     </div>
 
     <!-- Liste des produits -->
-    <div class="card">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                <i class="bi bi-box-seam me-2"></i>Liste des produits
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+                <i class="bi bi-box-seam me-2" style="color: #1e3a5f;"></i>Liste des produits
             </h5>
-            <span class="badge bg-secondary">{{ produits|length }} produit(s)</span>
+            <span class="badge" style="background: #344e65; color: white;">{{ produits|length }} produit(s)</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -85,20 +95,18 @@
                             <th>TVA</th>
                             <th>Unité</th>
                             <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
+                        </thead>
                     <tbody>
                         {% for produit in produits %}
                         <tr>
-                            <td>
-                                <span class="badge bg-light text-dark">{{ produit.reference }}</span>
+                            <td data-label="Réf.">
+                                <span class="badge" style="background: #f0f0f0; color: #1e3a5f;">{{ produit.reference }}</span>
                             </td>
-                            <td>
-                                <div class="fw-bold">{{ produit.nom }}</div>
+                            <td data-label="Produit">
+                                <div class="fw-bold" style="color: #1e3a5f;">{{ produit.nom }}</div>
                                 {% if produit.description %}
                                     <small class="text-muted">{{ produit.description|truncatechars:50 }}</small>
                                 {% endif %}
-                                <!-- Affichage de la devise uniquement -->
                                 {% if produit.pays %}
                                     <br>
                                     <small class="text-muted">
@@ -106,30 +114,30 @@
                                     </small>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td data-label="Catégorie">
                                 {% if produit.categorie %}
-                                    <span class="badge bg-info bg-opacity-10 text-info">
+                                    <span class="badge" style="background: #e8f0fe; color: #1e3a5f;">
                                         <i class="bi bi-folder me-1"></i>{{ produit.categorie.nom }}
                                     </span>
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
-                            <td class="text-end">
+                            <td data-label="Prix HT" class="text-end">
                                 {{ produit.prix_ht|floatformat:0 }} {{ produit.devise_symbole }}
                             </td>
-                            <td class="text-end fw-bold text-primary">
+                            <td data-label="Prix TTC" class="text-end fw-bold" style="color: #2d6a9f;">
                                 {{ produit.prix_ttc|floatformat:0 }} {{ produit.devise_symbole }}
                             </td>
-                            <td>
+                            <td data-label="TVA">
                                 {% if produit.taux_tva > 0 %}
-                                    <span class="badge bg-info">{{ produit.taux_tva }}%</span>
+                                    <span class="badge" style="background: #2d6a9f; color: white;">{{ produit.taux_tva }}%</span>
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
-                            <td>{{ produit.get_unite_display }}</td>
-                            <td>
+                            <td data-label="Unité">{{ produit.get_unite_display }}</td>
+                            <td data-label="Actions" class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <a href="{% url 'modifier_produit' produit.pk %}" 
                                        class="btn btn-sm btn-outline-warning"
@@ -152,10 +160,11 @@
                         {% empty %}
                         <tr>
                             <td colspan="8" class="text-center py-5">
-                                <i class="bi bi-box-seam display-1 text-muted"></i>
-                                <h5 class="mt-3">Aucun produit</h5>
+                                <i class="bi bi-box-seam display-1 text-muted" style="color: #344e65 !important;"></i>
+                                <h5 class="mt-3" style="color: #344e65;">Aucun produit</h5>
                                 <p class="text-muted">Commencez par ajouter votre premier produit</p>
-                                <a href="{% url 'ajouter_produit' %}" class="btn btn-primary">
+                                <a href="{% url 'ajouter_produit' %}" class="btn" 
+                                   style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
                                     <i class="bi bi-plus-circle"></i> Ajouter un produit
                                 </a>
                             </td>
@@ -167,4 +176,177 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Style du tableau */
+.table th {
+    font-weight: 600;
+    color: #1e3a5f;
+    border-top: none;
+    padding: 1rem;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+/* Style des badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+/* Style des boutons d'action */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.btn-outline-info {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-info:hover {
+    background-color: #2d6a9f;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive pour tableaux sur mobile */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+    }
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+    .table td .d-flex {
+        justify-content: flex-end;
+    }
+    .card-header {
+        padding: 1rem;
+    }
+    .card-header h5 {
+        font-size: 1.1rem;
+    }
+}
+
+/* Très petits écrans */
+@media (max-width: 399px) {
+    .card-header {
+        flex-direction: column;
+        align-items: stretch !important;
+        text-align: center;
+    }
+    .card-header h5 {
+        margin-bottom: 10px;
+    }
+    .card-header .badge {
+        align-self: center;
+    }
+    .table td {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    .table td::before {
+        margin-bottom: 5px;
+        display: block;
+    }
+    .table td .d-flex {
+        margin-top: 5px;
+        justify-content: flex-start;
+    }
+}
+
+/* Ajustement des cartes statistiques sur mobile */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 0.8rem;
+    }
+    .card-body h2 {
+        font-size: 1.3rem !important;
+    }
+    .card-body .rounded-circle {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    .card-body .rounded-circle i {
+        font-size: 1.1rem !important;
+    }
+}
+</style>
 {% endblock %}

@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Devis{% endblock %}
 {% block page_title %}Gestion des Devis{% endblock %}
 
@@ -6,70 +8,110 @@
 
 <!-- Statistiques -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card text-center p-3">
-            <div class="fs-3 fw-bold text-primary">{{ nb_total }}</div>
-            <div class="text-muted small">Total</div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 55px; height: 55px; background: rgba(30, 58, 95, 0.1);">
+                    <i class="bi bi-files fs-4" style="color: #1e3a5f;"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold" style="color: #1e3a5f;">{{ nb_total }}</div>
+                    <div class="text-muted small">Total devis</div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3">
-            <div class="fs-3 fw-bold text-warning">{{ nb_attente }}</div>
-            <div class="text-muted small">En attente</div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 55px; height: 55px; background: rgba(52, 78, 101, 0.1);">
+                    <i class="bi bi-hourglass-split fs-4" style="color: #344e65;"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold" style="color: #344e65;">{{ nb_attente }}</div>
+                    <div class="text-muted small">En attente</div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3">
-            <div class="fs-3 fw-bold text-success">{{ nb_acceptes }}</div>
-            <div class="text-muted small">Acceptés</div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 55px; height: 55px; background: rgba(45, 106, 159, 0.1);">
+                    <i class="bi bi-check-lg fs-4" style="color: #2d6a9f;"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold" style="color: #2d6a9f;">{{ nb_acceptes }}</div>
+                    <div class="text-muted small">Acceptés</div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center p-3">
-            <div class="fs-3 fw-bold text-danger">{{ nb_refuses }}</div>
-            <div class="text-muted small">Refusés</div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center"
+                     style="width: 55px; height: 55px; background: rgba(220, 53, 69, 0.1);">
+                    <i class="bi bi-x-lg fs-4" style="color: #dc3545;"></i>
+                </div>
+                <div>
+                    <div class="fs-2 fw-bold" style="color: #dc3545;">{{ nb_refuses }}</div>
+                    <div class="text-muted small">Refusés</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Filtres et actions -->
-<div class="card mb-4">
+<!-- Filtres et actions - Version responsive optimisée -->
+<div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
+        <div class="d-flex flex-column gap-3">
+            <!-- Barre de recherche - optimisée pour mobile -->
+            <div class="w-100">
                 <form method="get" class="d-flex gap-2">
                     <input type="hidden" name="statut" value="{{ statut }}">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" name="q" class="form-control"
-                               placeholder="Rechercher..." value="{{ recherche }}">
+                    <div class="input-group flex-grow-1">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search" style="color: #1e3a5f;"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control border-start-0"
+                               placeholder="Rechercher par numéro ou client..." value="{{ recherche }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">OK</button>
+                    <button type="submit" class="btn" style="background: #1e3a5f; color: white; border: none; white-space: nowrap;">
+                        <i class="bi bi-search d-md-none"></i>
+                        <span class="d-none d-md-inline">Rechercher</span>
+                    </button>
                 </form>
             </div>
-            <div class="col-md-4">
-                <div class="d-flex gap-2">
+            
+            <!-- Filtres et bouton nouveau - organisés en flex wrap -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <a href="{% url 'liste_devis' %}"
-                       class="btn btn-sm {% if not statut %}btn-primary{% else %}btn-outline-secondary{% endif %}">
-                        Tous
+                       class="btn btn-sm {% if not statut %}btn-primary{% else %}btn-outline-secondary{% endif %}"
+                       style="{% if not statut %}background: #1e3a5f; border-color: #1e3a5f;{% endif %}">
+                        <i class="bi bi-grid"></i> Tous
                     </a>
                     <a href="?statut=en_attente"
                        class="btn btn-sm {% if statut == 'en_attente' %}btn-warning{% else %}btn-outline-warning{% endif %}">
-                        En attente
+                        <i class="bi bi-hourglass-split"></i> En attente
                     </a>
                     <a href="?statut=accepte"
                        class="btn btn-sm {% if statut == 'accepte' %}btn-success{% else %}btn-outline-success{% endif %}">
-                        Acceptés
+                        <i class="bi bi-check-lg"></i> Acceptés
                     </a>
                     <a href="?statut=refuse"
                        class="btn btn-sm {% if statut == 'refuse' %}btn-danger{% else %}btn-outline-danger{% endif %}">
-                        Refusés
+                        <i class="bi bi-x-lg"></i> Refusés
                     </a>
                 </div>
-            </div>
-            <div class="col-md-2 text-end">
-                <a href="{% url 'ajouter_devis' %}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg me-1"></i>Nouveau
+                <a href="{% url 'ajouter_devis' %}" class="btn" 
+                   style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
+                    <i class="bi bi-plus-lg me-1"></i>Nouveau devis
                 </a>
             </div>
         </div>
@@ -77,72 +119,294 @@
 </div>
 
 <!-- Tableau -->
-<div class="card">
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+            <i class="bi bi-file-text me-2" style="color: #1e3a5f;"></i>Liste des devis
+        </h5>
+    </div>
     <div class="card-body p-0">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th>Numéro</th>
-                    <th>Client</th>
-                    <th>Date création</th>
-                    <th>Validité</th>
-                    <th>Total TTC</th>
-                    <th>Statut</th>
-                    <th class="text-center">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for d in devis %}
-                <tr>
-                    <td><strong>{{ d.numero }}</strong></td>
-                    <td>
-                        {{ d.client.nom }}
-                        {% if d.client.entreprise %}
-                            <br><small class="text-muted">{{ d.client.entreprise }}</small>
-                        {% endif %}
-                    </td>
-                    <td>{{ d.date_creation|date:"d/m/Y" }}</td>
-                    <td>{{ d.date_validite|date:"d/m/Y" }}</td>
-                    <td class="fw-semibold">{{ d.calculer_total_ttc|floatformat:0 }} {{ d.client.devise|default:"FCFA" }}</td>
-                    <td>
-                        {% if d.statut == 'en_attente' %}
-                            <span class="badge bg-warning text-dark">En attente</span>
-                        {% elif d.statut == 'accepte' %}
-                            <span class="badge bg-success">Accepté</span>
-                            {% if d.transforme_en_facture %}
-                                <span class="badge bg-info ms-1">Facturé</span>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th style="width: 15%">Numéro</th>
+                        <th style="width: 25%">Client</th>
+                        <th style="width: 15%">Date création</th>
+                        <th style="width: 15%">Validité</th>
+                        <th style="width: 15%">Total TTC</th>
+                        <th style="width: 10%">Statut</th>
+                        <th style="width: 5%" class="text-center">Actions</th>
+                    </thead>
+                <tbody>
+                    {% for d in devis %}
+                    <tr>
+                        <td data-label="Numéro">
+                            <strong style="color: #1e3a5f;">{{ d.numero }}</strong>
+                        </td>
+                        <td data-label="Client">
+                            {{ d.client.nom }}
+                            {% if d.client.entreprise %}
+                                <br><small class="text-muted">{{ d.client.entreprise }}</small>
                             {% endif %}
-                        {% else %}
-                            <span class="badge bg-danger">Refusé</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-center">
-                        <a href="{% url 'detail_devis' d.pk %}"
-                           class="btn btn-sm btn-outline-info me-1" title="Voir">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        <a href="{% url 'modifier_devis' d.pk %}"
-                           class="btn btn-sm btn-outline-warning me-1" title="Modifier">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a href="{% url 'supprimer_devis' d.pk %}"
-                           class="btn btn-sm btn-outline-danger" title="Supprimer">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        <i class="bi bi-file-text fs-3 d-block mb-2"></i>
-                        Aucun devis trouvé.
-                        <a href="{% url 'ajouter_devis' %}">Créer le premier devis</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        <td data-label="Date création">{{ d.date_creation|date:"d/m/Y" }}</td>
+                        <td data-label="Validité">{{ d.date_validite|date:"d/m/Y" }}</td>
+                        <td data-label="Total TTC" class="fw-semibold" style="color: #2d6a9f;">
+                            {{ d.calculer_total_ttc|floatformat:0 }} {{ d.client.devise|default:"FCFA" }}
+                        </td>
+                        <td data-label="Statut">
+                            {% if d.statut == 'en_attente' %}
+                                <span class="badge" style="background: #344e65; color: white;">En attente</span>
+                            {% elif d.statut == 'accepte' %}
+                                <span class="badge" style="background: #2d6a9f; color: white;">Accepté</span>
+                                {% if d.transforme_en_facture %}
+                                    <span class="badge ms-1" style="background: #1e3a5f; color: white;">Facturé</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-danger">Refusé</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Actions" class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{% url 'detail_devis' d.pk %}"
+                                   class="btn btn-sm btn-outline-info" title="Voir">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{% url 'modifier_devis' d.pk %}"
+                                   class="btn btn-sm btn-outline-warning" title="Modifier">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'supprimer_devis' d.pk %}"
+                                   class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-file-text display-1 text-muted" style="color: #344e65 !important;"></i>
+                            <h5 class="mt-3" style="color: #344e65;">Aucun devis</h5>
+                            <p class="text-muted mb-3">Commencez par créer votre premier devis</p>
+                            <a href="{% url 'ajouter_devis' %}" class="btn" 
+                               style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
+                                <i class="bi bi-plus-circle me-1"></i>Créer un devis
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<style>
+/* Style des cartes statistiques */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+/* Style des badges */
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+/* Style des boutons d'action */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-info {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-info:hover {
+    background-color: #2d6a9f;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-warning {
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #1e3a5f;
+    border-color: #1e3a5f;
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive pour tableaux sur mobile */
+@media (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+    }
+    .table thead {
+        display: none;
+    }
+    .table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        padding: 0.5rem;
+        background: white;
+    }
+    .table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+        border: none;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .table td:last-child {
+        border-bottom: none;
+    }
+    .table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #1e3a5f;
+        text-align: left;
+        margin-right: 15px;
+        flex: 1;
+    }
+    .table td .d-flex {
+        justify-content: flex-end;
+    }
+}
+
+/* Ajustement des cartes statistiques sur mobile */
+@media (max-width: 575px) {
+    .card-body {
+        padding: 0.8rem;
+    }
+    .card-body .fs-2 {
+        font-size: 1.3rem !important;
+    }
+    .card-body .rounded-circle {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    .card-body .rounded-circle i {
+        font-size: 1.1rem !important;
+    }
+}
+
+/* Barre de recherche et filtres - optimisés pour mobile */
+@media (max-width: 768px) {
+    .d-flex.flex-wrap.align-items-center.justify-content-between {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+    
+    .d-flex.flex-wrap.gap-2 {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        white-space: nowrap;
+    }
+    
+    .input-group {
+        flex: 1;
+    }
+    
+    form.d-flex {
+        width: 100%;
+    }
+}
+
+/* Tablettes */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .d-flex.flex-wrap.align-items-center.justify-content-between {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .d-flex.flex-wrap.gap-2 {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+    
+    .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Ajustements pour les très petits écrans */
+@media (max-width: 480px) {
+    .btn-sm {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .btn {
+        font-size: 0.8rem;
+    }
+    
+    .input-group-text, .form-control {
+        font-size: 0.8rem;
+    }
+}
+</style>
 {% endblock %}

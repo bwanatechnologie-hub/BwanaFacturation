@@ -1,44 +1,52 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ titre }}{% endblock %}
 {% block page_title %}{{ titre }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-tag me-2"></i>{{ titre }}
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold" style="color: #1e3a5f;">
+                    <i class="bi bi-tag me-2" style="color: #1e3a5f;"></i>{{ titre }}
                 </h5>
             </div>
             <div class="card-body p-4">
                 <form method="post">
                     {% csrf_token %}
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Nom <span class="text-danger">*</span>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-pencil-square me-1"></i>Nom <span class="text-danger">*</span>
                         </label>
                         {{ form.nom }}
                         {% if form.nom.errors %}
-                            <div class="text-danger small">{{ form.nom.errors }}</div>
+                            <div class="text-danger small mt-1">{{ form.nom.errors }}</div>
                         {% endif %}
+                        <small class="text-muted">Ex: Informatique, Design, Marketing...</small>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Description</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold" style="color: #1e3a5f;">
+                            <i class="bi bi-file-text me-1"></i>Description
+                        </label>
                         {{ form.description }}
-                        <small class="text-muted">Optionnel</small>
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                        {% endif %}
+                        <small class="text-muted">Optionnel - Décrivez à quoi sert cette catégorie</small>
                     </div>
 
-                    <hr>
+                    <hr class="my-4" style="border-color: #e0e0e0;">
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary px-4">
+                        <button type="submit" class="btn px-4 py-2 fw-bold" 
+                                style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
                             <i class="bi bi-check-lg me-2"></i>{{ bouton }}
                         </button>
-                        <a href="{% url 'liste_categories' %}" class="btn btn-outline-secondary px-4">
+                        <a href="{% url 'liste_categories' %}" class="btn btn-outline-secondary px-4 py-2">
                             <i class="bi bi-x me-2"></i>Annuler
                         </a>
                     </div>
@@ -47,4 +55,81 @@
         </div>
     </div>
 </div>
+
+<style>
+/* Style des champs de formulaire */
+.form-control {
+    border: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.form-control:focus {
+    border-color: #1e3a5f;
+    box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Style du bouton */
+.btn {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
+}
+
+.btn-outline-secondary {
+    border-color: #dee2e6;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #1e3a5f;
+    border-color: #1e3a5f;
+    transform: translateY(-2px);
+}
+
+/* Animation de la carte */
+.card {
+    animation: fadeInUp 0.4s ease-out;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
 {% endblock %}
