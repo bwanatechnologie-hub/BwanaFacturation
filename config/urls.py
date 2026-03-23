@@ -7,7 +7,7 @@ from django.views.static import serve
 from django.shortcuts import redirect
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls),
 
     # Redirection racine → dashboard
     path('', lambda request: redirect('/devis/tableau-de-bord/'), name='home'),
@@ -20,7 +20,7 @@ urlpatterns = [
     path('produits/',    include('produits.urls')),
 
     # ✅ Administration personnalisée
-    path('admin-bwana/', include('users.urls_admin')),
+    path('masque-zone-ad-rouge/', include('users.urls_admin')),
 
     # Media protégés par login
     path('media/<path:path>', login_required(serve), {
