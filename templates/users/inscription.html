@@ -20,19 +20,19 @@
             <h5 class="text-muted" style="color: #344e65 !important;">Créer un compte</h5>
         </div>
 
-        <!-- ✅ Messages -->
+        <!-- Messages -->
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show border-0"
                      role="alert" style="border-radius: 12px;">
-                    <i class="bi bi-{{ message.tags }}-circle me-2"></i>
+                    <i class="bi bi-info-circle me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
 
-        <!-- ✅ Erreurs formulaire -->
+        <!-- Erreurs formulaire -->
         {% if form.errors %}
             <div class="alert alert-danger border-0" style="border-radius: 12px; background-color: rgba(220, 53, 69, 0.1); color: #dc3545;">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -93,7 +93,7 @@
                 <small class="text-muted">Vous recevrez un email de confirmation</small>
             </div>
 
-            <!-- Mot de passe -->
+            <!-- Mot de passe avec toggle -->
             <div class="mb-3">
                 <label class="form-label fw-semibold" style="color: #1e3a5f;">
                     <i class="bi bi-lock me-1"></i>Mot de passe
@@ -103,6 +103,13 @@
                         <i class="bi bi-lock" style="color: #1e3a5f;"></i>
                     </span>
                     {{ form.password1 }}
+                    <!-- ✅ Bouton œil password1 -->
+                    <button type="button"
+                            class="input-group-text bg-light border-start-0"
+                            onclick="togglePassword('id_password1', this)"
+                            title="Afficher / masquer le mot de passe">
+                        <i class="bi bi-eye" style="color: #1e3a5f;"></i>
+                    </button>
                 </div>
                 {% if form.password1.errors %}
                     <div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>
@@ -110,7 +117,7 @@
                 <small class="text-muted">Minimum 8 caractères</small>
             </div>
 
-            <!-- Confirmation mot de passe -->
+            <!-- Confirmation mot de passe avec toggle -->
             <div class="mb-4">
                 <label class="form-label fw-semibold" style="color: #1e3a5f;">
                     <i class="bi bi-lock-fill me-1"></i>Confirmer le mot de passe
@@ -120,6 +127,13 @@
                         <i class="bi bi-lock-fill" style="color: #1e3a5f;"></i>
                     </span>
                     {{ form.password2 }}
+                    <!-- ✅ Bouton œil password2 -->
+                    <button type="button"
+                            class="input-group-text bg-light border-start-0"
+                            onclick="togglePassword('id_password2', this)"
+                            title="Afficher / masquer le mot de passe">
+                        <i class="bi bi-eye" style="color: #1e3a5f;"></i>
+                    </button>
                 </div>
                 {% if form.password2.errors %}
                     <div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>
@@ -161,9 +175,7 @@
     </div>
 </div>
 
-<!-- Styles personnalisés -->
 <style>
-/* Style pour le logo */
 .logo-circle {
     width: 100px;
     height: 100px;
@@ -174,86 +186,68 @@
     justify-content: center;
     box-shadow: 0 10px 20px rgba(0, 75, 173, 0.3);
 }
-
-/* Animation du formulaire */
-.card {
-    animation: slideUp 0.5s ease-out;
-}
-
+.card { animation: slideUp 0.5s ease-out; }
 @keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
-
-/* Style des champs de formulaire */
 .form-control, .input-group-text {
     border: 1px solid #e0e0e0;
     padding: 12px;
     transition: all 0.3s ease;
 }
-
 .form-control:focus {
     border-color: #1e3a5f;
     box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.1);
 }
+.input-group-text { background-color: #f8f9fa; }
+.btn { transition: all 0.3s ease; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(30, 58, 95, 0.3); }
+.form-label { margin-bottom: 8px; font-size: 0.9rem; }
+.invalid-feedback { font-size: 0.8rem; margin-top: 5px; }
+.form-check-input:checked { background-color: #1e3a5f; border-color: #1e3a5f; }
 
-.input-group-text {
-    background-color: #f8f9fa;
+/* ✅ Style bouton œil */
+.input-group-text[onclick] {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.input-group-text[onclick]:hover {
+    background-color: #e9ecef !important;
 }
 
-/* Style du bouton */
-.btn {
-    transition: all 0.3s ease;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(30, 58, 95, 0.3);
-}
-
-/* Style des labels */
-.form-label {
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-}
-
-/* Style des messages d'erreur */
-.invalid-feedback {
-    font-size: 0.8rem;
-    margin-top: 5px;
-}
-
-/* Style du checkbox */
-.form-check-input:checked {
-    background-color: #1e3a5f;
-    border-color: #1e3a5f;
-}
-
-/* Responsive */
 @media (max-width: 576px) {
-    .card {
-        margin: 15px;
-        padding: 20px !important;
-    }
+    .card { margin: 15px; padding: 20px !important; }
 }
 </style>
 
-<!-- Script pour le placeholder -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Ajouter des placeholders aux champs
     document.querySelectorAll('input').forEach(input => {
         if (!input.placeholder) {
-            if (input.type === 'email') input.placeholder = 'exemple@email.com';
+            if (input.type === 'email')    input.placeholder = 'exemple@email.com';
             if (input.type === 'password') input.placeholder = '••••••••';
+            if (input.type === 'text' && input.name === 'first_name') input.placeholder = 'Prénom';
+            if (input.type === 'text' && input.name === 'last_name')  input.placeholder = 'Nom';
         }
     });
 });
+
+/* ✅ Toggle affichage mot de passe */
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+        btn.title = 'Masquer le mot de passe';
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+        btn.title = 'Afficher le mot de passe';
+    }
+}
 </script>
 {% endblock %}
