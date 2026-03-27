@@ -150,7 +150,7 @@ def generer_pdf_devis(devis):
     # ── Colonne émetteur : LOGO EN HAUT puis infos
     col_emetteur = []
     if logo_emetteur:
-        col_emetteur.append(logo_emetteur)          # ← logo tout en haut
+        col_emetteur.append(logo_emetteur)
         col_emetteur.append(Spacer(1, 0.25*cm))
     col_emetteur.append(Paragraph(f"<b>{nom_emetteur}</b>", s_bold))
     if profil:
@@ -196,7 +196,7 @@ def generer_pdf_devis(devis):
     # ── Colonne client : LOGO EN HAUT puis infos
     col_client = []
     if logo_client:
-        col_client.append(logo_client)              # ← logo tout en haut
+        col_client.append(logo_client)
         col_client.append(Spacer(1, 0.25*cm))
     col_client.append(Paragraph("Proposé à :", s_small))
     col_client.append(Paragraph(f"<b>{nom_client}</b>", s_bold))
@@ -210,10 +210,10 @@ def generer_pdf_devis(devis):
         col_client.append(Paragraph(line, s_small))
 
     # ── Table en-tête 3 colonnes
-    header_data  = [[col_emetteur, col_titre, col_client]]
+    header_data = [[col_emetteur, col_titre, col_client]]
     header_table = Table(header_data, colWidths=[6*cm, 6*cm, 6*cm])
     header_table.setStyle(TableStyle([
-        ('VALIGN',  (0, 0), (-1, -1), 'TOP'),   # ← TOP = logos alignés en haut
+        ('VALIGN',  (0, 0), (-1, -1), 'TOP'),
         ('PADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(header_table)
@@ -286,7 +286,7 @@ def generer_pdf_devis(devis):
             Paragraph(f"{montant_ht:,.2f}", s_right),
         ])
 
-    col_widths   = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
+    col_widths = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
     lignes_table = Table(rows, colWidths=col_widths)
     lignes_table.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, 0), BLEU),
@@ -308,7 +308,7 @@ def generer_pdf_devis(devis):
     # ══════════════════════════════════════════
     # TOTAUX
     # ══════════════════════════════════════════
-    total_ht  = devis.calculer_total_ht()
+    total_ht = devis.calculer_total_ht()
     total_tva = devis.calculer_tva()
     total_ttc = devis.calculer_total_ttc()
 
@@ -351,9 +351,55 @@ def generer_pdf_devis(devis):
         elements.append(Paragraph(f"<b>Notes :</b> {devis.notes}", s_normal))
 
     # ══════════════════════════════════════════
-    # PIED DE PAGE
+    # SECTION SIGNATURE
     # ══════════════════════════════════════════
     elements.append(Spacer(1, 0.8*cm))
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
+    elements.append(Spacer(1, 0.3*cm))
+
+    # Titre de la section
+    elements.append(Paragraph(
+        "<b>Signature et approbation</b>",
+        ParagraphStyle('signature_title', fontSize=10, fontName='Helvetica-Bold',
+                       textColor=BLEU, alignment=TA_CENTER, leading=14)
+    ))
+    elements.append(Spacer(1, 0.3*cm))
+
+    # Table à 2 colonnes pour les signatures (sans les traits)
+    signature_data = [
+        # Ligne des titres
+        [Paragraph("<b>Signature de l'émetteur</b>", s_bold),
+         Paragraph("<b>Signature du client</b>", s_bold)],
+        
+        # Espace pour signature
+        [Spacer(1, 2.5*cm), Spacer(1, 2.5*cm)],
+        
+        # Noms
+        [Paragraph(nom_emetteur, s_small),
+         Paragraph(nom_client, s_small)],
+        
+        # Dates
+        [Paragraph(f"Date : {date_fr(devis.date_creation)}", s_small),
+         Paragraph("Date : ____________", s_small)],
+    ]
+
+    signature_table = Table(signature_data, colWidths=[7*cm, 7*cm])
+    signature_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(signature_table)
+
+    # Espace avant le pied de page
+    elements.append(Spacer(1, 0.8*cm))
+
+    # ══════════════════════════════════════════
+    # PIED DE PAGE
+    # ══════════════════════════════════════════
     elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
     elements.append(Spacer(1, 0.2*cm))
 

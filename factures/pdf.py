@@ -147,7 +147,7 @@ def generer_pdf_facture(facture):
     # ── Colonne émetteur : LOGO EN HAUT puis infos
     col_emetteur = []
     if logo_emetteur:
-        col_emetteur.append(logo_emetteur)          # ← logo tout en haut
+        col_emetteur.append(logo_emetteur)
         col_emetteur.append(Spacer(1, 0.25*cm))
     col_emetteur.append(Paragraph(f"<b>{nom_emetteur}</b>", s_bold))
     if profil:
@@ -193,7 +193,7 @@ def generer_pdf_facture(facture):
     # ── Colonne client : LOGO EN HAUT puis infos
     col_client = []
     if logo_client:
-        col_client.append(logo_client)              # ← logo tout en haut
+        col_client.append(logo_client)
         col_client.append(Spacer(1, 0.25*cm))
     col_client.append(Paragraph("Facturé à :", s_small))
     col_client.append(Paragraph(f"<b>{nom_client}</b>", s_bold))
@@ -207,10 +207,10 @@ def generer_pdf_facture(facture):
         col_client.append(Paragraph(line, s_small))
 
     # ── Table en-tête 3 colonnes
-    header_data  = [[col_emetteur, col_titre, col_client]]
+    header_data = [[col_emetteur, col_titre, col_client]]
     header_table = Table(header_data, colWidths=[6*cm, 6*cm, 6*cm])
     header_table.setStyle(TableStyle([
-        ('VALIGN',  (0, 0), (-1, -1), 'TOP'),   # ← TOP = logos alignés en haut
+        ('VALIGN',  (0, 0), (-1, -1), 'TOP'),
         ('PADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(header_table)
@@ -283,7 +283,7 @@ def generer_pdf_facture(facture):
             Paragraph(f"{montant_ht:,.2f}", s_right),
         ])
 
-    col_widths   = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
+    col_widths = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
     lignes_table = Table(rows, colWidths=col_widths)
     lignes_table.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, 0), BLEU),
@@ -305,7 +305,7 @@ def generer_pdf_facture(facture):
     # ══════════════════════════════════════════
     # TOTAUX
     # ══════════════════════════════════════════
-    total_ht  = facture.calculer_total_ht()
+    total_ht = facture.calculer_total_ht()
     total_tva = facture.calculer_tva()
     total_ttc = facture.calculer_total_ttc()
 
@@ -348,25 +348,63 @@ def generer_pdf_facture(facture):
         elements.append(Paragraph(f"<b>Notes :</b> {facture.notes}", s_normal))
 
     # ══════════════════════════════════════════
-    # PIED DE PAGE
+    # SECTION SIGNATURE (sans les traits)
     # ══════════════════════════════════════════
     elements.append(Spacer(1, 0.8*cm))
     elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
-    elements.append(Spacer(1, 0.2*cm))
+    elements.append(Spacer(1, 0.3*cm))
 
-    #if profil and profil.conditions_paiement:
-    #    elements.append(Paragraph(
-    #        f"<b>Conditions de paiement :</b> {profil.conditions_paiement}",
-    #        ParagraphStyle('cond', fontSize=8, fontName='Helvetica',
-    #                       textColor=NOIR, leading=12)
-    #    ))
-    #    elements.append(Spacer(1, 0.15*cm))
+    # Titre de la section
+    elements.append(Paragraph(
+        "<b>Signature et approbation</b>",
+        ParagraphStyle('signature_title', fontSize=10, fontName='Helvetica-Bold',
+                       textColor=BLEU, alignment=TA_CENTER, leading=14)
+    ))
+    elements.append(Spacer(1, 0.3*cm))
+
+    # Table à 2 colonnes pour les signatures (sans les lignes)
+    signature_data = [
+        # Ligne des titres
+        [Paragraph("<b>Signature de l'émetteur</b>", s_bold),
+         Paragraph("<b>Signature du client</b>", s_bold)],
+        
+        # Espace pour signature (plus grand)
+        [Spacer(1, 2.5*cm), Spacer(1, 2.5*cm)],
+        
+        # Noms
+        [Paragraph(nom_emetteur, s_small),
+         Paragraph(nom_client, s_small)],
+        
+        # Dates
+        [Paragraph(f"Date : {date_fr(facture.date_creation)}", s_small),
+         Paragraph("Date : ____________", s_small)],
+    ]
+
+    signature_table = Table(signature_data, colWidths=[7*cm, 7*cm])
+    signature_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    elements.append(signature_table)
+
+    # Espace avant le pied de page
+    elements.append(Spacer(1, 0.8*cm))
+
+    # ══════════════════════════════════════════
+    # PIED DE PAGE
+    # ══════════════════════════════════════════
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
+    elements.append(Spacer(1, 0.2*cm))
 
     if profil and profil.mention_legale:
         elements.append(Paragraph(
             profil.mention_legale,
             ParagraphStyle('mention', fontSize=7, fontName='Helvetica',
-                           textColor=GRIS, leading=10)
+                           textColor=GRIS, leading=10, alignment=TA_CENTER)
         ))
         elements.append(Spacer(1, 0.15*cm))
 
