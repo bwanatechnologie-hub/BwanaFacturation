@@ -1,0 +1,142 @@
+<!-- templates/devis/gestion_liens.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liens du Devis {{ devis.numero }}{% endblock %}
+{% block page_title %}📋 Liens du Devis {{ devis.numero }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        
+        <!-- Statut du devis -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: #1e3a5f;">Devis {{ devis.numero }}</h5>
+                        <p class="text-muted mb-0">Client : {{ devis.client.nom }} {{ devis.client.prenom }}</p>
+                    </div>
+                    <div>
+                        {% if devis.statut == 'en_attente' %}
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">⏳ En attente d'approbation</span>
+                        {% elif devis.statut == 'approuve_superieur' %}
+                            <span class="badge bg-info text-dark fs-6 px-3 py-2">✅ Approuvé - En attente client</span>
+                        {% elif devis.statut == 'accepte' %}
+                            <span class="badge bg-success fs-6 px-3 py-2">🎉 Accepté par le client</span>
+                        {% elif devis.statut == 'refuse' %}
+                            <span class="badge bg-danger fs-6 px-3 py-2">❌ Refusé par le client</span>
+                        {% elif devis.statut == 'rejete_superieur' %}
+                            <span class="badge bg-danger fs-6 px-3 py-2">❌ Rejeté par le supérieur</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lien approbation supérieur -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-person-check me-2"></i>Étape 1 : Approbation supérieur
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if devis.statut == 'en_attente' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Envoyez ce lien à votre supérieur pour approbation.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="lienAppro" value="{{ lien_approbation }}" readonly>
+                        <button class="btn btn-outline-primary" onclick="copierLien('lienAppro')">
+                            <i class="bi bi-copy"></i> Copier
+                        </button>
+                    </div>
+                    <a href="{{ lien_approbation }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> Aperçu
+                    </a>
+                {% elif devis.statut == 'approuve_superieur' %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ✅ Devis approuvé par le supérieur le {{ devis.approuve_le|date:"d/m/Y H:i" }}
+                        {% if devis.commentaire_approbation %}
+                            <br><small class="text-muted">Commentaire : {{ devis.commentaire_approbation }}</small>
+                        {% endif %}
+                    </div>
+                {% elif devis.statut == 'rejete_superieur' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        ❌ Devis rejeté par le supérieur
+                        {% if devis.commentaire_approbation %}
+                            <br><small>Motif : {{ devis.commentaire_approbation }}</small>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Lien client -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-person me-2"></i>Étape 2 : Acceptation client
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if devis.statut == 'approuve_superieur' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Envoyez ce lien au client pour qu'il accepte ou refuse le devis.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="lienClient" value="{{ lien_client }}" readonly>
+                        <button class="btn btn-outline-primary" onclick="copierLien('lienClient')">
+                            <i class="bi bi-copy"></i> Copier
+                        </button>
+                    </div>
+                    <a href="{{ lien_client }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> Aperçu
+                    </a>
+                {% elif devis.statut == 'accepte' %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ✅ Devis accepté par le client le {{ devis.accepte_client_le|date:"d/m/Y H:i" }}
+                    </div>
+                {% elif devis.statut == 'refuse' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        ❌ Devis refusé par le client le {{ devis.accepte_client_le|date:"d/m/Y H:i" }}
+                    </div>
+                {% elif devis.statut == 'en_attente' %}
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        En attente d'approbation du supérieur avant d'envoyer au client.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'detail_devis' devis.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour au devis
+            </a>
+            {% if devis.statut == 'accepte' and not devis.transforme_en_facture %}
+            <a href="{% url 'transformer_en_facture' devis.pk %}" class="btn btn-success">
+                <i class="bi bi-arrow-right-circle me-2"></i>Transformer en facture
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copierLien(id) {
+    const input = document.getElementById(id);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    alert('Lien copié dans le presse-papier !');
+}
+</script>
+{% endblock %}

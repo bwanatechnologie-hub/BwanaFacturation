@@ -26,6 +26,9 @@ GRIS_CLAIR = colors.HexColor('#f2f2f2')
 GRIS       = colors.HexColor('#6c757d')
 BLANC      = colors.white
 NOIR       = colors.black
+VERT       = colors.HexColor('#2d6a9f')
+ROUGE      = colors.HexColor('#dc3545')
+ORANGE     = colors.HexColor('#fd7e14')
 
 
 def montant_en_lettres(montant, devise='FCFA'):
@@ -111,14 +114,18 @@ def generer_pdf_facture(facture):
     nom_client = f"{client.nom} {client.prenom}".strip()
 
     # ── Devise
-    devise = client.devise if client.pays_obj else 'FCFA'
+    devise = 'FCFA'
+    if hasattr(client, 'pays_obj') and client.pays_obj:
+        devise = client.pays_obj.devise_symbole or 'FCFA'
 
-    # ── Infos taxe
-    type_taxe_label = facture.type_taxe or client.type_taxe_nom or 'TVA'
-    taux_taxe_val   = facture.taux_taxe or client.taux_tva or (
-        facture.lignes.first().tva if facture.lignes.exists() else 0
-    )
-    pays_label = facture.pays or client.pays_nom or ''
+    # ── Infos taxe - Récupérer les taxes multiples
+    pays_label = facture.pays or (client.pays_obj.nom if client.pays_obj else '')
+    
+    # Récupérer les détails des taxes
+    taxes_details = facture.get_taxes_details()
+    total_ht = facture.calculer_total_ht()
+    total_tva = facture.calculer_tva()
+    total_ttc = facture.calculer_total_ttc()
 
     # ── Adresse client
     adresse_client_lines = []
@@ -130,11 +137,19 @@ def generer_pdf_facture(facture):
         adresse_client_lines.append(ville_str)
     if client.pays_obj: adresse_client_lines.append(client.pays_obj.nom)
 
-    statut_map   = {'non_payee': 'NON PAYÉE', 'payee': 'PAYÉE', 'annulee': 'ANNULÉE'}
-    statut_texte = statut_map.get(facture.statut, '')
+    # ── Statut avec couleurs pour le cachet
+    statut_map = {
+        'en_attente': ('EN ATTENTE D\'APPROBATION', ORANGE),
+        'approuvee': ('APPROUVÉE', VERT),
+        'rejetee': ('REJETÉE', ROUGE),
+        'non_payee': ('NON PAYÉE', ROUGE),
+        'payee': ('PAYÉE', VERT),
+        'annulee': ('ANNULÉE', GRIS),
+    }
+    statut_texte, statut_couleur = statut_map.get(facture.statut, ('', GRIS))
 
     # ══════════════════════════════════════════
-    # LOGOS — tous les deux EN HAUT de leur colonne
+    # LOGOS
     # ══════════════════════════════════════════
     logo_emetteur = None
     if profil and profil.logo:
@@ -144,7 +159,7 @@ def generer_pdf_facture(facture):
     if hasattr(client, 'logo') and client.logo:
         logo_client = _logo_image(client.logo.path, largeur=4*cm, hauteur=2.2*cm)
 
-    # ── Colonne émetteur : LOGO EN HAUT puis infos
+    # ── Colonne émetteur
     col_emetteur = []
     if logo_emetteur:
         col_emetteur.append(logo_emetteur)
@@ -168,7 +183,7 @@ def generer_pdf_facture(facture):
     else:
         col_emetteur.append(Paragraph(utilisateur.email or '', s_normal))
 
-    # ── Colonne titre FACTURE (centre)
+    # ── Colonne titre FACTURE
     col_titre = [
         Paragraph('FACTURE', ParagraphStyle(
             'titre', fontSize=24, fontName='Helvetica-Bold',
@@ -190,7 +205,7 @@ def generer_pdf_facture(facture):
         )),
     ]
 
-    # ── Colonne client : LOGO EN HAUT puis infos
+    # ── Colonne client
     col_client = []
     if logo_client:
         col_client.append(logo_client)
@@ -227,7 +242,6 @@ def generer_pdf_facture(facture):
         Paragraph(f"<b>Date :</b> {date_fr(facture.date_creation)}", s_normal),
         Paragraph(
             f"<b>Échéance :</b> {date_fr(facture.date_echeance)}"
-            f"{(' — <b>' + statut_texte + '</b>') if statut_texte else ''}"
             f"{pays_str}",
             s_normal
         ),
@@ -240,12 +254,22 @@ def generer_pdf_facture(facture):
     ]))
     elements.append(infos_table)
 
-    # Bandeau taxe + devise
+    # ✅ Bandeau taxe + devise (affichage des taxes multiples)
     elements.append(Spacer(1, 0.2*cm))
+    
+    # Créer le contenu du bandeau des taxes
+    if taxes_details and len(taxes_details) > 0:
+        taxe_lines = []
+        for taxe in taxes_details:
+            taxe_lines.append(f"{taxe['code']} ({taxe['taux']}%)")
+        taxe_text = " + ".join(taxe_lines)
+    else:
+        taxe_text = f"{facture.type_taxe or 'TVA'} ({facture.taux_taxe or 0}%)"
+    
     taxe_data = [[
         Paragraph(f"<b>Pays :</b> {pays_label or 'Non spécifié'}", s_normal),
-        Paragraph(f"<b>Type de taxe :</b> {type_taxe_label}", s_normal),
-        Paragraph(f"<b>Taux :</b> {taux_taxe_val}% — <b>Devise :</b> {devise}", s_bold),
+        Paragraph(f"<b>Taxes :</b> {taxe_text}", s_normal),
+        Paragraph(f"<b>Devise :</b> {devise}", s_bold),
     ]]
     taxe_table = Table(taxe_data, colWidths=[6*cm, 6*cm, 6*cm])
     taxe_table.setStyle(TableStyle([
@@ -269,7 +293,7 @@ def generer_pdf_facture(facture):
         ))
 
     entete = [th('Produit / Service'), th('Description'), th('Qté'),
-              th(f'P.U. ({devise})'), th(f'{type_taxe_label} %'), th(f'HT ({devise})')]
+              th(f'P.U. ({devise})'), th(f'TVA %'), th(f'HT ({devise})')]
     rows = [entete]
 
     for ligne in lignes:
@@ -303,30 +327,49 @@ def generer_pdf_facture(facture):
     elements.append(Spacer(1, 0.4*cm))
 
     # ══════════════════════════════════════════
-    # TOTAUX
+    # TOTAUX - AFFICHAGE DES TAXES MULTIPLES
     # ══════════════════════════════════════════
-    total_ht = facture.calculer_total_ht()
-    total_tva = facture.calculer_tva()
-    total_ttc = facture.calculer_total_ttc()
-
-    totaux_data = [
-        ['', '', Paragraph('<b>Sous total HT :</b>', s_right),
-                 Paragraph(f"{total_ht:,.2f} {devise}", s_right)],
-        ['', '', Paragraph(f'<b>{type_taxe_label} ({taux_taxe_val}%) :</b>', s_right),
-                 Paragraph(f"{total_tva:,.2f} {devise}", s_right)],
-        ['', '', Paragraph('<b>Total TTC :</b>', ParagraphStyle(
-                    'tot', fontSize=10, fontName='Helvetica-Bold',
-                    alignment=TA_RIGHT, textColor=BLEU)),
-                 Paragraph(f"<b>{total_ttc:,.0f} {devise}</b>", ParagraphStyle(
-                    'tot2', fontSize=10, fontName='Helvetica-Bold',
-                    alignment=TA_RIGHT, textColor=BLEU))],
+    
+    # Construire les lignes du tableau des totaux
+    totaux_rows = []
+    
+    # Ligne HT
+    totaux_rows.append([
+        '', '', Paragraph('<b>Sous total HT :</b>', s_right),
+        Paragraph(f"{total_ht:,.2f} {devise}", s_right)
+    ])
+    
+    # ✅ Lignes pour chaque taxe individuelle
+    for taxe in taxes_details:
+        totaux_rows.append([
+            '', '', Paragraph(f'<b>{taxe["code"]} ({taxe["taux"]}%) :</b>', s_right),
+            Paragraph(f"{taxe['montant']:,.2f} {devise}", s_right)
+        ])
+    
+    # Ligne TTC
+    totaux_rows.append([
+        '', '', Paragraph('<b>Total TTC :</b>', ParagraphStyle(
+            'tot', fontSize=10, fontName='Helvetica-Bold',
+            alignment=TA_RIGHT, textColor=BLEU)),
+        Paragraph(f"<b>{total_ttc:,.0f} {devise}</b>", ParagraphStyle(
+            'tot2', fontSize=10, fontName='Helvetica-Bold',
+            alignment=TA_RIGHT, textColor=BLEU))
+    ])
+    
+    totaux_table = Table(totaux_rows, colWidths=[3*cm, 5*cm, 5.5*cm, 4.5*cm])
+    
+    # Appliquer le style avec surbrillance sur la dernière ligne
+    style_commands = [
+        ('PADDING', (0, 0), (-1, -1), 5),
+        ('LINEABOVE', (2, len(totaux_rows)-1), (3, len(totaux_rows)-1), 1, BLEU),
+        ('BACKGROUND', (2, len(totaux_rows)-1), (3, len(totaux_rows)-1), GRIS_CLAIR),
     ]
-    totaux_table = Table(totaux_data, colWidths=[3*cm, 5*cm, 5.5*cm, 4.5*cm])
-    totaux_table.setStyle(TableStyle([
-        ('PADDING',    (0, 0), (-1, -1), 5),
-        ('LINEABOVE',  (2, 2), (3, 2), 1, BLEU),
-        ('BACKGROUND', (2, 2), (3, 2), GRIS_CLAIR),
-    ]))
+    
+    # Optionnel: ajouter des séparateurs entre les taxes
+    for i in range(1, len(totaux_rows) - 1):
+        style_commands.append(('LINEABOVE', (2, i), (3, i), 0.5, colors.HexColor('#dddddd')))
+    
+    totaux_table.setStyle(TableStyle(style_commands))
     elements.append(totaux_table)
 
     # ══════════════════════════════════════════
@@ -348,55 +391,35 @@ def generer_pdf_facture(facture):
         elements.append(Paragraph(f"<b>Notes :</b> {facture.notes}", s_normal))
 
     # ══════════════════════════════════════════
-    # SECTION SIGNATURE (sans les traits)
+    # CACHET D'APPROBATION (EN BAS À DROITE)
     # ══════════════════════════════════════════
-    elements.append(Spacer(1, 0.8*cm))
-    elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
-    elements.append(Spacer(1, 0.3*cm))
+    STATUTS_AVEC_CACHET = ['payee', 'annulee', 'approuvee']
+    
+    if facture.statut in STATUTS_AVEC_CACHET:
+        elements.append(Spacer(1, 0.5*cm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
+        elements.append(Spacer(1, 0.3*cm))
 
-    # Titre de la section
-    elements.append(Paragraph(
-        "<b>Signature et approbation</b>",
-        ParagraphStyle('signature_title', fontSize=10, fontName='Helvetica-Bold',
-                       textColor=BLEU, alignment=TA_CENTER, leading=14)
-    ))
-    elements.append(Spacer(1, 0.3*cm))
-
-    # Table à 2 colonnes pour les signatures (sans les lignes)
-    signature_data = [
-        # Ligne des titres
-        [Paragraph("<b>Signature de l'émetteur</b>", s_bold),
-         Paragraph("<b>Signature du client</b>", s_bold)],
-        
-        # Espace pour signature (plus grand)
-        [Spacer(1, 2.5*cm), Spacer(1, 2.5*cm)],
-        
-        # Noms
-        [Paragraph(nom_emetteur, s_small),
-         Paragraph(nom_client, s_small)],
-        
-        # Dates
-        [Paragraph(f"Date : {date_fr(facture.date_creation)}", s_small),
-         Paragraph("Date : ____________", s_small)],
-    ]
-
-    signature_table = Table(signature_data, colWidths=[7*cm, 7*cm])
-    signature_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-    ]))
-    elements.append(signature_table)
-
-    # Espace avant le pied de page
-    elements.append(Spacer(1, 0.8*cm))
+        cachet_data = [
+            ['', Paragraph(
+                f"<b>{statut_texte}</b>",
+                ParagraphStyle('cachet', fontSize=12, fontName='Helvetica-Bold',
+                               textColor=statut_couleur, alignment=TA_RIGHT, leading=16)
+            )],
+        ]
+        cachet_table = Table(cachet_data, colWidths=[12*cm, 6*cm])
+        cachet_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(cachet_table)
 
     # ══════════════════════════════════════════
     # PIED DE PAGE
     # ══════════════════════════════════════════
+    elements.append(Spacer(1, 0.5*cm))
     elements.append(HRFlowable(width="100%", thickness=0.5, color=GRIS))
     elements.append(Spacer(1, 0.2*cm))
 

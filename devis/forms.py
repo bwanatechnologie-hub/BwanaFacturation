@@ -1,8 +1,12 @@
+# devis/forms.py
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import Devis, LigneDevis
 from clients.models import Client
-from taxes.models import PaysTaxe
+from taxes.models import PaysTaxe, Taxe, Pays  # ✅ Ajout des nouveaux modèles
 from produits.models import Produit
+from datetime import timedelta
 
 
 class DevisForm(forms.ModelForm):
@@ -12,17 +16,25 @@ class DevisForm(forms.ModelForm):
         label="Pays / Taxe",
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_pays_select'})
     )
+    
+    # ✅ NOUVEAU : Champ pour les taxes multiples
+    taxes = forms.ModelMultipleChoiceField(
+        queryset=Taxe.objects.none(),
+        required=False,
+        label="Taxes applicables",
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'taxes-checkbox'})
+    )
 
     class Meta:
         model = Devis
         fields = ['client', 'date_validite', 'statut', 'notes',
-                  'pays', 'type_taxe', 'taux_taxe']
+                  'pays', 'type_taxe', 'taux_taxe', 'taxes']  # ✅ Ajout de taxes
         widgets = {
             'client': forms.Select(attrs={'class': 'form-select'}),
             'date_validite': forms.DateInput(attrs={
                 'class': 'form-control', 
                 'type': 'date'
-            }, format='%Y-%m-%d'),  # ✅ Correction : format ajouté ici
+            }, format='%Y-%m-%d'),
             'statut': forms.Select(attrs={'class': 'form-select'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'type_taxe': forms.TextInput(attrs={
@@ -33,27 +45,90 @@ class DevisForm(forms.ModelForm):
             'taux_taxe': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'id': 'id_taux_taxe',
-                'step': '0.01'
+                'step': '0.01',
+                'readonly': 'readonly'  # ✅ Rendre readonly car géré par les taxes multiples
             }),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        
         if user:
             self.fields['client'].queryset = Client.objects.filter(utilisateur=user)
 
-        # ✅ Champs optionnels — remplis automatiquement par le JS
+        # Champs optionnels
         self.fields['taux_taxe'].required = False
         self.fields['type_taxe'].required = False
         self.fields['pays'].required = False
+        self.fields['taxes'].required = False
 
-        # Choix des pays
+        # Choix des pays (legacy)
         pays_choices = [('', '-- Sélectionner un pays --')]
         pays_choices += [
             (p.code, f"{p.nom} ({p.type_taxe} {p.taux_defaut}%)")
             for p in PaysTaxe.objects.filter(actif=True)
         ]
         self.fields['pays'].choices = pays_choices
+        
+        # ✅ Charger les taxes si un client est sélectionné
+        client_id = self.data.get('client') or (self.instance.client_id if self.instance.pk else None)
+        
+        if client_id:
+            try:
+                client = Client.objects.get(id=client_id)
+                if client.pays_obj:
+                    # Récupérer les taxes du pays du client
+                    self.fields['taxes'].queryset = Taxe.objects.filter(
+                        pays=client.pays_obj,
+                        actif=True
+                    ).order_by('ordre')
+                    
+                    # Pré-sélectionner les taxes par défaut pour la création
+                    if not self.instance.pk and not self.data.get('taxes'):
+                        taxes_defaut = client.pays_obj.get_taxes_par_defaut()
+                        self.fields['taxes'].initial = taxes_defaut
+                    
+                    # Mettre à jour le champ pays legacy
+                    if client.pays_obj.code:
+                        self.fields['pays'].initial = client.pays_obj.code
+                        
+            except Client.DoesNotExist:
+                pass
+        
+        # Si en modification, sélectionner les taxes existantes
+        if self.instance.pk and self.instance.taxes.exists():
+            self.fields['taxes'].initial = self.instance.taxes.all()
+        
+        # Définir une date par défaut (J+30)
+        if not self.instance.pk and not self.initial.get('date_validite'):
+            default_date = timezone.now().date() + timedelta(days=30)
+            self.initial['date_validite'] = default_date
+
+    def clean_date_validite(self):
+        """Validation : La date doit être strictement supérieure à aujourd'hui"""
+        date_validite = self.cleaned_data.get('date_validite')
+        
+        if not date_validite:
+            raise ValidationError("La date de validité est obligatoire.")
+        
+        aujourdhui = timezone.now().date()
+        
+        if date_validite <= aujourdhui:
+            raise ValidationError(
+                f"La date de validité ({date_validite.strftime('%d/%m/%Y')}) "
+                f"doit être postérieure à aujourd'hui ({aujourdhui.strftime('%d/%m/%Y')})."
+            )
+        
+        return date_validite
+
+    def clean_client(self):
+        """Vérifier que le client existe et est actif"""
+        client = self.cleaned_data.get('client')
+        
+        if client and hasattr(client, 'actif') and not client.actif:
+            raise ValidationError(f"Le client '{client.nom}' est inactif.")
+        
+        return client
 
     def clean_taux_taxe(self):
         """Retourner 0 si taux_taxe est vide"""
@@ -69,6 +144,17 @@ class DevisForm(forms.ModelForm):
     def clean_pays(self):
         """Retourner chaîne vide si pays est vide"""
         return self.cleaned_data.get('pays') or ''
+
+    def save(self, commit=True):
+        """Sauvegarde avec gestion des taxes multiples"""
+        instance = super().save(commit=False)
+        
+        if commit:
+            instance.save()
+            # Sauvegarder la relation ManyToMany des taxes
+            self._save_m2m()
+        
+        return instance
 
 
 class LigneDevisForm(forms.ModelForm):
@@ -124,6 +210,30 @@ class LigneDevisForm(forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.produit:
             self.fields['produit'].initial = self.instance.produit
 
+    def clean_quantite(self):
+        """Validation : quantité positive"""
+        quantite = self.cleaned_data.get('quantite')
+        if quantite is not None and quantite <= 0:
+            raise ValidationError("La quantité doit être supérieure à 0.")
+        return quantite
+
+    def clean_prix_unitaire(self):
+        """Validation : prix non négatif"""
+        prix = self.cleaned_data.get('prix_unitaire')
+        if prix is not None and prix < 0:
+            raise ValidationError("Le prix unitaire ne peut pas être négatif.")
+        return prix
+
+    def clean_tva(self):
+        """Validation : TVA entre 0 et 100"""
+        tva = self.cleaned_data.get('tva')
+        if tva is not None:
+            if tva < 0:
+                raise ValidationError("La TVA ne peut pas être négative.")
+            if tva > 100:
+                raise ValidationError("La TVA ne peut pas dépasser 100%.")
+        return tva
+
     def save(self, commit=True):
         instance = super().save(commit=False)
 
@@ -150,6 +260,21 @@ class BaseLigneDevisFormSet(forms.BaseFormSet):
     def _construct_form(self, i, **kwargs):
         kwargs['user'] = self.user
         return super()._construct_form(i, **kwargs)
+    
+    def clean(self):
+        """Validation globale du FormSet - au moins une ligne"""
+        if any(self.errors):
+            return
+        
+        lignes_non_supprimees = 0
+        for form in self.forms:
+            if form.cleaned_data.get('DELETE', False):
+                continue
+            if form.cleaned_data.get('produit') or form.cleaned_data.get('description'):
+                lignes_non_supprimees += 1
+        
+        if lignes_non_supprimees == 0:
+            raise ValidationError("Veuillez ajouter au moins un produit ou service.")
 
 
 # FormSet avec extra=1 pour création
@@ -167,6 +292,7 @@ class RechercheProduitForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Rechercher un produit...',
-            'id': 'search-produit'
+            'id': 'search-produit',
+            'autocomplete': 'off'
         })
     )

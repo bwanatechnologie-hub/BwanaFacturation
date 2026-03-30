@@ -25,11 +25,15 @@
         </div>
     </div>
     <div class="d-flex flex-wrap gap-2">
+        <!-- ✅ Nouveau bouton : Gérer les liens d'approbation -->
+        <a href="{% url 'gestion_liens_facture' facture.pk %}" class="btn btn-outline-info">
+            <i class="bi bi-link me-2"></i>Liens d'approbation
+        </a>
         <a href="{% url 'pdf_facture' facture.pk %}" class="btn" target="_blank"
            style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
             <i class="bi bi-file-pdf me-2"></i>PDF
         </a>
-        {% if facture.statut != 'payee' %}
+        {% if facture.statut != 'payee' and facture.statut != 'approuvee' %}
         <a href="{% url 'modifier_facture' facture.pk %}" class="btn btn-warning">
             <i class="bi bi-pencil me-2"></i>Modifier
         </a>
@@ -129,7 +133,13 @@
                             <div class="p-3 rounded" style="background: #f8f9fa;">
                                 <div class="text-muted small">Statut</div>
                                 <div>
-                                    {% if facture.statut == 'non_payee' %}
+                                    {% if facture.statut == 'en_attente' %}
+                                        <span class="badge" style="background: #ffc107; color: #1e3a5f;">⏳ En attente d'approbation</span>
+                                    {% elif facture.statut == 'approuvee' %}
+                                        <span class="badge" style="background: #17a2b8; color: white;">✅ Approuvée</span>
+                                    {% elif facture.statut == 'rejetee' %}
+                                        <span class="badge" style="background: #dc3545; color: white;">❌ Rejetée</span>
+                                    {% elif facture.statut == 'non_payee' %}
                                         <span class="badge" style="background: #dc3545; color: white;">Non payée</span>
                                     {% elif facture.statut == 'payee' %}
                                         <span class="badge" style="background: #2d6a9f; color: white;">Payée</span>
@@ -163,6 +173,40 @@
                             </div>
                         </div>
                         {% endif %}
+                        
+                        <!-- ✅ Affichage des informations d'approbation -->
+                        {% if facture.approuve_par %}
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: #d1e7dd;">
+                                <div class="text-muted small">Approbation</div>
+                                <div class="mt-1">
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                    Approuvée par <strong>{{ facture.approuve_par.get_full_name|default:facture.approuve_par.username }}</strong>
+                                    le {{ facture.approuve_le|date:"d/m/Y H:i" }}
+                                    {% if facture.commentaire_approbation %}
+                                        <br><small class="text-muted">Commentaire : {{ facture.commentaire_approbation }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if facture.accepte_par_client is not None %}
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: {% if facture.accepte_par_client %}#d1e7dd{% else %}#f8d7da{% endif %};">
+                                <div class="text-muted small">Réponse client</div>
+                                <div class="mt-1">
+                                    {% if facture.accepte_par_client %}
+                                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                        Client a accepté la facture le {{ facture.accepte_client_le|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill text-danger me-1"></i>
+                                        Client a refusé la facture le {{ facture.accepte_client_le|date:"d/m/Y H:i" }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -185,7 +229,7 @@
                                 <th class="text-end" style="width: 120px;">Prix HT</th>
                                 <th class="text-center" style="width: 80px;">TVA</th>
                                 <th class="text-end" style="width: 120px;">Total TTC</th>
-                            </tr>
+                              </tr>
                         </thead>
                         <tbody>
                             {% for ligne in lignes %}
@@ -197,18 +241,18 @@
                                             <i class="bi bi-box-seam me-1"></i>{{ ligne.produit.reference }}
                                         </small>
                                     {% endif %}
-                                 </td>
+                                  </td>
                                 <td data-label="Qté" class="text-center">{{ ligne.quantite }}</td>
                                 <td data-label="Prix HT" class="text-end">
                                     {{ ligne.prix_unitaire|floatformat:0 }} {{ devise }}
-                                 </td>
+                                  </td>
                                 <td data-label="TVA" class="text-center">
                                     <span class="badge" style="background: #f0f0f0; color: #1e3a5f;">{{ ligne.tva }}%</span>
-                                 </td>
+                                  </td>
                                 <td data-label="Total TTC" class="text-end fw-semibold" style="color: #2d6a9f;">
                                     {{ ligne.total_ttc|floatformat:0 }} {{ devise }}
-                                 </td>
-                            </tr>
+                                  </td>
+                              </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
@@ -216,22 +260,22 @@
                                 <td colspan="4" class="text-end fw-semibold">Total HT</td>
                                 <td class="text-end fw-semibold">
                                     {{ facture.calculer_total_ht|floatformat:0 }} {{ devise }}
-                                 </td>
-                            </tr>
+                                  </td>
+                              </tr>
                             <tr>
                                 <td colspan="4" class="text-end fw-semibold">TVA</td>
                                 <td class="text-end fw-semibold">
                                     {{ facture.calculer_tva|floatformat:0 }} {{ devise }}
-                                 </td>
-                            </tr>
+                                  </td>
+                              </tr>
                             <tr>
                                 <td colspan="4" class="text-end fw-bold fs-5">Total TTC</td>
                                 <td class="text-end fw-bold fs-5" style="color: #2d6a9f;">
                                     {{ facture.calculer_total_ttc|floatformat:0 }} {{ devise }}
-                                 </td>
-                            </tr>
+                                  </td>
+                              </tr>
                         </tfoot>
-                    </table>
+                      </table>
                 </div>
             </div>
         </div>
@@ -265,18 +309,19 @@
                 <form method="post" action="{% url 'changer_statut_facture' facture.pk %}">
                     {% csrf_token %}
                     <div class="d-grid gap-2">
-                        {% if facture.statut != 'payee' %}
+                        {% if facture.statut == 'approuvee' %}
+                        <button type="submit" name="statut" value="non_payee" class="btn" 
+                                style="background: #ffc107; color: #1e3a5f;">
+                            <i class="bi bi-hourglass-split me-2"></i>Marquer non payée
+                        </button>
+                        {% endif %}
+                        {% if facture.statut == 'non_payee' %}
                         <button type="submit" name="statut" value="payee" class="btn" 
                                 style="background: #2d6a9f; color: white;">
                             <i class="bi bi-check-circle me-2"></i>Marquer payée
                         </button>
                         {% endif %}
-                        {% if facture.statut != 'non_payee' %}
-                        <button type="submit" name="statut" value="non_payee" class="btn btn-outline-danger">
-                            <i class="bi bi-x-circle me-2"></i>Marquer non payée
-                        </button>
-                        {% endif %}
-                        {% if facture.statut != 'annulee' %}
+                        {% if facture.statut != 'annulee' and facture.statut != 'payee' and facture.statut != 'rejetee' %}
                         <button type="submit" name="statut" value="annulee" class="btn btn-outline-secondary">
                             <i class="bi bi-slash-circle me-2"></i>Annuler la facture
                         </button>
@@ -295,6 +340,9 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    <a href="{% url 'gestion_liens_facture' facture.pk %}" class="btn btn-outline-info">
+                        <i class="bi bi-link me-2"></i>Gérer les liens
+                    </a>
                     <a href="{% url 'pdf_facture' facture.pk %}" class="btn" target="_blank"
                        style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white;">
                         <i class="bi bi-file-pdf me-2"></i>Télécharger PDF
@@ -332,6 +380,24 @@
                     <span class="fw-bold fs-5">Total TTC</span>
                     <span class="fw-bold fs-5" style="color: #2d6a9f;">{{ facture.calculer_total_ttc|floatformat:0 }} {{ devise }}</span>
                 </div>
+                
+                <!-- ✅ Indicateur du statut d'approbation -->
+                {% if facture.statut == 'approuvee' %}
+                <div class="alert alert-info mt-3 mb-0 small" style="border-radius: 12px;">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Facture approuvée — Envoyez le lien au client
+                </div>
+                {% elif facture.statut == 'rejetee' %}
+                <div class="alert alert-danger mt-3 mb-0 small" style="border-radius: 12px;">
+                    <i class="bi bi-x-circle-fill me-1"></i>
+                    Facture rejetée par le supérieur
+                </div>
+                {% elif facture.statut == 'en_attente' %}
+                <div class="alert alert-warning mt-3 mb-0 small" style="border-radius: 12px;">
+                    <i class="bi bi-hourglass-split me-1"></i>
+                    En attente d'approbation du supérieur
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

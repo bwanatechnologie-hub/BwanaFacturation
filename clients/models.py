@@ -1,6 +1,10 @@
+# clients/models.py
 from django.db import models
 from django.contrib.auth.models import User
-from produits.models import Pays, TypeTaxe
+# ✅ IMPORTANT: Utiliser le modèle Pays de taxes.models
+from taxes.models import Pays  # ← Changement clé !
+# ❌ Supprimer l'import de produits.models
+# from produits.models import Pays, TypeTaxe
 
 
 class Client(models.Model):
@@ -37,8 +41,7 @@ class Client(models.Model):
         ('+256', '🇺🇬 Ouganda (+256)'),
         ('+250', '🇷🇼 Rwanda (+250)'),
         ('+251', '🇪🇹 Éthiopie (+251)'),
-        ('+1',   '🇨🇦 Canada (+1)'),
-        ('+1',   '🇺🇸 États-Unis (+1)'),
+        ('+1',   '🇨🇦 Canada / 🇺🇸 États-Unis (+1)'),
         ('+52',  '🇲🇽 Mexique (+52)'),
         ('+55',  '🇧🇷 Brésil (+55)'),
         ('+54',  '🇦🇷 Argentine (+54)'),
@@ -90,9 +93,9 @@ class Client(models.Model):
     )
     telephone = models.CharField(max_length=20, blank=True, verbose_name="Numéro de téléphone")
 
-    # ✅ Pays lié à la table Pays (devise + taxe automatiques)
+    # ✅ Pays lié à la table Pays (devise + taxes automatiques)
     pays_obj = models.ForeignKey(
-        Pays,
+        Pays,  # ← Maintenant c'est taxes.models.Pays
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='clients',
@@ -108,7 +111,7 @@ class Client(models.Model):
     # Entreprise
     entreprise = models.CharField(max_length=150, blank=True)
 
-    # ✅ Logo client — utilisé dans les PDF devis/facture
+    # Logo client — utilisé dans les PDF devis/facture
     logo = models.ImageField(
         upload_to='clients/logos/',
         blank=True,
@@ -138,25 +141,35 @@ class Client(models.Model):
     def devise(self):
         """Devise du client selon son pays"""
         if self.pays_obj:
-            return self.pays_obj.symbole_devise
+            return self.pays_obj.devise_symbole
         return 'FCFA'
 
     @property
     def taux_tva(self):
-        """TVA par défaut selon le pays du client"""
+        """
+        ✅ MODIFIÉ : Retourne le taux de TVA par défaut
+        Pour les pays avec taxes multiples (ex: Québec), retourne le taux cumulé ou le premier taux
+        """
         if self.pays_obj:
-            type_taxe = self.pays_obj.types_taxe.first()
-            if type_taxe:
-                return type_taxe.taux_par_defaut()
+            # Récupérer toutes les taxes actives du pays
+            taxes = self.pays_obj.taxes.filter(actif=True)
+            if taxes.exists():
+                # Calculer le taux total (pour compatibilité avec l'ancien système)
+                total_taux = sum(taxe.taux for taxe in taxes)
+                return total_taux
         return 0
 
     @property
     def type_taxe_nom(self):
-        """Nom du type de taxe selon le pays du client"""
+        """Nom du type de taxe principal selon le pays du client"""
         if self.pays_obj:
-            type_taxe = self.pays_obj.types_taxe.first()
-            if type_taxe:
-                return type_taxe.code
+            taxes = self.pays_obj.taxes.filter(actif=True)
+            if taxes.exists():
+                if taxes.count() == 1:
+                    return taxes.first().code
+                else:
+                    # Pour plusieurs taxes, retourner une chaîne combinée
+                    return " + ".join(taxe.code for taxe in taxes)
         return 'TVA'
 
     @property
@@ -164,6 +177,13 @@ class Client(models.Model):
         if self.pays_obj:
             return self.pays_obj.nom
         return ''
+    
+    @property
+    def taxes_disponibles(self):
+        """Retourne la liste des taxes disponibles pour ce client"""
+        if self.pays_obj:
+            return self.pays_obj.taxes.filter(actif=True).order_by('ordre')
+        return []
 
     class Meta:
         ordering = ['-date_creation']

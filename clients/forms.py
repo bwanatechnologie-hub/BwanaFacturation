@@ -1,6 +1,9 @@
+# clients/forms.py
 from django import forms
 from .models import Client
-from produits.models import Pays
+# ✅ IMPORTANT: Importer Pays depuis taxes.models
+from taxes.models import Pays  # ← Changement clé !
+# ❌ Supprimer: from produits.models import Pays
 
 
 class ClientForm(forms.ModelForm):
@@ -9,7 +12,7 @@ class ClientForm(forms.ModelForm):
         fields = [
             'nom', 'prenom', 'email',
             'indicatif', 'telephone',
-            'pays_obj',              # ✅ pas 'pays'
+            'pays_obj',              # ✅ pays_obj (ForeignKey vers taxes.models.Pays)
             'province', 'ville', 'code_postal',
             'adresse', 'entreprise', 'logo',
         ]
@@ -68,9 +71,22 @@ class ClientForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['pays_obj'].queryset    = Pays.objects.all().order_by('nom')
+        # ✅ Utiliser Pays.objects depuis taxes.models
+        self.fields['pays_obj'].queryset = Pays.objects.filter(actif=True).order_by('nom')
         self.fields['pays_obj'].empty_label = '-- Sélectionnez un pays --'
 
+        # Champs optionnels
         for field in ['prenom', 'email', 'telephone', 'province',
                       'ville', 'code_postal', 'adresse', 'entreprise', 'logo']:
             self.fields[field].required = False
+
+    def clean(self):
+        """Validation personnalisée"""
+        cleaned_data = super().clean()
+        
+        # Vérifier que le pays sélectionné existe
+        pays = cleaned_data.get('pays_obj')
+        if pays and not pays.actif:
+            self.add_error('pays_obj', 'Ce pays n\'est pas actif.')
+        
+        return cleaned_data

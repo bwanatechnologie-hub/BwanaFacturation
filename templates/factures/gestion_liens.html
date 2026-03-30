@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liens de la Facture {{ facture.numero }}{% endblock %}
+{% block page_title %}📋 Liens de la Facture {{ facture.numero }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        
+        <!-- Statut de la facture -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: #1e3a5f;">Facture {{ facture.numero }}</h5>
+                        <p class="text-muted mb-0">Client : {{ facture.client.nom }} {{ facture.client.prenom }}</p>
+                    </div>
+                    <div>
+                        {% if facture.statut == 'en_attente' %}
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">⏳ En attente d'approbation</span>
+                        {% elif facture.statut == 'approuvee' %}
+                            <span class="badge bg-info text-dark fs-6 px-3 py-2">✅ Approuvée - En attente client</span>
+                        {% elif facture.statut == 'non_payee' %}
+                            <span class="badge bg-primary fs-6 px-3 py-2">💰 En attente de paiement</span>
+                        {% elif facture.statut == 'payee' %}
+                            <span class="badge bg-success fs-6 px-3 py-2">🎉 Payée</span>
+                        {% elif facture.statut == 'rejetee' %}
+                            <span class="badge bg-danger fs-6 px-3 py-2">❌ Rejetée</span>
+                        {% else %}
+                            <span class="badge bg-secondary fs-6 px-3 py-2">{{ facture.get_statut_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lien approbation supérieur -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-person-check me-2"></i>Étape 1 : Approbation supérieur
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if facture.statut == 'en_attente' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Envoyez ce lien à votre supérieur pour approbation.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="lienAppro" value="{{ lien_approbation }}" readonly>
+                        <button class="btn btn-outline-primary" onclick="copierLien('lienAppro')">
+                            <i class="bi bi-copy"></i> Copier
+                        </button>
+                    </div>
+                    <a href="{{ lien_approbation }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> Aperçu
+                    </a>
+                {% elif facture.statut == 'approuvee' %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ✅ Facture approuvée par le supérieur le {{ facture.approuve_le|date:"d/m/Y H:i" }}
+                        {% if facture.commentaire_approbation %}
+                            <br><small class="text-muted">Commentaire : {{ facture.commentaire_approbation }}</small>
+                        {% endif %}
+                    </div>
+                {% elif facture.statut == 'rejetee' %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        ❌ Facture rejetée par le supérieur
+                        {% if facture.commentaire_approbation %}
+                            <br><small>Motif : {{ facture.commentaire_approbation }}</small>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Lien client -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4">
+                <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                    <i class="bi bi-person me-2"></i>Étape 2 : Acceptation client
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if facture.statut == 'approuvee' %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Envoyez ce lien au client pour qu'il accepte ou refuse la facture.
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="lienClient" value="{{ lien_client }}" readonly>
+                        <button class="btn btn-outline-primary" onclick="copierLien('lienClient')">
+                            <i class="bi bi-copy"></i> Copier
+                        </button>
+                    </div>
+                    <a href="{{ lien_client }}" target="_blank" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-eye"></i> Aperçu
+                    </a>
+                {% elif facture.statut == 'non_payee' %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        ✅ Facture acceptée par le client le {{ facture.accepte_client_le|date:"d/m/Y H:i" }}
+                    </div>
+                {% elif facture.statut == 'rejetee' and facture.accepte_par_client is False %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-x-circle-fill me-2"></i>
+                        ❌ Facture refusée par le client le {{ facture.accepte_client_le|date:"d/m/Y H:i" }}
+                    </div>
+                {% elif facture.statut == 'en_attente' %}
+                    <div class="alert alert-secondary">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        En attente d'approbation du supérieur avant d'envoyer au client.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'detail_facture' facture.pk %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Retour à la facture
+            </a>
+            {% if facture.statut == 'non_payee' %}
+            <a href="{% url 'changer_statut_facture' facture.pk %}?statut=payee" class="btn btn-success"
+               onclick="return confirm('Marquer cette facture comme payée ?')">
+                <i class="bi bi-credit-card me-2"></i>Marquer payée
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copierLien(id) {
+    const input = document.getElementById(id);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    alert('Lien copié dans le presse-papier !');
+}
+</script>
+{% endblock %}

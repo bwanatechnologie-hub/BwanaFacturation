@@ -1,14 +1,17 @@
+# clients/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from .models import Client
 from .forms import ClientForm
-from produits.models import Pays
+# ✅ Importer depuis taxes.models
+from taxes.models import Pays, Taxe  # ← Changement clé !
 
 
 def get_pays_context():
-    return Pays.objects.prefetch_related('types_taxe__taux').order_by('nom')
+    """Retourne la liste des pays actifs"""
+    return Pays.objects.filter(actif=True).order_by('nom')
 
 
 @login_required
@@ -90,7 +93,7 @@ def supprimer_client(request, pk):
 
 @login_required
 def detail_client(request, pk):
-    client   = get_object_or_404(
+    client = get_object_or_404(
         Client.objects.select_related('pays_obj'),
         pk=pk, utilisateur=request.user
     )
@@ -109,26 +112,69 @@ def api_client_info(request, pk):
     """Retourne devise + taxes du client pour le JS du formulaire devis"""
     client = get_object_or_404(Client, pk=pk, utilisateur=request.user)
 
-    # Taxes disponibles selon le pays du client
+    # ✅ Récupérer les taxes multiples du pays du client
     taxes = []
     if client.pays_obj:
-        for type_taxe in client.pays_obj.types_taxe.prefetch_related('taux').all():
-            taux_defaut = type_taxe.taux_par_defaut()
+        for taxe in client.pays_obj.taxes.filter(actif=True).order_by('ordre'):
             taxes.append({
-                'id':          type_taxe.id,
-                'nom':         type_taxe.nom,
-                'code':        type_taxe.code,
-                'taux_defaut': float(taux_defaut),
+                'id': taxe.id,
+                'nom': taxe.nom,
+                'code': taxe.code,
+                'taux_defaut': float(taxe.taux),
+                'cumulative': taxe.cumulative,
+                'par_defaut': taxe.par_defaut,
+                'ordre': taxe.ordre
             })
 
     return JsonResponse({
-        'id':         client.pk,
-        'nom':        str(client),
-        'pays_code':  client.pays_obj.code if client.pays_obj else '',
-        'pays_nom':   client.pays_obj.nom  if client.pays_obj else '',
-        'devise':     client.devise,
-        'taux_tva':   float(client.taux_tva),
-        'type_taxe':  client.type_taxe_nom,
-        'taxes':      taxes,   # liste de toutes les taxes du pays
-        'province':   client.province or '',
+        'id': client.pk,
+        'nom': str(client),
+        'pays_code': client.pays_obj.code if client.pays_obj else '',
+        'pays_nom': client.pays_obj.nom if client.pays_obj else '',
+        'devise': client.devise,
+        'taux_tva': float(client.taux_tva),
+        'type_taxe': client.type_taxe_nom,
+        'taxes': taxes,
+        'province': client.province or '',
     })
+
+
+# ══════════════════════════════════════════════════
+# API : Récupérer les taxes du client
+# ══════════════════════════════════════════════════
+@login_required
+def api_client_taxes(request, pk):
+    """
+    API pour récupérer les taxes disponibles pour un client
+    Utilisée par le formulaire devis pour afficher les checkboxes
+    """
+    try:
+        client = get_object_or_404(Client, pk=pk, utilisateur=request.user)
+        
+        taxes = []
+        if client.pays_obj:
+            for taxe in client.pays_obj.taxes.filter(actif=True).order_by('ordre'):
+                taxes.append({
+                    'id': taxe.id,
+                    'nom': taxe.nom,
+                    'code': taxe.code,
+                    'taux': float(taxe.taux),
+                    'cumulative': taxe.cumulative,
+                    'par_defaut': taxe.par_defaut,
+                    'ordre': taxe.ordre,
+                    'description': taxe.description if hasattr(taxe, 'description') else ''
+                })
+        
+        return JsonResponse({
+            'success': True,
+            'taxes': taxes,
+            'pays': client.pays_obj.nom if client.pays_obj else '',
+            'pays_code': client.pays_obj.code if client.pays_obj else '',
+            'devise': client.devise,
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'error': str(e)
+        }, status=400)

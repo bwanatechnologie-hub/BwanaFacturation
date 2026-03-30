@@ -1,0 +1,22 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}Déjà traité{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg text-center">
+                <div class="card-body p-5">
+                    <i class="bi bi-check-circle-fill text-success display-1"></i>
+                    <h3 class="mt-3">Déjà traité</h3>
+                    <p class="text-muted">Cette facture a déjà été traitée.</p>
+                    <hr>
+                    <p>Statut actuel : <strong>{{ facture.get_statut_display }}</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
