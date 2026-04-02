@@ -131,7 +131,7 @@
 
                     <div class="d-flex gap-2 justify-content-between flex-wrap">
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn px-4 py-2 fw-bold" 
+                            <button type="submit" class="btn px-4 py-2 fw-bold"
                                     style="background: linear-gradient(135deg, #1e3a5f, #2d6a9f); color: white; border: none;">
                                 <i class="bi bi-check-lg me-2"></i>{{ bouton }}
                             </button>
@@ -249,67 +249,105 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-bs-toggle="tooltip"]')
         .forEach(el => new bootstrap.Tooltip(el));
 
-    // ── Gestion pays / devise
+    // ── Gestion pays / devise / provinces
     const paysSelect        = document.getElementById('id_pays');
     const provinceContainer = document.getElementById('province-container');
     const provinceSelect    = document.getElementById('id_province');
     const deviseLabel       = document.getElementById('devise-label');
     const deviseHelper      = document.getElementById('devise-helper');
 
+    // Données pays injectées depuis Django
     const paysData = {
         {% for pays in pays_list %}
         '{{ pays.id }}': {
             'code':   '{{ pays.code }}',
             'devise': '{{ pays.symbole_devise }}',
-            'nom':    '{{ pays.nom }}',
+            'nom':    '{{ pays.nom|escapejs }}',
         },
         {% endfor %}
     };
 
+    // ← CORRECTION : données provinces injectées depuis Django
+    const provincesData = [
+        {% for p in provinces_list %}
+        {
+            'id':      {{ p.id }},
+            'nom':     '{{ p.nom|escapejs }}',
+            'pays_id': {{ p.pays_id }},
+        },
+        {% endfor %}
+    ];
+
+    // Province sélectionnée au chargement (pour modifier_produit)
+    const provinceInitiale = provinceSelect ? provinceSelect.value : '';
+
     function updatePays() {
         const paysId = paysSelect ? paysSelect.value : null;
         if (!paysId) {
-            if (deviseLabel) deviseLabel.textContent = 'FCFA';
-            if (deviseHelper) deviseHelper.textContent = 'Sélectionnez le pays';
+            if (deviseLabel)       deviseLabel.textContent = 'FCFA';
+            if (deviseHelper)      deviseHelper.textContent = 'Sélectionnez le pays';
             if (provinceContainer) provinceContainer.style.display = 'none';
             return;
         }
         const pays = paysData[paysId];
         if (!pays) return;
-        if (deviseLabel) deviseLabel.textContent = pays.devise;
+
+        if (deviseLabel)  deviseLabel.textContent  = pays.devise;
         if (deviseHelper) deviseHelper.textContent = `${pays.nom} — ${pays.devise}`;
+
         if (pays.code === 'CA') {
             if (provinceContainer) provinceContainer.style.display = 'block';
-            if (provinceSelect) provinceSelect.disabled = false;
+            if (provinceSelect) {
+                provinceSelect.disabled = false;
+
+                // Sauvegarder la valeur actuelle avant de vider
+                const valeurCourante = provinceSelect.value || provinceInitiale;
+
+                // Vider et repeupler avec les provinces filtrées par pays
+                provinceSelect.innerHTML = '<option value="">-- Sélectionnez une province --</option>';
+                provincesData
+                    .filter(p => String(p.pays_id) === String(paysId))
+                    .forEach(p => {
+                        const opt = new Option(p.nom, p.id);
+                        if (String(p.id) === String(valeurCourante)) {
+                            opt.selected = true;
+                        }
+                        provinceSelect.appendChild(opt);
+                    });
+            }
         } else {
             if (provinceContainer) provinceContainer.style.display = 'none';
-            if (provinceSelect) { provinceSelect.value = ''; provinceSelect.disabled = true; }
+            if (provinceSelect) {
+                provinceSelect.value    = '';
+                provinceSelect.disabled = true;
+                provinceSelect.innerHTML = '<option value="">-- Sélectionnez une province --</option>';
+            }
         }
     }
 
     if (paysSelect) {
         paysSelect.addEventListener('change', updatePays);
-        updatePays();
+        updatePays(); // Appel initial pour modifier_produit (pays déjà sélectionné)
     }
 
 
     // ══════════════════════════════════════════
     // MODAL — Nouvelle catégorie
     // ══════════════════════════════════════════
-    const modalCat    = document.getElementById('modalNouvelleCategorie');
-    const inputCatNom = document.getElementById('modal-cat-nom');
+    const modalCat     = document.getElementById('modalNouvelleCategorie');
+    const inputCatNom  = document.getElementById('modal-cat-nom');
     const inputCatDesc = document.getElementById('modal-cat-desc');
-    const btnCat      = document.getElementById('btn-sauvegarder-categorie');
-    const alertCat    = document.getElementById('modal-cat-alert');
-    const spinCat     = document.getElementById('btn-cat-spinner');
-    const iconCat     = document.getElementById('btn-cat-icon');
+    const btnCat       = document.getElementById('btn-sauvegarder-categorie');
+    const alertCat     = document.getElementById('modal-cat-alert');
+    const spinCat      = document.getElementById('btn-cat-spinner');
+    const iconCat      = document.getElementById('btn-cat-icon');
 
     if (modalCat) {
         modalCat.addEventListener('show.bs.modal', () => {
-            if (inputCatNom) inputCatNom.value = '';
+            if (inputCatNom)  inputCatNom.value = '';
             if (inputCatDesc) inputCatDesc.value = '';
-            if (inputCatNom) inputCatNom.classList.remove('is-invalid');
-            if (alertCat) alertCat.className = 'alert d-none';
+            if (inputCatNom)  inputCatNom.classList.remove('is-invalid');
+            if (alertCat)     alertCat.className = 'alert d-none';
         });
         modalCat.addEventListener('shown.bs.modal', () => {
             if (inputCatNom) inputCatNom.focus();
@@ -323,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnCat) {
         btnCat.addEventListener('click', async () => {
-            const nom  = inputCatNom ? inputCatNom.value.trim() : '';
+            const nom  = inputCatNom  ? inputCatNom.value.trim()  : '';
             const desc = inputCatDesc ? inputCatDesc.value.trim() : '';
             if (!nom) {
                 if (inputCatNom) inputCatNom.classList.add('is-invalid');
@@ -337,10 +375,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
                 const resp = await fetch("{% url 'ajouter_categorie' %}", {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRFToken': csrf, 
-                        'X-Requested-With': 'XMLHttpRequest' 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrf,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({ nom, description: desc }),
                 });
@@ -354,20 +392,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     const lien = document.getElementById('lien-nouvelle-categorie');
                     if (lien) {
                         const badge = document.createElement('span');
-                        badge.className = 'badge bg-success ms-2';
+                        badge.className   = 'badge bg-success ms-2';
                         badge.textContent = `✅ "${data.nom}" ajoutée`;
                         lien.after(badge);
                         setTimeout(() => badge.remove(), 3000);
                     }
                 } else {
                     if (alertCat) {
-                        alertCat.className = 'alert alert-danger';
+                        alertCat.className   = 'alert alert-danger';
                         alertCat.textContent = data.erreur || 'Une erreur est survenue.';
                     }
                 }
             } catch {
                 if (alertCat) {
-                    alertCat.className = 'alert alert-danger';
+                    alertCat.className   = 'alert alert-danger';
                     alertCat.textContent = 'Impossible de contacter le serveur.';
                 }
             } finally {
@@ -382,20 +420,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // ══════════════════════════════════════════
     // MODAL — Nouvelle unité de vente
     // ══════════════════════════════════════════
-    const modalUnite    = document.getElementById('modalNouvelleUnite');
-    const inputUniteNom = document.getElementById('modal-unite-nom');
+    const modalUnite     = document.getElementById('modalNouvelleUnite');
+    const inputUniteNom  = document.getElementById('modal-unite-nom');
     const inputUniteCode = document.getElementById('modal-unite-code');
-    const btnUnite      = document.getElementById('btn-sauvegarder-unite');
-    const alertUnite    = document.getElementById('modal-unite-alert');
-    const spinUnite     = document.getElementById('btn-unite-spinner');
-    const iconUnite     = document.getElementById('btn-unite-icon');
+    const btnUnite       = document.getElementById('btn-sauvegarder-unite');
+    const alertUnite     = document.getElementById('modal-unite-alert');
+    const spinUnite      = document.getElementById('btn-unite-spinner');
+    const iconUnite      = document.getElementById('btn-unite-icon');
 
     if (modalUnite) {
         modalUnite.addEventListener('show.bs.modal', () => {
-            if (inputUniteNom) inputUniteNom.value = '';
+            if (inputUniteNom)  inputUniteNom.value = '';
             if (inputUniteCode) inputUniteCode.value = '';
-            if (inputUniteNom) inputUniteNom.classList.remove('is-invalid');
-            if (alertUnite) alertUnite.className = 'alert d-none';
+            if (inputUniteNom)  inputUniteNom.classList.remove('is-invalid');
+            if (alertUnite)     alertUnite.className = 'alert d-none';
         });
         modalUnite.addEventListener('shown.bs.modal', () => {
             if (inputUniteNom) inputUniteNom.focus();
@@ -409,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (btnUnite) {
         btnUnite.addEventListener('click', async () => {
-            const nom  = inputUniteNom ? inputUniteNom.value.trim() : '';
+            const nom  = inputUniteNom  ? inputUniteNom.value.trim()  : '';
             const code = inputUniteCode ? inputUniteCode.value.trim() : '';
             if (!nom) {
                 if (inputUniteNom) inputUniteNom.classList.add('is-invalid');
@@ -423,10 +461,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
                 const resp = await fetch("{% url 'ajouter_unite_vente' %}", {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRFToken': csrf, 
-                        'X-Requested-With': 'XMLHttpRequest' 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrf,
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({ nom, code }),
                 });
@@ -440,20 +478,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     const lien = document.getElementById('lien-nouvelle-unite');
                     if (lien) {
                         const badge = document.createElement('span');
-                        badge.className = 'badge bg-success ms-2';
+                        badge.className   = 'badge bg-success ms-2';
                         badge.textContent = `✅ "${data.nom}" ajoutée`;
                         lien.after(badge);
                         setTimeout(() => badge.remove(), 3000);
                     }
                 } else {
                     if (alertUnite) {
-                        alertUnite.className = 'alert alert-danger';
+                        alertUnite.className   = 'alert alert-danger';
                         alertUnite.textContent = data.erreur || 'Une erreur est survenue.';
                     }
                 }
             } catch {
                 if (alertUnite) {
-                    alertUnite.className = 'alert alert-danger';
+                    alertUnite.className   = 'alert alert-danger';
                     alertUnite.textContent = 'Impossible de contacter le serveur.';
                 }
             } finally {
@@ -468,25 +506,25 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <style>
-.tooltip-inner { 
-    max-width: 300px; 
-    padding: 8px 12px; 
-    background-color: #1e3a5f; 
+.tooltip-inner {
+    max-width: 300px;
+    padding: 8px 12px;
+    background-color: #1e3a5f;
 }
-input[readonly], select[disabled] { 
-    background-color: #f8f9fa; 
-    cursor: not-allowed; 
+input[readonly], select[disabled] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
 }
-.input-group { 
-    flex-wrap: nowrap; 
+.input-group {
+    flex-wrap: nowrap;
 }
-#province-container { 
-    transition: all 0.3s ease; 
+#province-container {
+    transition: all 0.3s ease;
     animation: fadeIn 0.3s ease;
 }
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Style des modales */
@@ -511,7 +549,7 @@ input[readonly], select[disabled] {
 }
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Style des champs */
@@ -559,30 +597,18 @@ textarea.form-control {
 
 /* Responsive */
 @media (max-width: 767px) {
-    .card-body {
-        padding: 1.5rem !important;
-    }
-    .form-label {
-        font-size: 0.9rem;
-    }
+    .card-body { padding: 1.5rem !important; }
+    .form-label { font-size: 0.9rem; }
     .d-flex.gap-2.justify-content-between {
         flex-direction: column;
         gap: 1rem !important;
     }
-    .d-flex.gap-2.justify-content-between > div {
-        width: 100%;
-    }
-    .d-flex.gap-2.justify-content-between .btn {
-        flex: 1;
-    }
+    .d-flex.gap-2.justify-content-between > div { width: 100%; }
+    .d-flex.gap-2.justify-content-between .btn  { flex: 1; }
 }
 @media (max-width: 575px) {
-    .row.g-4 > [class*="col-"] {
-        width: 100%;
-    }
-    .input-group {
-        flex-wrap: wrap;
-    }
+    .row.g-4 > [class*="col-"] { width: 100%; }
+    .input-group { flex-wrap: wrap; }
     .input-group .form-control {
         width: 100%;
         border-radius: 8px !important;
