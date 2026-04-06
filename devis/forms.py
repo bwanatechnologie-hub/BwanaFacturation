@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Devis, LigneDevis
 from clients.models import Client
-from taxes.models import PaysTaxe, Taxe, Pays  # ✅ Ajout des nouveaux modèles
+from taxes.models import PaysTaxe, Taxe, Pays
 from produits.models import Produit
 from datetime import timedelta
 
@@ -17,18 +17,26 @@ class DevisForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_pays_select'})
     )
     
-    # ✅ NOUVEAU : Champ pour les taxes multiples
+    # Champ pour les taxes multiples
     taxes = forms.ModelMultipleChoiceField(
         queryset=Taxe.objects.none(),
         required=False,
         label="Taxes applicables",
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'taxes-checkbox'})
     )
+    
+    # ✅ NOUVEAU : Champ devise
+    devise = forms.ChoiceField(
+        choices=[],
+        required=False,
+        label="Devise",
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_devise'})
+    )
 
     class Meta:
         model = Devis
         fields = ['client', 'date_validite', 'statut', 'notes',
-                  'pays', 'type_taxe', 'taux_taxe', 'taxes']  # ✅ Ajout de taxes
+                  'pays', 'type_taxe', 'taux_taxe', 'taxes', 'devise']
         widgets = {
             'client': forms.Select(attrs={'class': 'form-select'}),
             'date_validite': forms.DateInput(attrs={
@@ -46,7 +54,7 @@ class DevisForm(forms.ModelForm):
                 'class': 'form-control',
                 'id': 'id_taux_taxe',
                 'step': '0.01',
-                'readonly': 'readonly'  # ✅ Rendre readonly car géré par les taxes multiples
+                'readonly': 'readonly'
             }),
         }
 
@@ -61,6 +69,7 @@ class DevisForm(forms.ModelForm):
         self.fields['type_taxe'].required = False
         self.fields['pays'].required = False
         self.fields['taxes'].required = False
+        self.fields['devise'].required = False  # ✅ Devise optionnelle
 
         # Choix des pays (legacy)
         pays_choices = [('', '-- Sélectionner un pays --')]
@@ -70,7 +79,18 @@ class DevisForm(forms.ModelForm):
         ]
         self.fields['pays'].choices = pays_choices
         
-        # ✅ Charger les taxes si un client est sélectionné
+        # ✅ Configuration du champ devise
+        # Récupérer toutes les devises disponibles
+        toutes_devises = Pays.objects.filter(actif=True).values_list('devise_symbole', flat=True).distinct()
+        devises_disponibles = list(set(list(toutes_devises) + ['FCFA', '€', '$', 'CAD', 'USD', 'EUR', 'GBP']))
+        devises_disponibles.sort()
+        
+        devise_choices = [('', '-- Sélectionner une devise --')]
+        for devise in devises_disponibles:
+            devise_choices.append((devise, devise))
+        self.fields['devise'].choices = devise_choices
+        
+        # Charger les taxes si un client est sélectionné
         client_id = self.data.get('client') or (self.instance.client_id if self.instance.pk else None)
         
         if client_id:
@@ -91,6 +111,10 @@ class DevisForm(forms.ModelForm):
                     # Mettre à jour le champ pays legacy
                     if client.pays_obj.code:
                         self.fields['pays'].initial = client.pays_obj.code
+                    
+                    # ✅ Pré-sélectionner la devise du client
+                    if client.devise:
+                        self.fields['devise'].initial = client.devise
                         
             except Client.DoesNotExist:
                 pass
@@ -98,6 +122,10 @@ class DevisForm(forms.ModelForm):
         # Si en modification, sélectionner les taxes existantes
         if self.instance.pk and self.instance.taxes.exists():
             self.fields['taxes'].initial = self.instance.taxes.all()
+        
+        # ✅ Si en modification, charger la devise sauvegardée
+        if self.instance.pk and hasattr(self.instance, 'devise_choisie') and self.instance.devise_choisie:
+            self.fields['devise'].initial = self.instance.devise_choisie
         
         # Définir une date par défaut (J+30)
         if not self.instance.pk and not self.initial.get('date_validite'):
@@ -146,8 +174,13 @@ class DevisForm(forms.ModelForm):
         return self.cleaned_data.get('pays') or ''
 
     def save(self, commit=True):
-        """Sauvegarde avec gestion des taxes multiples"""
+        """Sauvegarde avec gestion des taxes multiples et de la devise"""
         instance = super().save(commit=False)
+        
+        # ✅ Sauvegarder la devise choisie
+        devise_choisie = self.cleaned_data.get('devise')
+        if devise_choisie:
+            instance.devise_choisie = devise_choisie
         
         if commit:
             instance.save()
@@ -157,6 +190,7 @@ class DevisForm(forms.ModelForm):
         return instance
 
 
+# LigneDevisForm sans tva
 class LigneDevisForm(forms.ModelForm):
     produit = forms.ModelChoiceField(
         queryset=Produit.objects.none(),
@@ -169,7 +203,7 @@ class LigneDevisForm(forms.ModelForm):
 
     class Meta:
         model = LigneDevis
-        fields = ['description', 'quantite', 'prix_unitaire', 'tva']
+        fields = ['description', 'quantite', 'prix_unitaire']
         widgets = {
             'description': forms.TextInput(attrs={
                 'class': 'form-control description-input',
@@ -186,11 +220,6 @@ class LigneDevisForm(forms.ModelForm):
                 'step': '0.01',
                 'min': '0'
             }),
-            'tva': forms.NumberInput(attrs={
-                'class': 'form-control tva-input',
-                'step': '0.01',
-                'min': '0'
-            }),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -201,7 +230,7 @@ class LigneDevisForm(forms.ModelForm):
             self.fields['produit'].queryset = Produit.objects.filter(
                 user=user,
                 actif=True
-            ).select_related('pays', 'type_taxe').order_by('nom')
+            ).select_related('pays').order_by('nom')
         else:
             self.fields['produit'].queryset = Produit.objects.none()
 
@@ -211,28 +240,16 @@ class LigneDevisForm(forms.ModelForm):
             self.fields['produit'].initial = self.instance.produit
 
     def clean_quantite(self):
-        """Validation : quantité positive"""
         quantite = self.cleaned_data.get('quantite')
         if quantite is not None and quantite <= 0:
             raise ValidationError("La quantité doit être supérieure à 0.")
         return quantite
 
     def clean_prix_unitaire(self):
-        """Validation : prix non négatif"""
         prix = self.cleaned_data.get('prix_unitaire')
         if prix is not None and prix < 0:
             raise ValidationError("Le prix unitaire ne peut pas être négatif.")
         return prix
-
-    def clean_tva(self):
-        """Validation : TVA entre 0 et 100"""
-        tva = self.cleaned_data.get('tva')
-        if tva is not None:
-            if tva < 0:
-                raise ValidationError("La TVA ne peut pas être négative.")
-            if tva > 100:
-                raise ValidationError("La TVA ne peut pas dépasser 100%.")
-        return tva
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -244,8 +261,6 @@ class LigneDevisForm(forms.ModelForm):
                 instance.description = produit.nom
             if not instance.prix_unitaire or instance.prix_unitaire == 0:
                 instance.prix_unitaire = produit.prix_ht
-            if not instance.tva or instance.tva == 0:
-                instance.tva = produit.taux_tva
 
         if commit:
             instance.save()
@@ -262,7 +277,6 @@ class BaseLigneDevisFormSet(forms.BaseFormSet):
         return super()._construct_form(i, **kwargs)
     
     def clean(self):
-        """Validation globale du FormSet - au moins une ligne"""
         if any(self.errors):
             return
         
@@ -277,7 +291,6 @@ class BaseLigneDevisFormSet(forms.BaseFormSet):
             raise ValidationError("Veuillez ajouter au moins un produit ou service.")
 
 
-# FormSet avec extra=1 pour création
 LigneDevisFormSet = forms.formset_factory(
     LigneDevisForm,
     formset=BaseLigneDevisFormSet,

@@ -1,8 +1,13 @@
+# factures/forms.py
 from django import forms
+from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import Facture, LigneFacture
 from clients.models import Client
 from produits.models import Produit
-from taxes.models import PaysTaxe
+from taxes.models import PaysTaxe, Taxe, Pays
+from datetime import timedelta
+import json
 
 
 class FactureForm(forms.ModelForm):
@@ -12,11 +17,27 @@ class FactureForm(forms.ModelForm):
         label="Pays / Taxe",
         widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_pays_select'})
     )
+    
+    # ✅ Champ devise
+    devise = forms.ChoiceField(
+        choices=[],
+        required=False,
+        label="Devise",
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_devise'})
+    )
+    
+    # ✅ Champ pour les taxes multiples
+    taxes = forms.ModelMultipleChoiceField(
+        queryset=Taxe.objects.none(),
+        required=False,
+        label="Taxes applicables",
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'taxes-checkbox'})
+    )
 
     class Meta:
         model = Facture
         fields = ['client', 'date_echeance', 'statut', 'notes',
-                  'pays', 'type_taxe', 'taux_taxe']
+                  'pays', 'type_taxe', 'taux_taxe', 'taxes', 'devise']
         widgets = {
             'client': forms.Select(attrs={'class': 'form-select'}),
             'date_echeance': forms.DateInput(
@@ -33,7 +54,8 @@ class FactureForm(forms.ModelForm):
             }),
             'taux_taxe': forms.NumberInput(attrs={
                 'class': 'form-control', 'id': 'id_taux_taxe',
-                'step': '0.01'
+                'step': '0.01',
+                'readonly': 'readonly'
             }),
         }
 
@@ -41,19 +63,70 @@ class FactureForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['client'].queryset = Client.objects.filter(utilisateur=user)
         
-        # ✅ Champs optionnels — remplis automatiquement par le JS
+        # Champs optionnels
         self.fields['taux_taxe'].required = False
         self.fields['type_taxe'].required = False
         self.fields['pays'].required = False
+        self.fields['taxes'].required = False
+        self.fields['devise'].required = False
         self.fields['date_echeance'].input_formats = ['%Y-%m-%d', '%d/%m/%Y']
 
-        # ✅ Choix des pays
+        # Choix des pays (legacy)
         pays_choices = [('', '-- Sélectionner un pays --')]
         pays_choices += [
             (p.code, f"{p.nom} ({p.type_taxe} {p.taux_defaut}%)")
             for p in PaysTaxe.objects.filter(actif=True)
         ]
         self.fields['pays'].choices = pays_choices
+        
+        # ✅ Configuration du champ devise
+        toutes_devises = Pays.objects.filter(actif=True).values_list('devise_symbole', flat=True).distinct()
+        devises_disponibles = list(set(list(toutes_devises) + ['FCFA', '€', '$', 'CAD', 'USD', 'EUR', 'GBP']))
+        devises_disponibles.sort()
+        
+        devise_choices = [('', '-- Sélectionner une devise --')]
+        for devise in devises_disponibles:
+            devise_choices.append((devise, devise))
+        self.fields['devise'].choices = devise_choices
+        
+        # Charger les taxes si un client est sélectionné
+        client_id = self.data.get('client') or (self.instance.client_id if self.instance.pk else None)
+        
+        if client_id:
+            try:
+                client = Client.objects.get(id=client_id)
+                if client.pays_obj:
+                    self.fields['taxes'].queryset = Taxe.objects.filter(
+                        pays=client.pays_obj,
+                        actif=True
+                    ).order_by('ordre')
+                    
+                    if not self.instance.pk and not self.data.get('taxes'):
+                        taxes_defaut = client.pays_obj.get_taxes_par_defaut()
+                        self.fields['taxes'].initial = taxes_defaut
+                    
+                    if client.pays_obj.code:
+                        self.fields['pays'].initial = client.pays_obj.code
+                    
+                    # ✅ Pré-sélectionner la devise du client
+                    if client.devise:
+                        self.fields['devise'].initial = client.devise
+                        
+            except Client.DoesNotExist:
+                pass
+        
+        # Si en modification, sélectionner les taxes existantes
+        if self.instance.pk and self.instance.taxes.exists():
+            self.fields['taxes'].initial = self.instance.taxes.all()
+        
+        # ✅ Si en modification, charger la devise sauvegardée
+        if self.instance.pk and hasattr(self.instance, 'devise_choisie') and self.instance.devise_choisie:
+            self.fields['devise'].initial = self.instance.devise_choisie
+        
+        # Définir une date par défaut (J+30)
+        if not self.instance.pk and not self.initial.get('date_echeance'):
+            default_date = timezone.now().date() + timedelta(days=30)
+            self.initial['date_echeance'] = default_date
 
     def clean_taux_taxe(self):
         """Retourner 0 si taux_taxe est vide"""
@@ -68,9 +141,27 @@ class FactureForm(forms.ModelForm):
         """Retourner chaîne vide si pays est vide"""
         return self.cleaned_data.get('pays') or ''
 
+    def save(self, commit=True):
+        """Sauvegarde avec gestion des taxes et de la devise"""
+        instance = super().save(commit=False)
+        
+        # ✅ Sauvegarder la devise choisie
+        devise_choisie = self.cleaned_data.get('devise')
+        if devise_choisie:
+            instance.devise_choisie = devise_choisie
+        
+        # ✅ Récupérer les taxes personnalisées du POST (si présentes)
+        # Note: Les taxes personnalisées sont gérées dans la vue, pas ici
+        
+        if commit:
+            instance.save()
+            # Sauvegarder la relation ManyToMany des taxes
+            self._save_m2m()
+        
+        return instance
+
 
 class LigneFactureForm(forms.ModelForm):
-    # ✅ Ajout champ produit
     produit = forms.ModelChoiceField(
         queryset=Produit.objects.none(),
         required=False,
@@ -82,7 +173,8 @@ class LigneFactureForm(forms.ModelForm):
 
     class Meta:
         model = LigneFacture
-        fields = ['description', 'quantite', 'prix_unitaire', 'tva']
+        # ✅ SUPPRIMER 'tva' des champs (la TVA est globale maintenant)
+        fields = ['description', 'quantite', 'prix_unitaire']
         widgets = {
             'description': forms.TextInput(attrs={
                 'class': 'form-control description-input',
@@ -99,11 +191,6 @@ class LigneFactureForm(forms.ModelForm):
                 'step': '0.01',
                 'min': '0'
             }),
-            'tva': forms.NumberInput(attrs={
-                'class': 'form-control tva-input',
-                'step': '0.01',
-                'min': '0'
-            }),
         }
 
     def __init__(self, *args, user=None, **kwargs):
@@ -114,7 +201,7 @@ class LigneFactureForm(forms.ModelForm):
             self.fields['produit'].queryset = Produit.objects.filter(
                 user=user,
                 actif=True
-            ).select_related('pays', 'type_taxe').order_by('nom')
+            ).select_related('pays').order_by('nom')
         else:
             self.fields['produit'].queryset = Produit.objects.none()
 
@@ -122,6 +209,18 @@ class LigneFactureForm(forms.ModelForm):
 
         if self.instance and self.instance.pk and self.instance.produit:
             self.fields['produit'].initial = self.instance.produit
+
+    def clean_quantite(self):
+        quantite = self.cleaned_data.get('quantite')
+        if quantite is not None and quantite <= 0:
+            raise ValidationError("La quantité doit être supérieure à 0.")
+        return quantite
+
+    def clean_prix_unitaire(self):
+        prix = self.cleaned_data.get('prix_unitaire')
+        if prix is not None and prix < 0:
+            raise ValidationError("Le prix unitaire ne peut pas être négatif.")
+        return prix
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -133,15 +232,12 @@ class LigneFactureForm(forms.ModelForm):
                 instance.description = produit.nom
             if not instance.prix_unitaire or instance.prix_unitaire == 0:
                 instance.prix_unitaire = produit.prix_ht
-            if not instance.tva or instance.tva == 0:
-                instance.tva = produit.taux_tva
 
         if commit:
             instance.save()
         return instance
 
 
-# ✅ FormSet personnalisé
 class BaseLigneFactureFormSet(forms.BaseFormSet):
     def __init__(self, *args, user=None, **kwargs):
         self.user = user
@@ -150,9 +246,22 @@ class BaseLigneFactureFormSet(forms.BaseFormSet):
     def _construct_form(self, i, **kwargs):
         kwargs['user'] = self.user
         return super()._construct_form(i, **kwargs)
+    
+    def clean(self):
+        if any(self.errors):
+            return
+        
+        lignes_non_supprimees = 0
+        for form in self.forms:
+            if form.cleaned_data.get('DELETE', False):
+                continue
+            if form.cleaned_data.get('produit') or form.cleaned_data.get('description'):
+                lignes_non_supprimees += 1
+        
+        if lignes_non_supprimees == 0:
+            raise ValidationError("Veuillez ajouter au moins un produit ou service.")
 
 
-# ✅ FormSet avec extra=1 pour création
 LigneFactureFormSet = forms.formset_factory(
     LigneFactureForm,
     formset=BaseLigneFactureFormSet,

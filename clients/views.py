@@ -7,6 +7,10 @@ from .models import Client
 from .forms import ClientForm
 # ✅ Importer depuis taxes.models
 from taxes.models import Pays, Taxe  # ← Changement clé !
+import logging
+import traceback
+
+logger = logging.getLogger(__name__)
 
 
 def get_pays_context():
@@ -110,33 +114,58 @@ def detail_client(request, pk):
 @login_required
 def api_client_info(request, pk):
     """Retourne devise + taxes du client pour le JS du formulaire devis"""
-    client = get_object_or_404(Client, pk=pk, utilisateur=request.user)
+    try:
+        client = get_object_or_404(Client, pk=pk, utilisateur=request.user)
+        
+        logger.info(f"API client info - Client: {client.id}, Nom: {client.nom}")
+        logger.info(f"  - Pays: {client.pays_obj}")
+        logger.info(f"  - Province: '{client.province}'")
 
-    # ✅ Récupérer les taxes multiples du pays du client
-    taxes = []
-    if client.pays_obj:
-        for taxe in client.pays_obj.taxes.filter(actif=True).order_by('ordre'):
-            taxes.append({
-                'id': taxe.id,
-                'nom': taxe.nom,
-                'code': taxe.code,
-                'taux_defaut': float(taxe.taux),
-                'cumulative': taxe.cumulative,
-                'par_defaut': taxe.par_defaut,
-                'ordre': taxe.ordre
-            })
+        taxes = []
+        if client.pays_obj:
+            # Base des taxes actives du pays
+            taxes_query = client.pays_obj.taxes.filter(actif=True)
+            
+            # ✅ Filtre STRICT par province
+            if client.province and client.province.strip():
+                taxes_query = taxes_query.filter(province=client.province)
+                logger.info(f"  - Filtre province: {client.province} -> {taxes_query.count()} taxes")
+            else:
+                # Si pas de province, ne retourner AUCUNE taxe
+                taxes_query = taxes_query.none()
+                logger.warning(f"  - Client sans province -> aucune taxe")
+            
+            for taxe in taxes_query.order_by('ordre'):
+                taxes.append({
+                    'id': taxe.id,
+                    'nom': taxe.nom,
+                    'code': taxe.code,
+                    'taux_defaut': float(taxe.taux),
+                    'cumulative': taxe.cumulative,
+                    'par_defaut': taxe.par_defaut,
+                    'ordre': taxe.ordre
+                })
+        else:
+            logger.warning(f"  - Client sans pays")
 
-    return JsonResponse({
-        'id': client.pk,
-        'nom': str(client),
-        'pays_code': client.pays_obj.code if client.pays_obj else '',
-        'pays_nom': client.pays_obj.nom if client.pays_obj else '',
-        'devise': client.devise,
-        'taux_tva': float(client.taux_tva),
-        'type_taxe': client.type_taxe_nom,
-        'taxes': taxes,
-        'province': client.province or '',
-    })
+        return JsonResponse({
+            'id': client.pk,
+            'nom': str(client),
+            'pays_code': client.pays_obj.code if client.pays_obj else '',
+            'pays_nom': client.pays_obj.nom if client.pays_obj else '',
+            'devise': client.devise,
+            'taux_tva': float(client.taux_tva),
+            'type_taxe': client.type_taxe_nom,
+            'taxes': taxes,
+            'province': client.province or '',
+        })
+        
+    except Exception as e:
+        logger.error(f"Erreur dans api_client_info: {str(e)}")
+        logger.error(traceback.format_exc())
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
 
 
 # ══════════════════════════════════════════════════
@@ -151,9 +180,24 @@ def api_client_taxes(request, pk):
     try:
         client = get_object_or_404(Client, pk=pk, utilisateur=request.user)
         
+        logger.info(f"API client taxes - Client: {client.id}, Nom: {client.nom}")
+        logger.info(f"  - Pays: {client.pays_obj}")
+        logger.info(f"  - Province: '{client.province}'")
+
         taxes = []
         if client.pays_obj:
-            for taxe in client.pays_obj.taxes.filter(actif=True).order_by('ordre'):
+            # Base des taxes actives du pays
+            taxes_query = client.pays_obj.taxes.filter(actif=True)
+            
+            # ✅ Filtre STRICT par province
+            if client.province and client.province.strip():
+                taxes_query = taxes_query.filter(province=client.province)
+                logger.info(f"  - Taxes trouvées: {taxes_query.count()}")
+            else:
+                taxes_query = taxes_query.none()
+                logger.warning(f"  - Client sans province -> aucune taxe")
+            
+            for taxe in taxes_query.order_by('ordre'):
                 taxes.append({
                     'id': taxe.id,
                     'nom': taxe.nom,
@@ -165,15 +209,27 @@ def api_client_taxes(request, pk):
                     'description': taxe.description if hasattr(taxe, 'description') else ''
                 })
         
-        return JsonResponse({
+        response_data = {
             'success': True,
             'taxes': taxes,
             'pays': client.pays_obj.nom if client.pays_obj else '',
             'pays_code': client.pays_obj.code if client.pays_obj else '',
             'devise': client.devise,
-        })
+            'province': client.province or '',
+        }
         
+        logger.info(f"  - Réponse: {len(taxes)} taxes")
+        return JsonResponse(response_data)
+        
+    except Client.DoesNotExist:
+        logger.error(f"Client {pk} non trouvé")
+        return JsonResponse({
+            'success': False, 
+            'error': 'Client non trouvé'
+        }, status=404)
     except Exception as e:
+        logger.error(f"Erreur dans api_client_taxes: {str(e)}")
+        logger.error(traceback.format_exc())
         return JsonResponse({
             'success': False, 
             'error': str(e)

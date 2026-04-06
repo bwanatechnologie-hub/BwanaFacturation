@@ -6,8 +6,8 @@
 
 {% block content %}
 
-{# ✅ Définir la devise une fois pour tout le template #}
-{% with devise=facture.client.devise|default:"FCFA" %}
+{# ✅ CORRECTION : Utiliser la devise choisie ou celle du client par défaut #}
+{% with devise=facture.devise_choisie|default:facture.client.devise|default:"FCFA" %}
 
 <!-- En-tête -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
@@ -22,10 +22,13 @@
                     <i class="bi bi-file-text me-1"></i>Depuis devis {{ facture.devis.numero }}
                 </span>
             {% endif %}
+            {# ✅ Afficher la devise utilisée #}
+            <span class="badge" style="background: #2d6a9f; color: white;">
+                <i class="bi bi-currency-dollar me-1"></i>Devise : {{ devise }}
+            </span>
         </div>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        <!-- ✅ Nouveau bouton : Gérer les liens d'approbation -->
         <a href="{% url 'gestion_liens_facture' facture.pk %}" class="btn btn-outline-info">
             <i class="bi bi-link me-2"></i>Liens d'approbation
         </a>
@@ -100,7 +103,7 @@
                             {% if facture.client.pays_obj %}
                                 <p class="mt-2">
                                     <span class="badge" style="background: #e8f0fe; color: #1e3a5f;">
-                                        <i class="bi bi-globe2 me-1"></i>{{ facture.client.pays_obj.nom }} — {{ devise }}
+                                        <i class="bi bi-globe2 me-1"></i>{{ facture.client.pays_obj.nom }}
                                     </span>
                                 </p>
                             {% endif %}
@@ -149,6 +152,15 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- ✅ Affichage de la devise choisie -->
+                        <div class="col-sm-6">
+                            <div class="p-3 rounded" style="background: #f8f9fa;">
+                                <div class="text-muted small">Devise</div>
+                                <div class="fw-bold" style="color: #2d6a9f;">{{ devise }}</div>
+                            </div>
+                        </div>
+                        
                         {% if facture.pays or facture.type_taxe or facture.taux_taxe %}
                         <div class="col-12">
                             <div class="p-3 rounded" style="background: #f8f9fa;">
@@ -173,6 +185,24 @@
                             </div>
                         </div>
                         {% endif %}
+                        
+                        <!-- ✅ Affichage des taxes personnalisées -->
+                        {% with taxes_details=facture.get_taxes_details %}
+                        {% if taxes_details %}
+                        <div class="col-12">
+                            <div class="p-3 rounded" style="background: #e8f0fe;">
+                                <div class="text-muted small">Taxes appliquées</div>
+                                <div class="mt-1">
+                                    {% for taxe in taxes_details %}
+                                        <span class="badge me-1" style="background: #2d6a9f; color: white;">
+                                            {{ taxe.code }} ({{ taxe.taux }}%) : {{ taxe.montant|floatformat:0 }} {{ devise }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endwith %}
                         
                         <!-- ✅ Affichage des informations d'approbation -->
                         {% if facture.approuve_par %}
@@ -227,9 +257,8 @@
                                 <th>Description</th>
                                 <th class="text-center" style="width: 80px;">Qté</th>
                                 <th class="text-end" style="width: 120px;">Prix HT</th>
-                                <th class="text-center" style="width: 80px;">TVA</th>
-                                <th class="text-end" style="width: 120px;">Total TTC</th>
-                              </tr>
+                                <th class="text-end" style="width: 120px;">Total HT</th>
+                               </tr>
                         </thead>
                         <tbody>
                             {% for ligne in lignes %}
@@ -245,37 +274,44 @@
                                 <td data-label="Qté" class="text-center">{{ ligne.quantite }}</td>
                                 <td data-label="Prix HT" class="text-end">
                                     {{ ligne.prix_unitaire|floatformat:0 }} {{ devise }}
-                                  </td>
-                                <td data-label="TVA" class="text-center">
-                                    <span class="badge" style="background: #f0f0f0; color: #1e3a5f;">{{ ligne.tva }}%</span>
-                                  </td>
-                                <td data-label="Total TTC" class="text-end fw-semibold" style="color: #2d6a9f;">
-                                    {{ ligne.total_ttc|floatformat:0 }} {{ devise }}
-                                  </td>
+                                   </td>
+                                <td data-label="Total HT" class="text-end fw-semibold" style="color: #2d6a9f;">
+                                    {{ ligne.total_ht|floatformat:0 }} {{ devise }}
+                                   </td>
                               </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <td colspan="4" class="text-end fw-semibold">Total HT</td>
+                                <td colspan="3" class="text-end fw-semibold">Total HT</td>
                                 <td class="text-end fw-semibold">
                                     {{ facture.calculer_total_ht|floatformat:0 }} {{ devise }}
-                                  </td>
-                              </tr>
+                                   </td>
+                               </tr>
+                            
+
+
+                            {% with taxes_details=facture.get_taxes_details %}
+                            {% for taxe in taxes_details %}
                             <tr>
-                                <td colspan="4" class="text-end fw-semibold">TVA</td>
+                                <td colspan="3" class="text-end fw-semibold">
+                                    {{ taxe.code }} ({{ taxe.taux }}%)
+                                </td>
                                 <td class="text-end fw-semibold">
-                                    {{ facture.calculer_tva|floatformat:0 }} {{ devise }}
-                                  </td>
-                              </tr>
-                            <tr>
-                                <td colspan="4" class="text-end fw-bold fs-5">Total TTC</td>
-                                <td class="text-end fw-bold fs-5" style="color: #2d6a9f;">
+                                    {{ taxe.montant|floatformat:0 }} {{ devise }}
+                                   </td>
+                               </tr>
+                            {% endfor %}
+                            {% endwith %}
+                            
+                            <tr class="fw-bold">
+                                <td colspan="3" class="text-end fs-5">Total TTC</td>
+                                <td class="text-end fs-5" style="color: #2d6a9f;">
                                     {{ facture.calculer_total_ttc|floatformat:0 }} {{ devise }}
-                                  </td>
-                              </tr>
+                                   </td>
+                               </tr>
                         </tfoot>
-                      </table>
+                    </table>
                 </div>
             </div>
         </div>
@@ -371,10 +407,14 @@
                     <span class="text-muted">Total HT</span>
                     <span class="fw-semibold">{{ facture.calculer_total_ht|floatformat:0 }} {{ devise }}</span>
                 </div>
+                {% with taxes_details=facture.get_taxes_details %}
+                {% for taxe in taxes_details %}
                 <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">TVA</span>
-                    <span class="fw-semibold">{{ facture.calculer_tva|floatformat:0 }} {{ devise }}</span>
+                    <span class="text-muted">{{ taxe.code }} ({{ taxe.taux }}%)</span>
+                    <span class="fw-semibold">{{ taxe.montant|floatformat:0 }} {{ devise }}</span>
                 </div>
+                {% endfor %}
+                {% endwith %}
                 <hr class="my-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-bold fs-5">Total TTC</span>
@@ -403,7 +443,6 @@
     </div>
 </div>
 
-{# ✅ Fin du bloc with #}
 {% endwith %}
 
 <style>

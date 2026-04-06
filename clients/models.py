@@ -1,10 +1,10 @@
 # clients/models.py
 from django.db import models
 from django.contrib.auth.models import User
-# ✅ IMPORTANT: Utiliser le modèle Pays de taxes.models
-from taxes.models import Pays  # ← Changement clé !
-# ❌ Supprimer l'import de produits.models
-# from produits.models import Pays, TypeTaxe
+from taxes.models import Pays
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Client(models.Model):
@@ -95,7 +95,7 @@ class Client(models.Model):
 
     # ✅ Pays lié à la table Pays (devise + taxes automatiques)
     pays_obj = models.ForeignKey(
-        Pays,  # ← Maintenant c'est taxes.models.Pays
+        Pays,
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='clients',
@@ -111,7 +111,7 @@ class Client(models.Model):
     # Entreprise
     entreprise = models.CharField(max_length=150, blank=True)
 
-    # Logo client — utilisé dans les PDF devis/facture
+    # Logo client
     logo = models.ImageField(
         upload_to='clients/logos/',
         blank=True,
@@ -147,29 +147,31 @@ class Client(models.Model):
     @property
     def taux_tva(self):
         """
-        ✅ MODIFIÉ : Retourne le taux de TVA par défaut
-        Pour les pays avec taxes multiples (ex: Québec), retourne le taux cumulé ou le premier taux
+        ✅ CORRECTION : Calcule le taux total uniquement pour la province du client
         """
         if self.pays_obj:
-            # Récupérer toutes les taxes actives du pays
-            taxes = self.pays_obj.taxes.filter(actif=True)
+            taxes = self.taxes_disponibles
             if taxes.exists():
-                # Calculer le taux total (pour compatibilité avec l'ancien système)
-                total_taux = sum(taxe.taux for taxe in taxes)
-                return total_taux
+                total = sum(taxe.taux for taxe in taxes)
+                logger.debug(f"taux_tva pour {self.nom}: {total}% ({taxes.count()} taxes)")
+                return total
         return 0
 
     @property
     def type_taxe_nom(self):
-        """Nom du type de taxe principal selon le pays du client"""
+        """
+        ✅ CORRECTION : Retourne uniquement les taxes de la province du client
+        """
         if self.pays_obj:
-            taxes = self.pays_obj.taxes.filter(actif=True)
+            taxes = self.taxes_disponibles
             if taxes.exists():
                 if taxes.count() == 1:
                     return taxes.first().code
                 else:
-                    # Pour plusieurs taxes, retourner une chaîne combinée
-                    return " + ".join(taxe.code for taxe in taxes)
+                    result = " + ".join(taxe.code for taxe in taxes)
+                    if len(result) > 50:
+                        return f"{taxes.count()} taxes"
+                    return result
         return 'TVA'
 
     @property
@@ -180,10 +182,30 @@ class Client(models.Model):
     
     @property
     def taxes_disponibles(self):
-        """Retourne la liste des taxes disponibles pour ce client"""
-        if self.pays_obj:
-            return self.pays_obj.taxes.filter(actif=True).order_by('ordre')
-        return []
+        """
+        ✅ CORRECTION : Retourne les taxes disponibles selon la province du client
+        """
+        if not self.pays_obj:
+            logger.debug(f"taxes_disponibles: {self.nom} - pas de pays")
+            return []
+        
+        # Log pour diagnostic
+        logger.info(f"taxes_disponibles pour {self.nom}:")
+        logger.info(f"  - Pays: {self.pays_obj.nom} ({self.pays_obj.code})")
+        logger.info(f"  - Province: '{self.province}'")
+        
+        # ✅ Filtrer STRICTEMENT par province
+        if self.province and self.province.strip():
+            # Si le client a une province, prendre uniquement les taxes de cette province
+            taxes = self.pays_obj.taxes.filter(actif=True, province=self.province).order_by('ordre')
+            logger.info(f"  - Taxes trouvées: {taxes.count()}")
+            for t in taxes:
+                logger.info(f"    - {t.code}: {t.taux}%")
+            return taxes
+        else:
+            # Si pas de province, ne retourner AUCUNE taxe (pas de taxes par défaut)
+            logger.warning(f"  - Client sans province -> aucune taxe")
+            return self.pays_obj.taxes.none()
 
     class Meta:
         ordering = ['-date_creation']

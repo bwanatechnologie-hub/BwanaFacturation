@@ -1,3 +1,4 @@
+# factures/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -12,6 +13,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
 from django.core.mail import send_mail
+import json
+from decimal import Decimal
 
 
 @login_required
@@ -49,30 +52,72 @@ def ajouter_facture(request):
             facture.utilisateur = request.user
             facture.numero = generer_numero_facture(request.user)
             
-            # ✅ Générer les tokens pour l'approbation
+            # ✅ Sauvegarder la devise choisie
+            devise_choisie = form.cleaned_data.get('devise')
+            if devise_choisie:
+                facture.devise_choisie = devise_choisie
+            
+            # Générer les tokens pour l'approbation
             facture.generer_tokens()
             
+            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES (champ caché)
+            taxes_perso = request.POST.get('taxes_personnalisees', '')
+            if taxes_perso:
+                try:
+                    taxes_data = json.loads(taxes_perso)
+                    facture.taxes_personnalisees = taxes_data
+                except json.JSONDecodeError:
+                    facture.taxes_personnalisees = {}
+            else:
+                facture.taxes_personnalisees = {}
+            
+            # ✅ IMPORTANT : Désactiver l'ancien système si des taxes personnalisées existent
+            if facture.taxes_personnalisees and (facture.taxes_personnalisees.get('ids') or facture.taxes_personnalisees.get('personnalisees')):
+                facture.taux_taxe = 0
+                facture.type_taxe = ''
+            else:
+                facture.taux_taxe = form.cleaned_data.get('taux_taxe', 0)
+                facture.type_taxe = form.cleaned_data.get('type_taxe', 'TVA')
+            
             facture.save()
+            
+            # Sauvegarder les taxes sélectionnées (ManyToMany)
+            if form.cleaned_data.get('taxes'):
+                facture.taxes.set(form.cleaned_data['taxes'])
 
+            # Sauvegarder les lignes
+            lignes_sauvegardees = 0
             for ligne_form in formset:
                 if ligne_form.cleaned_data and not ligne_form.cleaned_data.get('DELETE'):
                     ligne = ligne_form.save(commit=False)
                     ligne.facture = facture
                     ligne.save()
+                    lignes_sauvegardees += 1
+
+            if lignes_sauvegardees == 0:
+                facture.delete()
+                messages.error(request, '❌ Veuillez ajouter au moins un produit ou service.')
+                return render_creation_facture(request, form, formset)
 
             messages.success(request, f'✅ Facture {facture.numero} créée !')
             
-            # ✅ Rediriger vers la page de gestion des liens
             return redirect('gestion_liens_facture', pk=facture.pk)
         else:
             messages.error(request, '❌ Veuillez corriger les erreurs.')
+            print(f"❌ ERREURS FORM: {form.errors}")
+            print(f"❌ ERREURS FORMSET: {formset.errors}")
     else:
         form = FactureForm(request.user)
         formset = LigneFactureFormSet(prefix='lignes', user=request.user)
 
+    return render_creation_facture(request, form, formset)
+
+
+def render_creation_facture(request, form, formset):
+    """Helper pour le rendu de la création"""
     produits = Produit.objects.filter(
         user=request.user, actif=True
-    ).select_related('pays', 'type_taxe').order_by('nom')
+    ).select_related('pays').order_by('nom')
 
     return render(request, 'factures/form_facture.html', {
         'form': form,
@@ -89,7 +134,6 @@ def gestion_liens_facture(request, pk):
     """Page pour gérer les liens d'approbation et client"""
     facture = get_object_or_404(Facture, pk=pk, utilisateur=request.user)
     
-    # Construire les URLs
     base_url = request.build_absolute_uri('/')[:-1]
     lien_approbation = f"{base_url}{reverse('visualiser_facture_approbation', args=[facture.token_approbation])}"
     lien_client = f"{base_url}{reverse('visualiser_facture_client', args=[facture.token_client])}"
@@ -105,10 +149,12 @@ def visualiser_facture_approbation(request, token):
     """Page publique pour que le supérieur approuve la facture"""
     facture = get_object_or_404(Facture, token_approbation=token)
     
-    # Vérifier si déjà traité
     if facture.approuve_par:
-        messages.warning(request, "Cette facture a déjà été approuvée.")
-        return render(request, 'factures/public/deja_traite.html', {'facture': facture})
+        return render(request, 'factures/public/approbation.html', {
+            'facture': facture,
+            'deja_traite': True,
+            'message_warning': 'Cette facture a déjà été approuvée.'
+        })
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -121,7 +167,6 @@ def visualiser_facture_approbation(request, token):
             facture.statut = 'approuvee'
             facture.save()
             
-            # Envoyer notification au créateur
             try:
                 send_mail(
                     subject=f'✅ Facture {facture.numero} approuvée',
@@ -133,15 +178,18 @@ def visualiser_facture_approbation(request, token):
             except:
                 pass
             
-            messages.success(request, "✅ Facture approuvée avec succès !")
-            return redirect('visualiser_facture_approbation', token=token)
+            return render(request, 'factures/public/approbation.html', {
+                'facture': facture,
+                'action_effectuee': 'approuver',
+                'message_success': f'✅ Facture {facture.numero} approuvée avec succès !',
+                'commentaire': commentaire
+            })
             
         elif action == 'rejeter':
             facture.statut = 'rejetee'
             facture.commentaire_approbation = commentaire
             facture.save()
             
-            # Envoyer notification au créateur
             try:
                 send_mail(
                     subject=f'❌ Facture {facture.numero} rejetée',
@@ -153,11 +201,16 @@ def visualiser_facture_approbation(request, token):
             except:
                 pass
             
-            messages.info(request, "Facture rejetée.")
-            return redirect('visualiser_facture_approbation', token=token)
+            return render(request, 'factures/public/approbation.html', {
+                'facture': facture,
+                'action_effectuee': 'rejeter',
+                'message_success': f'❌ Facture {facture.numero} rejetée.',
+                'commentaire': commentaire
+            })
     
     return render(request, 'factures/public/approbation.html', {
         'facture': facture,
+        'deja_traite': False
     })
 
 
@@ -165,14 +218,19 @@ def visualiser_facture_client(request, token):
     """Page publique pour que le client accepte la facture"""
     facture = get_object_or_404(Facture, token_client=token)
     
-    # Vérifier si la facture est approuvée
     if facture.statut != 'approuvee':
-        messages.warning(request, "Cette facture n'a pas encore été approuvée en interne.")
-        return render(request, 'factures/public/en_attente.html', {'facture': facture})
+        return render(request, 'factures/public/client.html', {
+            'facture': facture,
+            'message_warning': 'Cette facture n\'a pas encore été approuvée en interne.',
+            'en_attente': True
+        })
     
     if facture.accepte_par_client is not None:
-        messages.warning(request, "Vous avez déjà répondu à cette facture.")
-        return render(request, 'factures/public/deja_repondu.html', {'facture': facture})
+        return render(request, 'factures/public/client.html', {
+            'facture': facture,
+            'deja_repondu': True,
+            'message_warning': 'Vous avez déjà répondu à cette facture.'
+        })
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -183,7 +241,6 @@ def visualiser_facture_client(request, token):
             facture.statut = 'non_payee'
             facture.save()
             
-            # Notifier le commercial
             try:
                 send_mail(
                     subject=f'✅ Facture {facture.numero} acceptée',
@@ -195,8 +252,11 @@ def visualiser_facture_client(request, token):
             except:
                 pass
             
-            messages.success(request, "✅ Merci ! Votre acceptation a été enregistrée.")
-            return redirect('visualiser_facture_client', token=token)
+            return render(request, 'factures/public/client.html', {
+                'facture': facture,
+                'action_effectuee': 'accepter',
+                'message_success': f'✅ Merci ! Votre acceptation a été enregistrée.'
+            })
             
         elif action == 'refuser':
             facture.accepte_par_client = False
@@ -204,7 +264,6 @@ def visualiser_facture_client(request, token):
             facture.statut = 'rejetee'
             facture.save()
             
-            # Notifier le commercial
             try:
                 send_mail(
                     subject=f'❌ Facture {facture.numero} refusée',
@@ -216,8 +275,11 @@ def visualiser_facture_client(request, token):
             except:
                 pass
             
-            messages.info(request, "Nous avons bien enregistré votre refus.")
-            return redirect('visualiser_facture_client', token=token)
+            return render(request, 'factures/public/client.html', {
+                'facture': facture,
+                'action_effectuee': 'refuser',
+                'message_success': f'ℹ️ Nous avons bien enregistré votre refus.'
+            })
     
     return render(request, 'factures/public/client.html', {
         'facture': facture,
@@ -256,28 +318,72 @@ def modifier_facture(request, pk):
         formset = LigneFactureFormSet(request.POST, prefix='lignes', user=request.user)
 
         if form.is_valid() and formset.is_valid():
-            form.save()
+            facture = form.save(commit=False)
+            
+            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES
+            taxes_perso = request.POST.get('taxes_personnalisees', '')
+            if taxes_perso:
+                try:
+                    taxes_data = json.loads(taxes_perso)
+                    facture.taxes_personnalisees = taxes_data
+                except json.JSONDecodeError:
+                    facture.taxes_personnalisees = {}
+            else:
+                facture.taxes_personnalisees = {}
+            
+            # ✅ Désactiver l'ancien système si des taxes personnalisées existent
+            if facture.taxes_personnalisees and (facture.taxes_personnalisees.get('ids') or facture.taxes_personnalisees.get('personnalisees')):
+                facture.taux_taxe = 0
+                facture.type_taxe = ''
+            else:
+                facture.taux_taxe = form.cleaned_data.get('taux_taxe', 0)
+                facture.type_taxe = form.cleaned_data.get('type_taxe', 'TVA')
+            
+            facture.save()
+            
+            # Sauvegarder les taxes ManyToMany
+            if form.cleaned_data.get('taxes'):
+                facture.taxes.set(form.cleaned_data['taxes'])
+            else:
+                facture.taxes.clear()
+            
             facture.lignes.all().delete()
 
+            lignes_sauvegardees = 0
             for ligne_form in formset:
                 if ligne_form.cleaned_data and not ligne_form.cleaned_data.get('DELETE'):
                     ligne = ligne_form.save(commit=False)
                     ligne.facture = facture
                     ligne.save()
+                    lignes_sauvegardees += 1
+
+            if lignes_sauvegardees == 0:
+                messages.error(request, '❌ Veuillez ajouter au moins un produit ou service.')
+                return render_modification_facture(request, facture, form, formset)
 
             messages.success(request, f'✏️ Facture {facture.numero} modifiée !')
             return redirect('detail_facture', pk=facture.pk)
         else:
             messages.error(request, '❌ Veuillez corriger les erreurs.')
+            print(f"❌ ERREURS FORM: {form.errors}")
+            print(f"❌ ERREURS FORMSET: {formset.errors}")
+        
         lignes_existantes = []
     else:
         form = FactureForm(request.user, instance=facture)
         formset = LigneFactureFormSet(prefix='lignes', user=request.user)
         lignes_existantes = list(facture.lignes.all())
 
+    return render_modification_facture(request, facture, form, formset, lignes_existantes)
+
+
+def render_modification_facture(request, facture, form, formset, lignes_existantes=None):
+    if lignes_existantes is None:
+        lignes_existantes = []
+    
     produits = Produit.objects.filter(
         user=request.user, actif=True
-    ).select_related('pays', 'type_taxe').order_by('nom')
+    ).select_related('pays').order_by('nom')
 
     return render(request, 'factures/form_facture.html', {
         'form': form,
@@ -297,7 +403,7 @@ def supprimer_facture(request, pk):
     if request.method == 'POST':
         numero = facture.numero
         facture.delete()
-        messages.success(request, f'Facture {numero} supprimée.')
+        messages.success(request, f'🗑️ Facture {numero} supprimée.')
         return redirect('liste_factures')
 
     return render(request, 'factures/confirmer_suppression.html', {'facture': facture})

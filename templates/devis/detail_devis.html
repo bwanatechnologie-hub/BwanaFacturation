@@ -16,7 +16,7 @@
             </span>
             {% if devis.client.pays_obj %}
             <span class="badge" style="background: #e8f0fe; color: #1e3a5f;">
-                <i class="bi bi-globe2 me-1"></i>{{ devis.client.pays_obj.nom }} — {{ devis.client.devise }}
+                <i class="bi bi-globe2 me-1"></i>{{ devis.client.pays_obj.nom }}
             </span>
             {% endif %}
         </div>
@@ -48,8 +48,8 @@
     </div>
 </div>
 
-{# Devise du client (priorité) sinon FCFA #}
-{% with devise=devis.client.devise|default:"FCFA" %}
+{# ✅ CORRECTION : Devise prioritaire (devis_choisie > client.devise > FCFA) #}
+{% with devise=devis.devise_choisie|default:devis.client.devise|default:"FCFA" %}
 
 <div class="row g-4">
     <div class="col-12 col-lg-8">
@@ -154,7 +154,8 @@
                                 </div>
                             </div>
                         </div>
-                        {% if devis.pays or devis.type_taxe or devis.taux_taxe %}
+                        
+                        <!-- ✅ Configuration fiscale avec taxes multiples -->
                         <div class="col-12">
                             <div class="p-3 rounded" style="background: #f8f9fa;">
                                 <div class="text-muted small">Configuration fiscale</div>
@@ -164,20 +165,24 @@
                                             <i class="bi bi-globe2 me-1"></i>{{ devis.pays }}
                                         </span>
                                     {% endif %}
-                                    {% if devis.type_taxe %}
+                                    {% if devis.taxes.exists %}
+                                        {% for taxe in devis.taxes.all %}
+                                            <span class="badge me-1" style="background: #e8f0fe; color: #1e3a5f;">
+                                                <i class="bi bi-receipt me-1"></i>{{ taxe.code }} ({{ taxe.taux }}%)
+                                                {% if taxe.cumulative %}*{% endif %}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
                                         <span class="badge me-1" style="background: #e8f0fe; color: #1e3a5f;">
-                                            <i class="bi bi-receipt me-1"></i>{{ devis.type_taxe }}
-                                        </span>
-                                    {% endif %}
-                                    {% if devis.taux_taxe %}
-                                        <span class="badge" style="background: #e8f0fe; color: #1e3a5f;">
-                                            {{ devis.taux_taxe }}%
+                                            <i class="bi bi-receipt me-1"></i>{{ devis.type_taxe|default:"TVA" }} ({{ devis.taux_taxe|default:0 }}%)
                                         </span>
                                     {% endif %}
                                 </div>
+                                {% if devis.taxes.exists and devis.taxes.all|length > 0 %}
+                                    <small class="text-muted mt-1 d-block">* Taxe cumulative (calculée sur le montant incluant les taxes précédentes)</small>
+                                {% endif %}
                             </div>
                         </div>
-                        {% endif %}
                         
                         <!-- ✅ Affichage des informations d'approbation -->
                         {% if devis.approuve_par %}
@@ -234,7 +239,7 @@
                                 <th class="text-end" style="width: 120px;">Prix HT</th>
                                 <th class="text-center" style="width: 80px;">TVA</th>
                                 <th class="text-end" style="width: 120px;">Total TTC</th>
-                             </tr>
+                              </tr>
                         </thead>
                         <tbody>
                             {% for ligne in lignes %}
@@ -246,36 +251,50 @@
                                             <i class="bi bi-box-seam me-1"></i>{{ ligne.produit.reference }}
                                         </small>
                                     {% endif %}
-                                 </tr>
+                                  </td>
                                 <td data-label="Qté" class="text-center">{{ ligne.quantite }}</td>
                                 <td data-label="Prix HT" class="text-end">
                                     {{ ligne.prix_unitaire|floatformat:0 }} {{ devise }}
-                                 </td>
+                                  </td>
                                 <td data-label="TVA" class="text-center">
                                     <span class="badge" style="background: #f0f0f0; color: #1e3a5f;">{{ ligne.tva }}%</span>
-                                 </td>
+                                  </td>
                                 <td data-label="Total TTC" class="text-end fw-semibold" style="color: #2d6a9f;">
                                     {{ ligne.total_ttc|floatformat:0 }} {{ devise }}
-                                 </td>
+                                  </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="4" class="text-end fw-semibold">Total HT</td>
-                                <td class="text-end fw-semibold">{{ devis.calculer_total_ht|floatformat:0 }} {{ devise }}</td>
+                                <td class="text-end fw-semibold">{{ devis.calculer_total_ht|floatformat:2 }} {{ devise }}</td>
                             </tr>
-                            <tr>
-                                <td colspan="4" class="text-end fw-semibold">
-                                    {{ devis.type_taxe|default:"TVA" }}
-                                    {% if devis.taux_taxe %}({{ devis.taux_taxe }}%){% endif %}
-                                </td>
-                                <td class="text-end fw-semibold">{{ devis.calculer_tva|floatformat:0 }} {{ devise }}</td>
-                            </tr>
+                            <!-- ✅ Affichage des taxes individuelles -->
+                            {% with taxes_details=devis.get_taxes_details %}
+                                {% if taxes_details %}
+                                    {% for taxe in taxes_details %}
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-semibold">
+                                            {{ taxe.code }} ({{ taxe.taux }}%)
+                                            {% if taxe.cumulative %}<small class="text-muted">(cumulative)</small>{% endif %}
+                                        </td>
+                                        <td class="text-end fw-semibold">{{ taxe.montant|floatformat:2 }} {{ devise }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-end fw-semibold">
+                                            {{ devis.type_taxe|default:"TVA" }} ({{ devis.taux_taxe|default:0 }}%)
+                                        </td>
+                                        <td class="text-end fw-semibold">{{ devis.calculer_tva|floatformat:2 }} {{ devise }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endwith %}
                             <tr>
                                 <td colspan="4" class="text-end fw-bold fs-5">Total TTC</td>
                                 <td class="text-end fw-bold fs-5" style="color: #2d6a9f;">
-                                    {{ devis.calculer_total_ttc|floatformat:0 }} {{ devise }}
+                                    {{ devis.calculer_total_ttc|floatformat:2 }} {{ devise }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -346,16 +365,30 @@
                 </h6>
                 <div class="d-flex justify-content-between mb-2">
                     <span class="text-muted">Total HT</span>
-                    <span class="fw-semibold">{{ devis.calculer_total_ht|floatformat:0 }} {{ devise }}</span>
+                    <span class="fw-semibold">{{ devis.calculer_total_ht|floatformat:2 }} {{ devise }}</span>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">{{ devis.type_taxe|default:"TVA" }}</span>
-                    <span class="fw-semibold">{{ devis.calculer_tva|floatformat:0 }} {{ devise }}</span>
-                </div>
+                
+                <!-- ✅ Affichage des taxes individuelles dans le résumé -->
+                {% with taxes_details=devis.get_taxes_details %}
+                    {% if taxes_details %}
+                        {% for taxe in taxes_details %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">{{ taxe.code }} ({{ taxe.taux }}%)</span>
+                            <span class="fw-semibold">{{ taxe.montant|floatformat:2 }} {{ devise }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">{{ devis.type_taxe|default:"TVA" }} ({{ devis.taux_taxe|default:0 }}%)</span>
+                            <span class="fw-semibold">{{ devis.calculer_tva|floatformat:2 }} {{ devise }}</span>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
                 <hr class="my-2">
                 <div class="d-flex justify-content-between">
                     <span class="fw-bold fs-5">Total TTC</span>
-                    <span class="fw-bold fs-5" style="color: #2d6a9f;">{{ devis.calculer_total_ttc|floatformat:0 }} {{ devise }}</span>
+                    <span class="fw-bold fs-5" style="color: #2d6a9f;">{{ devis.calculer_total_ttc|floatformat:2 }} {{ devise }}</span>
                 </div>
 
                 {% if devis.transforme_en_facture %}

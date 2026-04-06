@@ -137,7 +137,8 @@
                         <th style="width: 15%">Total TTC</th>
                         <th style="width: 10%">Statut</th>
                         <th style="width: 5%" class="text-center">Actions</th>
-                    </thead>
+                    </tr>
+                </thead>
                 <tbody>
                     {% for d in devis %}
                     <tr>
@@ -153,7 +154,9 @@
                         <td data-label="Date création">{{ d.date_creation|date:"d/m/Y" }}</td>
                         <td data-label="Validité">{{ d.date_validite|date:"d/m/Y" }}</td>
                         <td data-label="Total TTC" class="fw-semibold" style="color: #2d6a9f;">
-                            {{ d.calculer_total_ttc|floatformat:0 }} {{ d.client.devise|default:"FCFA" }}
+                            {% with devise=d.devise_choisie|default:d.client.devise|default:"FCFA" %}
+                                {{ d.calculer_total_ttc|floatformat:0 }} {{ devise }}
+                            {% endwith %}
                         </td>
                         <td data-label="Statut">
                             {% if d.statut == 'en_attente' %}
@@ -163,6 +166,10 @@
                                 {% if d.transforme_en_facture %}
                                     <span class="badge ms-1" style="background: #1e3a5f; color: white;">Facturé</span>
                                 {% endif %}
+                            {% elif d.statut == 'approuve_superieur' %}
+                                <span class="badge" style="background: #17a2b8; color: white;">✅ Approuvé</span>
+                            {% elif d.statut == 'rejete_superieur' %}
+                                <span class="badge" style="background: #dc3545; color: white;">❌ Rejeté</span>
                             {% else %}
                                 <span class="badge bg-danger">Refusé</span>
                             {% endif %}

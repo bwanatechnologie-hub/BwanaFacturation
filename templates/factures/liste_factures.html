@@ -160,10 +160,18 @@
                             {% endif %}
                         </td>
                         <td data-label="Total TTC" class="fw-semibold" style="color: #2d6a9f;">
-                            {{ f.calculer_total_ttc|floatformat:0 }} {{ f.client.devise|default:"FCFA" }}
+                            {% with devise=f.devise_choisie|default:f.client.devise|default:"FCFA" %}
+                                {{ f.calculer_total_ttc|floatformat:0 }} {{ devise }}
+                            {% endwith %}
                         </td>
                         <td data-label="Statut">
-                            {% if f.statut == 'non_payee' %}
+                            {% if f.statut == 'en_attente' %}
+                                <span class="badge" style="background: #ffc107; color: #1e3a5f;">En attente</span>
+                            {% elif f.statut == 'approuvee' %}
+                                <span class="badge" style="background: #17a2b8; color: white;">Approuvée</span>
+                            {% elif f.statut == 'rejetee' %}
+                                <span class="badge" style="background: #dc3545; color: white;">Rejetée</span>
+                            {% elif f.statut == 'non_payee' %}
                                 <span class="badge" style="background: #dc3545; color: white;">Non payée</span>
                             {% elif f.statut == 'payee' %}
                                 <span class="badge" style="background: #2d6a9f; color: white;">Payée</span>

@@ -7,6 +7,7 @@ from .forms import DevisForm, LigneDevisForm, LigneDevisFormSet
 from .utils import generer_numero_devis
 from django.http import HttpResponse
 import os
+import json
 from django.conf import settings
 from produits.models import Produit
 from django.db.models import Q
@@ -68,6 +69,25 @@ def ajouter_devis(request):
             # Générer les tokens pour l'approbation
             devis.generer_tokens()
             
+            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES (champ caché)
+            taxes_perso = request.POST.get('taxes_personnalisees', '')
+            if taxes_perso:
+                try:
+                    taxes_data = json.loads(taxes_perso)
+                    devis.taxes_personnalisees = taxes_data
+                except json.JSONDecodeError:
+                    devis.taxes_personnalisees = {}
+            else:
+                devis.taxes_personnalisees = {}
+            
+            # ✅ IMPORTANT : Désactiver l'ancien système si des taxes personnalisées existent
+            if devis.taxes_personnalisees and (devis.taxes_personnalisees.get('ids') or devis.taxes_personnalisees.get('personnalisees')):
+                devis.taux_taxe = 0
+                devis.type_taxe = ''
+            else:
+                devis.taux_taxe = form.cleaned_data.get('taux_taxe', 0)
+                devis.type_taxe = form.cleaned_data.get('type_taxe', 'TVA')
+            
             devis.save()
             
             # Sauvegarder les taxes sélectionnées (ManyToMany)
@@ -107,7 +127,7 @@ def render_creation_devis(request, form, formset):
     """Helper pour le rendu de la création"""
     produits = Produit.objects.filter(
         user=request.user, actif=True
-    ).select_related('pays', 'type_taxe').order_by('nom')
+    ).select_related('pays').order_by('nom')
 
     return render(request, 'devis/form_devis.html', {
         'form': form,
@@ -124,7 +144,6 @@ def gestion_liens_devis(request, pk):
     """Page pour gérer les liens d'approbation et client"""
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
     
-    # Construire les URLs
     base_url = request.build_absolute_uri('/')[:-1]
     lien_approbation = f"{base_url}{reverse('visualiser_devis_approbation', args=[devis.token_approbation])}"
     lien_client = f"{base_url}{reverse('visualiser_devis_client', args=[devis.token_client])}"
@@ -136,12 +155,10 @@ def gestion_liens_devis(request, pk):
     })
 
 
-# ✅ CORRIGÉ : Avec popup de confirmation
 def visualiser_devis_approbation(request, token):
     """Page publique pour que le supérieur approuve le devis"""
     devis = get_object_or_404(Devis, token_approbation=token)
     
-    # Vérifier si déjà traité
     if devis.approuve_par:
         return render(request, 'devis/public/approbation.html', {
             'devis': devis,
@@ -160,7 +177,6 @@ def visualiser_devis_approbation(request, token):
             devis.statut = 'approuve_superieur'
             devis.save()
             
-            # Envoyer notification au créateur
             try:
                 send_mail(
                     subject=f'✅ Devis {devis.numero} approuvé',
@@ -172,7 +188,6 @@ def visualiser_devis_approbation(request, token):
             except:
                 pass
             
-            # ✅ Afficher la page avec popup de succès
             return render(request, 'devis/public/approbation.html', {
                 'devis': devis,
                 'action_effectuee': 'approuver',
@@ -185,7 +200,6 @@ def visualiser_devis_approbation(request, token):
             devis.commentaire_approbation = commentaire
             devis.save()
             
-            # Envoyer notification au créateur
             try:
                 send_mail(
                     subject=f'❌ Devis {devis.numero} rejeté',
@@ -197,7 +211,6 @@ def visualiser_devis_approbation(request, token):
             except:
                 pass
             
-            # ✅ Afficher la page avec popup de rejet
             return render(request, 'devis/public/approbation.html', {
                 'devis': devis,
                 'action_effectuee': 'rejeter',
@@ -215,7 +228,6 @@ def visualiser_devis_client(request, token):
     """Page publique pour que le client accepte/refuse le devis"""
     devis = get_object_or_404(Devis, token_client=token)
     
-    # Vérifier si le devis est approuvé
     if devis.statut != 'approuve_superieur':
         return render(request, 'devis/public/client.html', {
             'devis': devis,
@@ -239,7 +251,6 @@ def visualiser_devis_client(request, token):
             devis.statut = 'accepte'
             devis.save()
             
-            # Notifier le commercial
             try:
                 send_mail(
                     subject=f'✅ Devis {devis.numero} accepté',
@@ -263,7 +274,6 @@ def visualiser_devis_client(request, token):
             devis.statut = 'refuse'
             devis.save()
             
-            # Notifier le commercial
             try:
                 send_mail(
                     subject=f'❌ Devis {devis.numero} refusé',
@@ -291,7 +301,6 @@ def detail_devis(request, pk):
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
     lignes = devis.lignes.all().select_related('produit')
     
-    # Vérifier si le devis est expiré
     if devis.date_validite < timezone.now().date() and devis.statut == 'en_attente':
         devis.statut = 'expire'
         devis.save(update_fields=['statut'])
@@ -315,24 +324,41 @@ def modifier_devis(request, pk):
         formset = LigneDevisFormSet(request.POST, prefix='lignes', user=request.user)
 
         if form.is_valid() and formset.is_valid():
-            # Validation de la date
             date_validite = form.cleaned_data.get('date_validite')
             if date_validite <= timezone.now().date():
                 messages.error(request, '❌ La date de validité doit être postérieure à aujourd\'hui.')
                 return render_modification_devis(request, devis, form, formset)
 
-            devis = form.save()
+            devis = form.save(commit=False)
             
-            # Sauvegarder les taxes sélectionnées (ManyToMany)
+            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES
+            taxes_perso = request.POST.get('taxes_personnalisees', '')
+            if taxes_perso:
+                try:
+                    taxes_data = json.loads(taxes_perso)
+                    devis.taxes_personnalisees = taxes_data
+                except json.JSONDecodeError:
+                    devis.taxes_personnalisees = {}
+            else:
+                devis.taxes_personnalisees = {}
+            
+            # ✅ Désactiver l'ancien système si des taxes personnalisées existent
+            if devis.taxes_personnalisees and (devis.taxes_personnalisees.get('ids') or devis.taxes_personnalisees.get('personnalisees')):
+                devis.taux_taxe = 0
+                devis.type_taxe = ''
+            else:
+                devis.taux_taxe = form.cleaned_data.get('taux_taxe', 0)
+                devis.type_taxe = form.cleaned_data.get('type_taxe', 'TVA')
+            
+            devis.save()
+            
             if form.cleaned_data.get('taxes'):
                 devis.taxes.set(form.cleaned_data['taxes'])
             else:
                 devis.taxes.clear()
             
-            # Supprimer les anciennes lignes
             devis.lignes.all().delete()
 
-            # Créer les nouvelles lignes
             lignes_sauvegardees = 0
             for ligne_form in formset:
                 if ligne_form.cleaned_data and not ligne_form.cleaned_data.get('DELETE'):
@@ -358,13 +384,12 @@ def modifier_devis(request, pk):
 
 
 def render_modification_devis(request, devis, form, formset, lignes_existantes=None):
-    """Helper pour le rendu de la modification"""
     if lignes_existantes is None:
         lignes_existantes = []
     
     produits = Produit.objects.filter(
         user=request.user, actif=True
-    ).select_related('pays', 'type_taxe').order_by('nom')
+    ).select_related('pays').order_by('nom')
 
     return render(request, 'devis/form_devis.html', {
         'form': form,
@@ -425,9 +450,13 @@ def transformer_en_facture(request, pk):
             taux_taxe=taux_taxe_facture,
         )
         
-        # Copier les taxes du devis vers la facture
         if devis.taxes.exists():
             facture.taxes.set(devis.taxes.all())
+        
+        # ✅ Copier les taxes personnalisées
+        if hasattr(devis, 'taxes_personnalisees') and devis.taxes_personnalisees:
+            facture.taxes_personnalisees = devis.taxes_personnalisees
+            facture.save(update_fields=['taxes_personnalisees'])
 
         for ligne in devis.lignes.all().select_related('produit'):
             LigneFacture.objects.create(
@@ -435,7 +464,6 @@ def transformer_en_facture(request, pk):
                 description=ligne.description,
                 quantite=ligne.quantite,
                 prix_unitaire=ligne.prix_unitaire,
-                tva=ligne.tva,
             )
 
         devis.transforme_en_facture = True

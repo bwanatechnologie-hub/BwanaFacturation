@@ -113,15 +113,17 @@ def generer_pdf_devis(devis):
                     or utilisateur.username)
     nom_client = f"{client.nom} {client.prenom}".strip()
 
-    # ── Devise
-    devise = 'FCFA'
-    if hasattr(client, 'pays_obj') and client.pays_obj:
+    # ── Devise : priorité à la devise choisie par l'utilisateur
+    if devis.devise_choisie:
+        devise = devis.devise_choisie
+    elif hasattr(client, 'pays_obj') and client.pays_obj:
         devise = client.pays_obj.devise_symbole or 'FCFA'
+    else:
+        devise = 'FCFA'
 
-    # ── Infos taxe - Récupérer les taxes multiples
+    # ── Infos taxe
     pays_label = devis.pays or ''
     
-    # Récupérer les détails des taxes
     taxes_details = devis.get_taxes_details()
     total_ht = devis.calculer_total_ht()
     total_tva = devis.calculer_tva()
@@ -252,35 +254,51 @@ def generer_pdf_devis(devis):
     ]))
     elements.append(infos_table)
 
-    # ✅ Bandeau taxe + devise (affichage des taxes multiples)
+    # ══════════════════════════════════════════
+    # BANDEAU TAXES ET DEVISE - CHAQUE TAXE SUR SA PROPRE LIGNE
+    # ══════════════════════════════════════════
     elements.append(Spacer(1, 0.2*cm))
     
-    # Créer le contenu du bandeau des taxes
-    if taxes_details and len(taxes_details) > 0:
+    # ✅ CORRECTION : Filtrer les taxes avec taux > 0 pour l'affichage
+    taxes_a_afficher = [t for t in taxes_details if t.get('taux', 0) > 0]
+    
+    # Construction du texte des taxes avec chaque taxe sur une ligne
+    if taxes_a_afficher and len(taxes_a_afficher) > 0:
+        # Créer une ligne par taxe avec son pourcentage
         taxe_lines = []
-        for taxe in taxes_details:
-            taxe_lines.append(f"{taxe['code']} ({taxe['taux']}%)")
-        taxe_text = " + ".join(taxe_lines)
+        for taxe in taxes_a_afficher:
+            taxe_lines.append(f"• {taxe['code']} : {taxe['taux']}%")
+        
+        # Joindre avec des sauts de ligne HTML
+        taxe_text = "<br/>".join(taxe_lines)
+        taxe_paragraph = Paragraph(
+            f"<b>Taxes appliquées :</b><br/>{taxe_text}",
+            ParagraphStyle('taxes', fontSize=9, fontName='Helvetica', leading=14)
+        )
     else:
-        taxe_text = f"{devis.type_taxe or 'TVA'} ({devis.taux_taxe or 0}%)"
+        # ✅ Afficher "TVA 0%" quand aucune taxe avec taux > 0
+        taxe_paragraph = Paragraph(
+            f"<b>Taxes :</b> TVA 0%",
+            s_normal
+        )
     
     taxe_data = [[
         Paragraph(f"<b>Pays :</b> {pays_label or 'Non spécifié'}", s_normal),
-        Paragraph(f"<b>Taxes :</b> {taxe_text}", s_normal),
+        taxe_paragraph,
         Paragraph(f"<b>Devise :</b> {devise}", s_bold),
     ]]
     taxe_table = Table(taxe_data, colWidths=[6*cm, 6*cm, 6*cm])
     taxe_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e8f0fe')),
         ('PADDING',    (0, 0), (-1, -1), 8),
-        ('VALIGN',     (0, 0), (-1, -1), 'MIDDLE'),
+        ('VALIGN',     (0, 0), (-1, -1), 'TOP'),
         ('LINEBEFORE', (0, 0), (0, -1), 3, BLEU_CLAIR),
     ]))
     elements.append(taxe_table)
     elements.append(Spacer(1, 0.4*cm))
 
     # ══════════════════════════════════════════
-    # TABLEAU DES LIGNES
+    # TABLEAU DES LIGNES - ✅ PLUS DE COLONNE TVA%
     # ══════════════════════════════════════════
     lignes = devis.lignes.all()
 
@@ -290,8 +308,9 @@ def generer_pdf_devis(devis):
             textColor=BLANC, alignment=TA_CENTER
         ))
 
+    # ✅ En-tête sans TVA%
     entete = [th('Produit / Service'), th('Description'), th('Qté'),
-              th(f'P.U. ({devise})'), th(f'TVA %'), th(f'HT ({devise})')]
+              th(f'P.U. ({devise})'), th(f'HT ({devise})')]
     rows = [entete]
 
     for ligne in lignes:
@@ -301,11 +320,11 @@ def generer_pdf_devis(devis):
             Paragraph(ligne.description, s_small),
             Paragraph(str(ligne.quantite).rstrip('0').rstrip('.'), s_center),
             Paragraph(f"{ligne.prix_unitaire:,.2f}", s_right),
-            Paragraph(f"{ligne.tva}%", s_center),
             Paragraph(f"{montant_ht:,.2f}", s_right),
         ])
 
-    col_widths = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 2*cm, 3*cm]
+    # ✅ Ajustement des largeurs de colonnes (suppression de la colonne TVA)
+    col_widths = [4.5*cm, 4.5*cm, 1.5*cm, 2.5*cm, 3*cm]
     lignes_table = Table(rows, colWidths=col_widths)
     lignes_table.setStyle(TableStyle([
         ('BACKGROUND',    (0, 0), (-1, 0), BLEU),
@@ -325,10 +344,9 @@ def generer_pdf_devis(devis):
     elements.append(Spacer(1, 0.4*cm))
 
     # ══════════════════════════════════════════
-    # TOTAUX - AFFICHAGE DES TAXES MULTIPLES
+    # TOTAUX
     # ══════════════════════════════════════════
     
-    # Construire les lignes du tableau des totaux
     totaux_rows = []
     
     # Ligne HT
@@ -337,11 +355,19 @@ def generer_pdf_devis(devis):
         Paragraph(f"{total_ht:,.2f} {devise}", s_right)
     ])
     
-    # ✅ Lignes pour chaque taxe individuelle
+    # ✅ Lignes pour chaque taxe individuelle (UNIQUEMENT si taux > 0)
     for taxe in taxes_details:
+        if taxe.get('taux', 0) > 0:
+            totaux_rows.append([
+                '', '', Paragraph(f'<b>{taxe["code"]} ({taxe["taux"]}%) :</b>', s_right),
+                Paragraph(f"{taxe['montant']:,.2f} {devise}", s_right)
+            ])
+    
+    # ✅ Si aucune taxe avec taux > 0, afficher "TVA 0%"
+    if not any(t.get('taux', 0) > 0 for t in taxes_details):
         totaux_rows.append([
-            '', '', Paragraph(f'<b>{taxe["code"]} ({taxe["taux"]}%) :</b>', s_right),
-            Paragraph(f"{taxe['montant']:,.2f} {devise}", s_right)
+            '', '', Paragraph('<b>TVA (0%) :</b>', s_right),
+            Paragraph(f"0,00 {devise}", s_right)
         ])
     
     # Ligne TTC
@@ -349,21 +375,19 @@ def generer_pdf_devis(devis):
         '', '', Paragraph('<b>Total TTC :</b>', ParagraphStyle(
             'tot', fontSize=10, fontName='Helvetica-Bold',
             alignment=TA_RIGHT, textColor=BLEU)),
-        Paragraph(f"<b>{total_ttc:,.0f} {devise}</b>", ParagraphStyle(
+        Paragraph(f"<b>{total_ttc:,.2f} {devise}</b>", ParagraphStyle(
             'tot2', fontSize=10, fontName='Helvetica-Bold',
             alignment=TA_RIGHT, textColor=BLEU))
     ])
     
     totaux_table = Table(totaux_rows, colWidths=[3*cm, 5*cm, 5.5*cm, 4.5*cm])
     
-    # Appliquer le style avec surbrillance sur la dernière ligne
     style_commands = [
         ('PADDING', (0, 0), (-1, -1), 5),
         ('LINEABOVE', (2, len(totaux_rows)-1), (3, len(totaux_rows)-1), 1, BLEU),
         ('BACKGROUND', (2, len(totaux_rows)-1), (3, len(totaux_rows)-1), GRIS_CLAIR),
     ]
     
-    # Optionnel: ajouter des séparateurs entre les taxes
     for i in range(1, len(totaux_rows) - 1):
         style_commands.append(('LINEABOVE', (2, i), (3, i), 0.5, colors.HexColor('#dddddd')))
     
@@ -379,7 +403,7 @@ def generer_pdf_devis(devis):
     lettres = montant_en_lettres(total_ttc, devise)
     elements.append(Paragraph(
         f"Arrêté le présent devis à la somme de "
-        f"<b>{lettres} ({total_ttc:,.0f}) {devise}</b>.",
+        f"<b>{lettres} ({total_ttc:,.2f}) {devise}</b>.",
         ParagraphStyle('lettres', fontSize=9, fontName='Helvetica',
                        textColor=BLEU, leading=14)
     ))
