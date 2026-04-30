@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture {{ facture.numero }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .facture-info {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2d6a9f;
+        }
+        .facture-info h3 {
+            margin: 0 0 10px;
+            color: #1e3a5f;
+            font-size: 18px;
+        }
+        .facture-info p {
+            margin: 5px 0;
+        }
+        .montant {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2d6a9f;
+            margin: 15px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #1e3a5f, #2d6a9f);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            margin: 10px 5px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+            border-top: 1px solid #e0e0e0;
+        }
+        .taxes {
+            background-color: #e8f0fe;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .highlight {
+            color: #2d6a9f;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Facture {{ facture.numero }}</h1>
+            <p>Document officiel</p>
+        </div>
+        
+        <div class="content">
+            <p>Bonjour <strong>{{ client.nom }} {{ client.prenom }}</strong>,</p>
+            
+            <p>Veuillez trouver ci-joint votre facture n°<strong>{{ facture.numero }}</strong>.</p>
+            
+            <!--<div class="facture-info">
+                <h3>Récapitulatif de la facture</h3>
+                <p><strong>Date d'émission :</strong> {{ facture.date_creation|date:"d/m/Y" }}</p>
+                <p><strong>Date d'échéance :</strong> {{ date_echeance|date:"d/m/Y" }}</p>
+                <p><strong>Statut :</strong> 
+                    {% if facture.statut == 'payee' %}
+                        <span style="color: #2d6a9f;">Payée</span>
+                    {% elif facture.statut == 'non_payee' %}
+                        <span style="color: #dc3545;">Non payée</span>
+                    {% else %}
+                        {{ facture.get_statut_display }}
+                    {% endif %}
+                </p>
+            </div>-->
+            
+            <div class="montant">
+                {{ total_ttc|floatformat:0 }} {{ devise }}
+            </div>
+            
+            {% if taxes_details %}
+            <div class="taxes">
+                <strong>Détail des taxes :</strong><br>
+                {% for taxe in taxes_details %}
+                    • {{ taxe.code }} ({{ taxe.taux }}%) : {{ taxe.montant|floatformat:0 }} {{ devise }}<br>
+                {% endfor %}
+                <hr style="margin: 8px 0;">
+                <strong>Total HT :</strong> {{ total_ht|floatformat:0 }} {{ devise }}<br>
+                <strong>Total TTC :</strong> {{ total_ttc|floatformat:0 }} {{ devise }}
+            </div>
+            {% endif %}
+            
+            <!--<div style="text-align: center; margin: 25px 0;">
+                <a href="{{ lien_pdf }}" class="btn" target="_blank">
+                     Télécharger le PDF
+                </a>
+                <a href="{{ lien_facture }}" class="btn btn-secondary" target="_blank">
+                     Voir la facture en ligne
+                </a>
+            </div>-->
+            
+            <p>Nous restons à votre disposition pour toute information complémentaire.</p>
+            <p>Cordialement,<br>
+            <strong>{{ utilisateur.get_full_name|default:utilisateur.username }}</strong></p>
+        </div>
+        
+        <div class="footer">
+            <p>Ce message est généré automatiquement, merci de ne pas y répondre.</p>
+            <p>&copy; {% now "Y" %} Bwana Facturation - Tous droits réservés.</p>
+        </div>
+    </div>
+</body>
+</html>

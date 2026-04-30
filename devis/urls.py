@@ -25,4 +25,5 @@ urlpatterns = [
     # Pages publiques (sans login)
     path('public/approbation/<str:token>/', views.visualiser_devis_approbation, name='visualiser_devis_approbation'),
     path('public/client/<str:token>/', views.visualiser_devis_client, name='visualiser_devis_client'),
+    path('<int:pk>/envoyer/', views.envoyer_devis_email, name='envoyer_devis_email'),
 ]

@@ -10,7 +10,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from functools import wraps
-from .admin_models import LoginHistory, Annonce, MaintenanceMode
+from .admin_models import LoginHistory, Annonce, MaintenanceMode, ConfigurationEmail  # ✅ Ajout ConfigurationEmail
+from django.core.mail import get_connection, EmailMessage  # ✅ Pour les tests email
 
 
 # ══════════════════════════════════════════
@@ -363,3 +364,141 @@ def admin_supprimer_annonce(request, pk):
     annonce.delete()
     messages.success(request, "🗑️ Annonce supprimée.")
     return redirect('admin_annonces')
+
+
+# ══════════════════════════════════════════
+# CONFIGURATION EMAIL (NOUVEAU)
+# ══════════════════════════════════════════
+
+@superadmin_required
+def admin_config_email(request):
+    """Page d'administration des configurations email"""
+    configs = ConfigurationEmail.objects.all()
+    
+    # Créer les configurations par défaut si la table est vide
+    if not configs.exists():
+        ConfigurationEmail.objects.get_or_create(
+            type_email='principal',
+            defaults={
+                'nom': 'Email principal (notifications)',
+                'host': 'smtp.gmail.com',
+                'port': 587,
+                'use_tls': True,
+                'use_ssl': False,
+                'username': '',
+                'password': '',
+                'from_email': '',
+                'actif': True,
+            }
+        )
+        ConfigurationEmail.objects.get_or_create(
+            type_email='factures',
+            defaults={
+                'nom': 'Email factures (à configurer)',
+                'host': 'smtp.gmail.com',
+                'port': 587,
+                'use_tls': True,
+                'use_ssl': False,
+                'username': '',
+                'password': '',
+                'from_email': '',
+                'actif': False,
+            }
+        )
+        configs = ConfigurationEmail.objects.all()
+    
+    return render(request, 'admin_bwana/config_email.html', {
+        'configs': configs,
+    })
+
+
+@superadmin_required
+def admin_config_email_modifier(request, pk):
+    """Modifier une configuration email"""
+    config = get_object_or_404(ConfigurationEmail, pk=pk)
+    
+    if request.method == 'POST':
+        config.nom = request.POST.get('nom', config.nom)
+        config.host = request.POST.get('host', config.host)
+        config.port = int(request.POST.get('port', config.port))
+        config.use_tls = request.POST.get('use_tls') == 'on'
+        config.use_ssl = request.POST.get('use_ssl') == 'on'
+        config.username = request.POST.get('username', config.username)
+        config.from_email = request.POST.get('from_email', config.from_email)
+        
+        # Mot de passe : ne modifier que si un nouveau est saisi
+        nouveau_password = request.POST.get('password')
+        if nouveau_password:
+            config.password = nouveau_password
+        
+        config.save()
+        messages.success(request, f"✅ Configuration '{config.nom}' mise à jour.")
+        return redirect('admin_config_email')
+    
+    return render(request, 'admin_bwana/config_email_modifier.html', {
+        'config': config,
+    })
+
+
+@superadmin_required
+def admin_config_email_tester(request, pk):
+    """Tester une configuration email en envoyant un email test"""
+    config = get_object_or_404(ConfigurationEmail, pk=pk)
+    
+    if request.method == 'POST':
+        email_test = request.POST.get('email_test')
+        
+        if not email_test:
+            messages.error(request, "❌ Veuillez saisir une adresse email pour le test.")
+            return redirect('admin_config_email')
+        
+        try:
+            connection = get_connection(
+                host=config.host,
+                port=config.port,
+                username=config.username,
+                password=config.password,
+                use_tls=config.use_tls,
+                use_ssl=config.use_ssl,
+            )
+            
+            email = EmailMessage(
+                subject=f"Test email - {config.nom}",
+                body=f"Ceci est un email de test depuis la configuration '{config.nom}'.\n\n"
+                     f"Date du test : {timezone.now().strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+                     f"Si vous recevez ce message, la configuration fonctionne correctement.",
+                from_email=config.from_email,
+                to=[email_test],
+                connection=connection,
+            )
+            email.send(fail_silently=False)
+            
+            config.test_envoye = True
+            config.date_dernier_test = timezone.now()
+            config.save()
+            
+            messages.success(request, f"✅ Email test envoyé avec succès à {email_test} depuis {config.nom}.")
+        except Exception as e:
+            messages.error(request, f"❌ Erreur lors de l'envoi du test : {str(e)}")
+        
+        return redirect('admin_config_email')
+    
+    return redirect('admin_config_email')
+
+
+@superadmin_required
+def admin_config_email_activer(request, pk):
+    """Activer/désactiver une configuration"""
+    config = get_object_or_404(ConfigurationEmail, pk=pk)
+    
+    # Si on active cette config, on désactive l'autre du même type
+    if not config.actif:
+        # Désactiver l'autre configuration du même type
+        ConfigurationEmail.objects.filter(type_email=config.type_email, actif=True).update(actif=False)
+    
+    config.actif = not config.actif
+    config.save()
+    
+    status = "activée" if config.actif else "désactivée"
+    messages.success(request, f"✅ Configuration '{config.nom}' {status}.")
+    return redirect('admin_config_email')

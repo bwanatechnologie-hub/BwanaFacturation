@@ -26,4 +26,12 @@ urlpatterns = [
     path('annonces/ajouter/',             views_admin.admin_ajouter_annonce,     name='admin_ajouter_annonce'),
     path('annonces/<int:pk>/toggle/',     views_admin.admin_toggle_annonce,      name='admin_toggle_annonce'),
     path('annonces/<int:pk>/supprimer/',  views_admin.admin_supprimer_annonce,   name='admin_supprimer_annonce'),
+
+    # ══════════════════════════════════════════
+    # CONFIGURATION EMAIL (NOUVEAU)
+    # ══════════════════════════════════════════
+    path('email/config/',                 views_admin.admin_config_email,            name='admin_config_email'),
+    path('email/config/<int:pk>/modifier/', views_admin.admin_config_email_modifier, name='admin_config_email_modifier'),
+    path('email/config/<int:pk>/tester/',   views_admin.admin_config_email_tester,   name='admin_config_email_tester'),
+    path('email/config/<int:pk>/activer/',  views_admin.admin_config_email_activer,  name='admin_config_email_activer'),
 ]

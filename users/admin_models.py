@@ -88,3 +88,72 @@ class MaintenanceMode(models.Model):
     def get_instance(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+# ══════════════════════════════════════════
+# CONFIGURATION EMAIL (NOUVEAU)
+# ══════════════════════════════════════════
+
+class ConfigurationEmail(models.Model):
+    """Configuration des serveurs SMTP pour l'envoi d'emails."""
+    
+    TYPE_CHOICES = [
+        ('principal', 'Email principal (notifications, validation, réinitialisation)'),
+        ('factures', 'Email dédié (factures et devis)'),
+    ]
+    
+    nom = models.CharField(max_length=100, verbose_name="Nom de la configuration")
+    type_email = models.CharField(
+        max_length=20, 
+        choices=TYPE_CHOICES, 
+        unique=True, 
+        verbose_name="Type d'email"
+    )
+    
+    # Paramètres SMTP
+    host = models.CharField(max_length=255, verbose_name="Serveur SMTP")
+    port = models.IntegerField(default=587, verbose_name="Port")
+    use_tls = models.BooleanField(default=True, verbose_name="Utiliser TLS")
+    use_ssl = models.BooleanField(default=False, verbose_name="Utiliser SSL")
+    
+    # Authentification
+    username = models.CharField(max_length=255, verbose_name="Nom d'utilisateur")
+    password = models.CharField(max_length=255, verbose_name="Mot de passe")
+    from_email = models.EmailField(verbose_name="Adresse d'expédition (From)")
+    
+    # Statut
+    actif = models.BooleanField(default=True, verbose_name="Actif")
+    test_envoye = models.BooleanField(default=False, verbose_name="Email test envoyé")
+    date_dernier_test = models.DateTimeField(null=True, blank=True, verbose_name="Date du dernier test")
+    
+    # Métadonnées
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Date de modification")
+    
+    class Meta:
+        verbose_name = "Configuration email"
+        verbose_name_plural = "Configurations email"
+        ordering = ['type_email']
+    
+    def __str__(self):
+        return f"{self.nom} ({self.get_type_email_display()})"
+    
+    def get_connection(self):
+        """Retourne une connexion SMTP utilisable par Django"""
+        from django.core.mail import get_connection
+        return get_connection(
+            host=self.host,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+            use_tls=self.use_tls,
+            use_ssl=self.use_ssl,
+        )
+    
+    @classmethod
+    def get_active(cls, type_email):
+        """Récupère la configuration active pour un type d'email donné"""
+        try:
+            return cls.objects.get(type_email=type_email, actif=True)
+        except cls.DoesNotExist:
+            return None

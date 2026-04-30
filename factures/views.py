@@ -12,9 +12,52 @@ import os
 from django.conf import settings
 from django.utils import timezone
 from django.urls import reverse
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 import json
 from decimal import Decimal
+
+
+# ✅ Helper pour obtenir la configuration email depuis la base de données
+def get_email_config(type_email='factures'):
+    """Récupère la configuration email depuis la base de données"""
+    try:
+        from users.admin_models import ConfigurationEmail
+        config = ConfigurationEmail.objects.get(type_email=type_email, actif=True)
+        return config
+    except Exception:
+        return None
+
+
+def get_email_connection(type_email='factures'):
+    """Retourne une connexion SMTP basée sur la configuration en base"""
+    config = get_email_config(type_email)
+    if config:
+        return get_connection(
+            host=config.host,
+            port=config.port,
+            username=config.username,
+            password=config.password,
+            use_tls=config.use_tls,
+            use_ssl=config.use_ssl,
+        )
+    # Fallback sur les settings
+    return get_connection(
+        host=getattr(settings, 'FACTURE_EMAIL_HOST', 'smtp.gmail.com'),
+        port=getattr(settings, 'FACTURE_EMAIL_PORT', 587),
+        username=getattr(settings, 'FACTURE_EMAIL_HOST_USER', ''),
+        password=getattr(settings, 'FACTURE_EMAIL_HOST_PASSWORD', ''),
+        use_tls=True,
+    )
+
+
+def get_from_email(type_email='factures'):
+    """Retourne l'adresse d'expédition depuis la base ou les settings"""
+    config = get_email_config(type_email)
+    if config:
+        return config.from_email
+    return getattr(settings, 'FACTURE_DEFAULT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL)
 
 
 @login_required
@@ -52,7 +95,7 @@ def ajouter_facture(request):
             facture.utilisateur = request.user
             facture.numero = generer_numero_facture(request.user)
             
-            # ✅ Sauvegarder la devise choisie
+            # Sauvegarder la devise choisie
             devise_choisie = form.cleaned_data.get('devise')
             if devise_choisie:
                 facture.devise_choisie = devise_choisie
@@ -60,7 +103,7 @@ def ajouter_facture(request):
             # Générer les tokens pour l'approbation
             facture.generer_tokens()
             
-            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES (champ caché)
+            # Récupérer les taxes personnalisées
             taxes_perso = request.POST.get('taxes_personnalisees', '')
             if taxes_perso:
                 try:
@@ -71,7 +114,7 @@ def ajouter_facture(request):
             else:
                 facture.taxes_personnalisees = {}
             
-            # ✅ IMPORTANT : Désactiver l'ancien système si des taxes personnalisées existent
+            # Désactiver l'ancien système si des taxes personnalisées existent
             if facture.taxes_personnalisees and (facture.taxes_personnalisees.get('ids') or facture.taxes_personnalisees.get('personnalisees')):
                 facture.taux_taxe = 0
                 facture.type_taxe = ''
@@ -320,7 +363,7 @@ def modifier_facture(request, pk):
         if form.is_valid() and formset.is_valid():
             facture = form.save(commit=False)
             
-            # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES
+            # Récupérer les taxes personnalisées
             taxes_perso = request.POST.get('taxes_personnalisees', '')
             if taxes_perso:
                 try:
@@ -331,7 +374,7 @@ def modifier_facture(request, pk):
             else:
                 facture.taxes_personnalisees = {}
             
-            # ✅ Désactiver l'ancien système si des taxes personnalisées existent
+            # Désactiver l'ancien système si des taxes personnalisées existent
             if facture.taxes_personnalisees and (facture.taxes_personnalisees.get('ids') or facture.taxes_personnalisees.get('personnalisees')):
                 facture.taux_taxe = 0
                 facture.type_taxe = ''
@@ -450,3 +493,101 @@ def telecharger_pdf_facture(request, pk):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nom_fichier}"'
     return response
+
+
+# ============================================================
+# ENVOI DE FACTURE PAR EMAIL (AVEC CONFIGURATION BASE DE DONNÉES)
+# ============================================================
+
+@login_required
+def envoyer_facture_email(request, pk):
+    """Envoie la facture par email avec choix du destinataire"""
+    facture = get_object_or_404(Facture, pk=pk, utilisateur=request.user)
+    
+    # Récupérer l'option choisie par l'utilisateur
+    option_destinataire = request.POST.get('option_destinataire')
+    
+    # Déterminer l'adresse email du destinataire
+    if option_destinataire == 'client':
+        email_destinataire = facture.client.email
+        if not email_destinataire:
+            messages.error(request, f"Le client {facture.client.nom} n'a pas d'adresse email enregistrée.")
+            return redirect('liste_factures')
+    else:
+        email_destinataire = request.POST.get('email_autre')
+        if not email_destinataire:
+            messages.error(request, "Veuillez saisir une adresse email.")
+            return redirect('liste_factures')
+    
+    # Vérifier que le PDF existe, sinon le générer
+    if not facture.fichier_pdf or not os.path.exists(facture.fichier_pdf.path):
+        from .pdf import generer_pdf_facture
+        buffer = generer_pdf_facture(facture)
+        nom_fichier = f"facture_{facture.numero}.pdf"
+        chemin_relatif = f"factures/pdf/{nom_fichier}"
+        chemin_complet = os.path.join(settings.MEDIA_ROOT, chemin_relatif)
+        os.makedirs(os.path.dirname(chemin_complet), exist_ok=True)
+        with open(chemin_complet, 'wb') as f:
+            f.write(buffer.getvalue())
+        facture.fichier_pdf = chemin_relatif
+        facture.save()
+    
+    # Déterminer la devise
+    devise = facture.get_devise()
+    
+    # URLs complètes
+    base_url = request.build_absolute_uri('/')[:-1]
+    lien_facture = f"{base_url}{reverse('detail_facture', args=[facture.pk])}"
+    lien_pdf = f"{base_url}{reverse('pdf_facture', args=[facture.pk])}"
+    
+    # Contexte pour le template email
+    context = {
+        'facture': facture,
+        'client': facture.client,
+        'total_ht': facture.calculer_total_ht(),
+        'total_ttc': facture.calculer_total_ttc(),
+        'tva': facture.calculer_tva(),
+        'devise': devise,
+        'date_echeance': facture.date_echeance,
+        'lien_facture': lien_facture,
+        'lien_pdf': lien_pdf,
+        'utilisateur': request.user,
+        'taxes_details': facture.get_taxes_details(),
+    }
+    
+    # Rendre le template HTML
+    html_message = render_to_string('factures/emails/facture_email.html', context)
+    plain_message = strip_tags(html_message)
+    
+    # ✅ Utiliser la configuration depuis la base de données
+    sujet = f"Facture {facture.numero} - {facture.client.nom}"
+    
+    # Récupérer la connexion et l'expéditeur depuis la base de données
+    connection = get_email_connection('factures')
+    from_email = get_from_email('factures')
+    
+    email = EmailMessage(
+        subject=sujet,
+        body=html_message,
+        from_email=from_email,
+        to=[email_destinataire],
+        reply_to=[request.user.email],
+        connection=connection,
+    )
+    email.content_subtype = 'html'
+    
+    # Ajouter le PDF en pièce jointe
+    with open(facture.fichier_pdf.path, 'rb') as pdf_file:
+        email.attach(f"facture_{facture.numero}.pdf", pdf_file.read(), 'application/pdf')
+    
+    # Envoyer l'email
+    try:
+        email.send(fail_silently=False)
+        # Enregistrer la date d'envoi
+        facture.date_envoi_email = timezone.now()
+        facture.save(update_fields=['date_envoi_email'])
+        messages.success(request, f"Facture {facture.numero} envoyée par email à {email_destinataire}")
+    except Exception as e:
+        messages.error(request, f"Erreur lors de l'envoi : {str(e)}")
+    
+    return redirect('liste_factures')

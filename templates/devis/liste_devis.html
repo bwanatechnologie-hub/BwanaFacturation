@@ -66,11 +66,11 @@
     </div>
 </div>
 
-<!-- Filtres et actions - Version responsive optimisée -->
+<!-- Filtres et actions -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <div class="d-flex flex-column gap-3">
-            <!-- Barre de recherche - optimisée pour mobile -->
+            <!-- Barre de recherche -->
             <div class="w-100">
                 <form method="get" class="d-flex gap-2">
                     <input type="hidden" name="statut" value="{{ statut }}">
@@ -88,7 +88,7 @@
                 </form>
             </div>
             
-            <!-- Filtres et bouton nouveau - organisés en flex wrap -->
+            <!-- Filtres et bouton nouveau -->
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div class="d-flex flex-wrap gap-2">
                     <a href="{% url 'liste_devis' %}"
@@ -130,13 +130,13 @@
             <table class="table table-hover mb-0 align-middle">
                 <thead class="bg-light">
                     <tr>
-                        <th style="width: 15%">Numéro</th>
-                        <th style="width: 25%">Client</th>
-                        <th style="width: 15%">Date création</th>
-                        <th style="width: 15%">Validité</th>
-                        <th style="width: 15%">Total TTC</th>
+                        <th style="width: 13%">Numéro</th>
+                        <th style="width: 22%">Client</th>
+                        <th style="width: 12%">Date création</th>
+                        <th style="width: 12%">Validité</th>
+                        <th style="width: 12%">Total TTC</th>
                         <th style="width: 10%">Statut</th>
-                        <th style="width: 5%" class="text-center">Actions</th>
+                        <th style="width: 19%" class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -167,9 +167,9 @@
                                     <span class="badge ms-1" style="background: #1e3a5f; color: white;">Facturé</span>
                                 {% endif %}
                             {% elif d.statut == 'approuve_superieur' %}
-                                <span class="badge" style="background: #17a2b8; color: white;">✅ Approuvé</span>
+                                <span class="badge" style="background: #17a2b8; color: white;">Approuvé</span>
                             {% elif d.statut == 'rejete_superieur' %}
-                                <span class="badge" style="background: #dc3545; color: white;">❌ Rejeté</span>
+                                <span class="badge" style="background: #dc3545; color: white;">Rejeté</span>
                             {% else %}
                                 <span class="badge bg-danger">Refusé</span>
                             {% endif %}
@@ -184,6 +184,13 @@
                                    class="btn btn-sm btn-outline-warning" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="Envoyer par email"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#emailModal{{ d.pk }}">
+                                    <i class="bi bi-envelope"></i>
+                                </button>
                                 <a href="{% url 'supprimer_devis' d.pk %}"
                                    class="btn btn-sm btn-outline-danger" title="Supprimer">
                                     <i class="bi bi-trash"></i>
@@ -209,6 +216,85 @@
         </div>
     </div>
 </div>
+
+<!-- ✅ TOUS LES MODALS EN DEHORS DU TABLEAU -->
+{% for d in devis %}
+<div class="modal fade" id="emailModal{{ d.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #1e3a5f; color: white;">
+                <h5 class="modal-title">
+                    <i class="bi bi-envelope me-2"></i>Envoyer le devis {{ d.numero }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form method="post" action="{% url 'envoyer_devis_email' d.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Destinataire</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="option_destinataire" id="clientRadio{{ d.pk }}" value="client" checked>
+                            <label class="form-check-label" for="clientRadio{{ d.pk }}">
+                                <strong>Au client enregistré</strong>
+                                <br><small class="text-muted">{{ d.client.email|default:"Aucun email enregistré" }}</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="option_destinataire" id="autreRadio{{ d.pk }}" value="autre">
+                            <label class="form-check-label" for="autreRadio{{ d.pk }}">
+                                <strong>À une autre personne</strong>
+                            </label>
+                        </div>
+                        <div id="autreEmailContainer{{ d.pk }}" class="autre-email-container" data-parent="{{ d.pk }}" style="display: none;">
+                            <label class="form-label mt-2">Adresse email</label>
+                            <input type="email" name="email_autre" class="form-control" placeholder="exemple@email.com">
+                            <small class="text-muted">Vous pouvez saisir plusieurs adresses séparées par des virgules.</small>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Le devis sera joint au format PDF.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn" style="background: #1e3a5f; color: white;">
+                        <i class="bi bi-send me-1"></i>Envoyer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gérer l'affichage des champs email personnalisés pour tous les modals
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        var clientRadio = modal.querySelector('input[value="client"]');
+        var autreRadio = modal.querySelector('input[value="autre"]');
+        
+        if (clientRadio && autreRadio) {
+            // Fonction pour afficher/masquer le container email
+            function toggleEmailContainer() {
+                var container = modal.querySelector('.autre-email-container');
+                if (container) {
+                    container.style.display = autreRadio.checked ? 'block' : 'none';
+                }
+            }
+            
+            // Écouter les changements
+            clientRadio.addEventListener('change', toggleEmailContainer);
+            autreRadio.addEventListener('change', toggleEmailContainer);
+            
+            // Initialiser l'état
+            toggleEmailContainer();
+        }
+    });
+});
+</script>
 
 <style>
 /* Style des cartes statistiques */
@@ -267,6 +353,17 @@
 
 .btn-outline-danger:hover {
     background-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-primary:hover {
+    background-color: #2d6a9f;
     color: white;
     transform: translateY(-2px);
 }
@@ -414,6 +511,23 @@
     .input-group-text, .form-control {
         font-size: 0.8rem;
     }
+}
+
+/* Modals stables */
+.modal {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-dialog {
+    pointer-events: auto;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
 }
 </style>
 {% endblock %}

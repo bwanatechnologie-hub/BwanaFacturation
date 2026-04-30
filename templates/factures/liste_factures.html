@@ -131,12 +131,12 @@
                 <thead class="bg-light" style="background: #f8f9fa;">
                     <tr style="color: #1e3a5f;">
                         <th style="width: 15%">Numéro</th>
-                        <th style="width: 25%">Client</th>
-                        <th style="width: 12%">Date création</th>
-                        <th style="width: 12%">Échéance</th>
-                        <th style="width: 12%">Total TTC</th>
-                        <th style="width: 12%">Statut</th>
-                        <th style="width: 12%" class="text-center">Actions</th>
+                        <th style="width: 20%">Client</th>
+                        <th style="width: 10%">Date création</th>
+                        <th style="width: 10%">Échéance</th>
+                        <th style="width: 10%">Total TTC</th>
+                        <th style="width: 10%">Statut</th>
+                        <th style="width: 25%" class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,8 +189,28 @@
                                    class="btn btn-sm btn-outline-warning" title="Modifier">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                
+                                <!-- ✅ Bouton d'envoi par email - UNIQUEMENT si facture validée -->
+                                {% if f.statut == 'approuvee' or f.statut == 'non_payee' or f.statut == 'payee' %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Envoyer par email"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#emailModal{{ f.pk }}">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                {% else %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            title="Facture non approuvée - Envoi impossible"
+                                            disabled>
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
+                                {% endif %}
+                                
                                 <a href="{% url 'supprimer_facture' f.pk %}"
-                                   class="btn btn-sm btn-outline-danger" title="Supprimer"
+                                   class="btn btn-sm btn-outline-danger"
+                                   title="Supprimer"
                                    onclick="return confirm('Supprimer définitivement cette facture ?')">
                                     <i class="bi bi-trash"></i>
                                 </a>
@@ -215,6 +235,85 @@
         </div>
     </div>
 </div>
+
+<!-- ✅ TOUS LES MODALS EN DEHORS DU TABLEAU -->
+{% for f in factures %}
+<div class="modal fade" id="emailModal{{ f.pk }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #1e3a5f; color: white;">
+                <h5 class="modal-title">
+                    <i class="bi bi-envelope me-2"></i>Envoyer la facture {{ f.numero }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <form method="post" action="{% url 'envoyer_facture_email' f.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Destinataire</label>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="option_destinataire" id="clientRadio{{ f.pk }}" value="client" checked>
+                            <label class="form-check-label" for="clientRadio{{ f.pk }}">
+                                <strong>Au client enregistré</strong>
+                                <br><small class="text-muted">{{ f.client.email|default:"Aucun email enregistré" }}</small>
+                            </label>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" name="option_destinataire" id="autreRadio{{ f.pk }}" value="autre">
+                            <label class="form-check-label" for="autreRadio{{ f.pk }}">
+                                <strong>À une autre personne</strong>
+                            </label>
+                        </div>
+                        <div id="autreEmailContainer{{ f.pk }}" class="autre-email-container" data-parent="{{ f.pk }}" style="display: none;">
+                            <label class="form-label mt-2">Adresse email</label>
+                            <input type="email" name="email_autre" class="form-control" placeholder="exemple@email.com">
+                            <small class="text-muted">Vous pouvez saisir plusieurs adresses séparées par des virgules.</small>
+                        </div>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        La facture sera jointe au format PDF.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn" style="background: #1e3a5f; color: white;">
+                        <i class="bi bi-send me-1"></i>Envoyer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gérer l'affichage des champs email personnalisés pour tous les modals
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        var clientRadio = modal.querySelector('input[value="client"]');
+        var autreRadio = modal.querySelector('input[value="autre"]');
+        
+        if (clientRadio && autreRadio) {
+            // Fonction pour afficher/masquer le container email
+            function toggleEmailContainer() {
+                var container = modal.querySelector('.autre-email-container');
+                if (container) {
+                    container.style.display = autreRadio.checked ? 'block' : 'none';
+                }
+            }
+            
+            // Écouter les changements
+            clientRadio.addEventListener('change', toggleEmailContainer);
+            autreRadio.addEventListener('change', toggleEmailContainer);
+            
+            // Initialiser l'état
+            toggleEmailContainer();
+        }
+    });
+});
+</script>
 
 <style>
 /* Style des cartes statistiques */
@@ -273,6 +372,17 @@
 
 .btn-outline-danger:hover {
     background-color: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+    color: #2d6a9f;
+    border-color: #2d6a9f;
+}
+
+.btn-outline-primary:hover {
+    background-color: #2d6a9f;
     color: white;
     transform: translateY(-2px);
 }
@@ -420,6 +530,23 @@
     .input-group-text, .form-control {
         font-size: 0.8rem;
     }
+}
+
+/* Modals stables */
+.modal {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-dialog {
+    pointer-events: auto;
+}
+
+.modal-backdrop {
+    z-index: 1040;
+}
+
+.modal {
+    z-index: 1050;
 }
 </style>
 {% endblock %}

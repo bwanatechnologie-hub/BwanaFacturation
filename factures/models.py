@@ -61,6 +61,9 @@ class Facture(models.Model):
         help_text="Devise sélectionnée par l'utilisateur pour cette facture"
     )
     
+    # ✅ Date d'envoi par email
+    date_envoi_email = models.DateTimeField(null=True, blank=True, verbose_name="Date d'envoi par email")
+    
     # ── Champs d'approbation ──
     approuve_par = models.ForeignKey(
         User, 

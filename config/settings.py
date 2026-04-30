@@ -19,14 +19,21 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# ⚠️ Remplace par ton domaine réel
-ALLOWED_HOSTS = ['srv1230775.hstgr.cloud']
+# ⚠️ Domains autorisés
+ALLOWED_HOSTS = ['srv1230775.hstgr.cloud', '127.0.0.1', 'localhost']
 
-# Redirections HTTPS
-SECURE_SSL_REDIRECT = True
+# Redirections HTTPS – seulement en production
+if DEBUG:
+    SECURE_SSL_REDIRECT = False
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = False
+else:
+    SECURE_SSL_REDIRECT = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
@@ -149,7 +156,7 @@ MESSAGE_TAGS = {
 }
 
 # ══════════════════════════════════════════
-# EMAIL GMAIL
+# EMAIL PRINCIPAL (notifications, validation...)
 # ══════════════════════════════════════════
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -158,6 +165,17 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'noreply@bwanafacturation.com')
+
+# ══════════════════════════════════════════
+# EMAIL DÉDIÉ AUX FACTURES ET DEVIS (2ème compte)
+# ══════════════════════════════════════════
+FACTURE_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+FACTURE_EMAIL_HOST = os.environ.get('FACTURE_EMAIL_HOST', 'smtp.gmail.com')
+FACTURE_EMAIL_PORT = int(os.environ.get('FACTURE_EMAIL_PORT', 587))
+FACTURE_EMAIL_USE_TLS = True
+FACTURE_EMAIL_HOST_USER = os.environ.get('FACTURE_EMAIL_HOST_USER', '')
+FACTURE_EMAIL_HOST_PASSWORD = os.environ.get('FACTURE_EMAIL_HOST_PASSWORD', '')
+FACTURE_DEFAULT_FROM_EMAIL = os.environ.get('FACTURE_DEFAULT_FROM_EMAIL', 'factures@bwanafacturation.com')
 
 # ══════════════════════════════════════════
 # CSRF & SÉCURITÉ
@@ -172,10 +190,16 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# CSRF trusted origins (ajoute ton domaine réel)
+# CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     'https://srv1230775.hstgr.cloud',
 ]
+
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        'http://127.0.0.1:8000',
+        'http://localhost:8000',
+    ]
 
 # ══════════════════════════════════════════
 # SITE

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier la configuration email — Administration{% endblock %}
+{% block page_title %}✏️ Modifier : {{ config.nom }}{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-4">
+            <h6 class="fw-bold mb-0" style="color: #1e3a5f;">
+                <i class="bi bi-envelope-gear me-2"></i>Paramètres SMTP — {{ config.get_type_email_display }}
+            </h6>
+            <small class="text-muted">Configurez les paramètres du serveur email pour {{ config.nom }}</small>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <!-- Nom -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Nom de la configuration</label>
+                        <input type="text" name="nom" class="form-control" value="{{ config.nom }}" required>
+                        <small class="text-muted">Ex: Email principal Gmail, Email factures SendGrid</small>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <!-- Serveur SMTP -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Serveur SMTP</label>
+                        <input type="text" name="host" class="form-control" value="{{ config.host }}" required>
+                        <small class="text-muted">Ex: smtp.gmail.com, smtp.sendgrid.net</small>
+                    </div>
+
+                    <!-- Port -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Port</label>
+                        <input type="number" name="port" class="form-control" value="{{ config.port }}" required>
+                        <small class="text-muted">587 pour TLS, 465 pour SSL</small>
+                    </div>
+
+                    <!-- Sécurité TLS / SSL -->
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" name="use_tls" id="use_tls" {% if config.use_tls %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="use_tls">Utiliser TLS</label>
+                            <br><small class="text-muted">Recommandé, port 587</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" name="use_ssl" id="use_ssl" {% if config.use_ssl %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="use_ssl">Utiliser SSL</label>
+                            <br><small class="text-muted">Port 465</small>
+                        </div>
+                    </div>
+
+                    <!-- Nom d'utilisateur -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nom d'utilisateur</label>
+                        <input type="text" name="username" class="form-control" value="{{ config.username }}" required>
+                        <small class="text-muted">Souvent l'adresse email complète</small>
+                    </div>
+
+                    <!-- Mot de passe -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Mot de passe</label>
+                        <input type="password" name="password" class="form-control" placeholder="•••••••• (laisser vide pour ne pas modifier)">
+                        <small class="text-muted">Laissez vide pour conserver l'ancien mot de passe</small>
+                    </div>
+
+                    <!-- Email d'expédition -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Adresse d'expédition (From)</label>
+                        <input type="email" name="from_email" class="form-control" value="{{ config.from_email }}" required>
+                        <small class="text-muted">Les emails seront envoyés depuis cette adresse</small>
+                    </div>
+                </div>
+
+                <!-- Avertissements -->
+                <div class="alert alert-warning mt-4 small">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <strong>Important :</strong>
+                    <ul class="mb-0 mt-1">
+                        <li>Si vous utilisez Gmail, vous devez utiliser un <strong>mot de passe d'application</strong> (activation validation 2 étapes requise).</li>
+                        <li>Vérifiez que votre hébergeur autorise les connexions SMTP externes.</li>
+                        <li>Testez toujours la configuration avec le bouton "Tester" après modification.</li>
+                    </ul>
+                </div>
+
+                <!-- Boutons -->
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn" style="background: #1e3a5f; color: white;">
+                        <i class="bi bi-save me-1"></i>Enregistrer
+                    </button>
+                    <a href="{% url 'admin_config_email' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aide rapide -->
+    <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-0 pt-4">
+            <h6 class="fw-bold mb-0" style="color: #2d6a9f;">
+                <i class="bi bi-question-circle me-2"></i>Paramètres SMTP courants
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr style="color: #1e3a5f;">
+                            <th>Fournisseur</th>
+                            <th>Serveur SMTP</th>
+                            <th>Port TLS</th>
+                            <th>Port SSL</th>
+                            <th>Remarque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gmail</td>
+                            <td>smtp.gmail.com</td>
+                            <td>587</td>
+                            <td>465</td>
+                            <td>Mot de passe d'application requis</td>
+                        </tr>
+                        <tr>
+                            <td>SendGrid</td>
+                            <td>smtp.sendgrid.net</td>
+                            <td>587</td>
+                            <td>465</td>
+                            <td>Utilisez votre clé API comme mot de passe</td>
+                        </tr>
+                        <tr>
+                            <td>Mailjet</td>
+                            <td>in.mailjet.com</td>
+                            <td>587</td>
+                            <td>465</td>
+                            <td>Clé API publique / privée</td>
+                        </tr>
+                        <tr>
+                            <td>Brevo (Sendinblue)</td>
+                            <td>smtp-relay.sendinblue.com</td>
+                            <td>587</td>
+                            <td>465</td>
+                            <td>Clé SMTP fournie</td>
+                        </tr>
+                        <tr>
+                            <td>Orange Mali/Côte d'Ivoire</td>
+                            <td>smtp.orange.net</td>
+                            <td>587</td>
+                            <td></td>
+                            <td>Paramètres selon votre opérateur</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.btn {
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.form-control:focus {
+    border-color: #2d6a9f;
+    box-shadow: 0 0 0 0.2rem rgba(45, 106, 159, 0.25);
+}
+</style>
+{% endblock %}

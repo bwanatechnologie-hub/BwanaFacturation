@@ -1,0 +1,3009 @@
+[
+{
+  "model": "produits.pays",
+  "pk": 1,
+  "fields": {
+    "code": "BF",
+    "nom": "Burkina Faso",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 2,
+  "fields": {
+    "code": "CI",
+    "nom": "Côte d'Ivoire",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 3,
+  "fields": {
+    "code": "SN",
+    "nom": "Sénégal",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 4,
+  "fields": {
+    "code": "ML",
+    "nom": "Mali",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 5,
+  "fields": {
+    "code": "NE",
+    "nom": "Niger",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 6,
+  "fields": {
+    "code": "TG",
+    "nom": "Togo",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 7,
+  "fields": {
+    "code": "BJ",
+    "nom": "Bénin",
+    "devise": "XOF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 8,
+  "fields": {
+    "code": "CM",
+    "nom": "Cameroun",
+    "devise": "XAF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 9,
+  "fields": {
+    "code": "GA",
+    "nom": "Gabon",
+    "devise": "XAF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 10,
+  "fields": {
+    "code": "CG",
+    "nom": "Congo-Brazzaville",
+    "devise": "XAF",
+    "symbole_devise": "FCFA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 11,
+  "fields": {
+    "code": "CD",
+    "nom": "République Démocratique du Congo",
+    "devise": "CDF",
+    "symbole_devise": "FC"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 12,
+  "fields": {
+    "code": "MA",
+    "nom": "Maroc",
+    "devise": "MAD",
+    "symbole_devise": "DH"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 13,
+  "fields": {
+    "code": "DZ",
+    "nom": "Algérie",
+    "devise": "DZD",
+    "symbole_devise": "DA"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 14,
+  "fields": {
+    "code": "TN",
+    "nom": "Tunisie",
+    "devise": "TND",
+    "symbole_devise": "DT"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 15,
+  "fields": {
+    "code": "EG",
+    "nom": "Égypte",
+    "devise": "EGP",
+    "symbole_devise": "£"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 16,
+  "fields": {
+    "code": "ZA",
+    "nom": "Afrique du Sud",
+    "devise": "ZAR",
+    "symbole_devise": "R"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 17,
+  "fields": {
+    "code": "NG",
+    "nom": "Nigeria",
+    "devise": "NGN",
+    "symbole_devise": "₦"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 18,
+  "fields": {
+    "code": "GH",
+    "nom": "Ghana",
+    "devise": "GHS",
+    "symbole_devise": "₵"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 19,
+  "fields": {
+    "code": "KE",
+    "nom": "Kenya",
+    "devise": "KES",
+    "symbole_devise": "KSh"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 20,
+  "fields": {
+    "code": "TZ",
+    "nom": "Tanzanie",
+    "devise": "TZS",
+    "symbole_devise": "TSh"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 21,
+  "fields": {
+    "code": "UG",
+    "nom": "Ouganda",
+    "devise": "UGX",
+    "symbole_devise": "USh"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 22,
+  "fields": {
+    "code": "RW",
+    "nom": "Rwanda",
+    "devise": "RWF",
+    "symbole_devise": "FRw"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 23,
+  "fields": {
+    "code": "ET",
+    "nom": "Éthiopie",
+    "devise": "ETB",
+    "symbole_devise": "Br"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 24,
+  "fields": {
+    "code": "CA",
+    "nom": "Canada",
+    "devise": "CAD",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 25,
+  "fields": {
+    "code": "US",
+    "nom": "États-Unis",
+    "devise": "USD",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 26,
+  "fields": {
+    "code": "MX",
+    "nom": "Mexique",
+    "devise": "MXN",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 27,
+  "fields": {
+    "code": "BR",
+    "nom": "Brésil",
+    "devise": "BRL",
+    "symbole_devise": "R$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 28,
+  "fields": {
+    "code": "AR",
+    "nom": "Argentine",
+    "devise": "ARS",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 29,
+  "fields": {
+    "code": "CO",
+    "nom": "Colombie",
+    "devise": "COP",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 30,
+  "fields": {
+    "code": "CL",
+    "nom": "Chili",
+    "devise": "CLP",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 31,
+  "fields": {
+    "code": "PE",
+    "nom": "Pérou",
+    "devise": "PEN",
+    "symbole_devise": "S/"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 32,
+  "fields": {
+    "code": "VE",
+    "nom": "Venezuela",
+    "devise": "VES",
+    "symbole_devise": "Bs"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 33,
+  "fields": {
+    "code": "GB",
+    "nom": "Royaume-Uni",
+    "devise": "GBP",
+    "symbole_devise": "£"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 34,
+  "fields": {
+    "code": "FR",
+    "nom": "France",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 35,
+  "fields": {
+    "code": "DE",
+    "nom": "Allemagne",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 36,
+  "fields": {
+    "code": "IT",
+    "nom": "Italie",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 37,
+  "fields": {
+    "code": "ES",
+    "nom": "Espagne",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 38,
+  "fields": {
+    "code": "PT",
+    "nom": "Portugal",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 39,
+  "fields": {
+    "code": "BE",
+    "nom": "Belgique",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 40,
+  "fields": {
+    "code": "CH",
+    "nom": "Suisse",
+    "devise": "CHF",
+    "symbole_devise": "Fr"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 41,
+  "fields": {
+    "code": "NL",
+    "nom": "Pays-Bas",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 42,
+  "fields": {
+    "code": "SE",
+    "nom": "Suède",
+    "devise": "SEK",
+    "symbole_devise": "kr"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 43,
+  "fields": {
+    "code": "NO",
+    "nom": "Norvège",
+    "devise": "NOK",
+    "symbole_devise": "kr"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 44,
+  "fields": {
+    "code": "DK",
+    "nom": "Danemark",
+    "devise": "DKK",
+    "symbole_devise": "kr"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 45,
+  "fields": {
+    "code": "FI",
+    "nom": "Finlande",
+    "devise": "EUR",
+    "symbole_devise": "€"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 46,
+  "fields": {
+    "code": "PL",
+    "nom": "Pologne",
+    "devise": "PLN",
+    "symbole_devise": "zł"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 47,
+  "fields": {
+    "code": "CZ",
+    "nom": "République Tchèque",
+    "devise": "CZK",
+    "symbole_devise": "Kč"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 48,
+  "fields": {
+    "code": "HU",
+    "nom": "Hongrie",
+    "devise": "HUF",
+    "symbole_devise": "Ft"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 49,
+  "fields": {
+    "code": "RU",
+    "nom": "Russie",
+    "devise": "RUB",
+    "symbole_devise": "₽"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 50,
+  "fields": {
+    "code": "TR",
+    "nom": "Turquie",
+    "devise": "TRY",
+    "symbole_devise": "₺"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 51,
+  "fields": {
+    "code": "CN",
+    "nom": "Chine",
+    "devise": "CNY",
+    "symbole_devise": "¥"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 52,
+  "fields": {
+    "code": "JP",
+    "nom": "Japon",
+    "devise": "JPY",
+    "symbole_devise": "¥"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 53,
+  "fields": {
+    "code": "KR",
+    "nom": "Corée du Sud",
+    "devise": "KRW",
+    "symbole_devise": "₩"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 54,
+  "fields": {
+    "code": "IN",
+    "nom": "Inde",
+    "devise": "INR",
+    "symbole_devise": "₹"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 55,
+  "fields": {
+    "code": "ID",
+    "nom": "Indonésie",
+    "devise": "IDR",
+    "symbole_devise": "Rp"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 56,
+  "fields": {
+    "code": "MY",
+    "nom": "Malaisie",
+    "devise": "MYR",
+    "symbole_devise": "RM"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 57,
+  "fields": {
+    "code": "SG",
+    "nom": "Singapour",
+    "devise": "SGD",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 58,
+  "fields": {
+    "code": "TH",
+    "nom": "Thaïlande",
+    "devise": "THB",
+    "symbole_devise": "฿"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 59,
+  "fields": {
+    "code": "VN",
+    "nom": "Vietnam",
+    "devise": "VND",
+    "symbole_devise": "₫"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 60,
+  "fields": {
+    "code": "PH",
+    "nom": "Philippines",
+    "devise": "PHP",
+    "symbole_devise": "₱"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 61,
+  "fields": {
+    "code": "PK",
+    "nom": "Pakistan",
+    "devise": "PKR",
+    "symbole_devise": "₨"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 62,
+  "fields": {
+    "code": "BD",
+    "nom": "Bangladesh",
+    "devise": "BDT",
+    "symbole_devise": "৳"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 63,
+  "fields": {
+    "code": "LK",
+    "nom": "Sri Lanka",
+    "devise": "LKR",
+    "symbole_devise": "₨"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 64,
+  "fields": {
+    "code": "NP",
+    "nom": "Népal",
+    "devise": "NPR",
+    "symbole_devise": "₨"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 65,
+  "fields": {
+    "code": "AU",
+    "nom": "Australie",
+    "devise": "AUD",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.pays",
+  "pk": 66,
+  "fields": {
+    "code": "NZ",
+    "nom": "Nouvelle-Zélande",
+    "devise": "NZD",
+    "symbole_devise": "$"
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 1,
+  "fields": {
+    "pays": 34,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "Taxe sur la valeur ajoutée - taux standard",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 2,
+  "fields": {
+    "pays": 34,
+    "nom": "TVA réduite",
+    "code": "TVA-R",
+    "description": "TVA taux réduit",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 3,
+  "fields": {
+    "pays": 35,
+    "nom": "Mehrwertsteuer",
+    "code": "MwSt",
+    "description": "Taxe sur la valeur ajoutée allemande",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 4,
+  "fields": {
+    "pays": 33,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "UK Value Added Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 5,
+  "fields": {
+    "pays": 24,
+    "nom": "TPS (Taxe sur les produits et services)",
+    "code": "TPS",
+    "description": "Taxe fédérale canadienne",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 6,
+  "fields": {
+    "pays": 24,
+    "nom": "TVQ (Taxe de vente du Québec)",
+    "code": "TVQ",
+    "description": "Taxe provinciale québécoise",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 7,
+  "fields": {
+    "pays": 24,
+    "nom": "TVH (Taxe de vente harmonisée)",
+    "code": "TVH",
+    "description": "Taxe harmonisée (TPS + TVP)",
+    "est_taxe_composee": true
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 8,
+  "fields": {
+    "pays": 25,
+    "nom": "Sales Tax",
+    "code": "ST",
+    "description": "State Sales Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 9,
+  "fields": {
+    "pays": 1,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Burkina Faso",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 10,
+  "fields": {
+    "pays": 2,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Côte d'Ivoire",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 11,
+  "fields": {
+    "pays": 3,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Sénégal",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 12,
+  "fields": {
+    "pays": 4,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Mali",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 13,
+  "fields": {
+    "pays": 5,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Niger",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 14,
+  "fields": {
+    "pays": 6,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Togo",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 15,
+  "fields": {
+    "pays": 7,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Bénin",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 16,
+  "fields": {
+    "pays": 8,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Cameroun",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 17,
+  "fields": {
+    "pays": 9,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Gabon",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 18,
+  "fields": {
+    "pays": 12,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Maroc",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 19,
+  "fields": {
+    "pays": 14,
+    "nom": "Taxe sur la valeur ajoutée",
+    "code": "TVA",
+    "description": "TVA Tunisie",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 20,
+  "fields": {
+    "pays": 16,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "South Africa VAT",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 21,
+  "fields": {
+    "pays": 17,
+    "nom": "Value Added Tax",
+    "code": "VAT",
+    "description": "Nigeria VAT",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 22,
+  "fields": {
+    "pays": 54,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "Indian GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 23,
+  "fields": {
+    "pays": 27,
+    "nom": "ICMS",
+    "code": "ICMS",
+    "description": "Imposto sobre Circulação de Mercadorias",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 24,
+  "fields": {
+    "pays": 27,
+    "nom": "ISS",
+    "code": "ISS",
+    "description": "Imposto Sobre Serviços",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 25,
+  "fields": {
+    "pays": 27,
+    "nom": "IPI",
+    "code": "IPI",
+    "description": "Imposto sobre Produtos Industrializados",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 26,
+  "fields": {
+    "pays": 65,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "Australian GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 27,
+  "fields": {
+    "pays": 66,
+    "nom": "Goods and Services Tax",
+    "code": "GST",
+    "description": "New Zealand GST",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 28,
+  "fields": {
+    "pays": 52,
+    "nom": "Consumption Tax",
+    "code": "CT",
+    "description": "Japanese Consumption Tax",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.typetaxe",
+  "pk": 29,
+  "fields": {
+    "pays": 26,
+    "nom": "IVA",
+    "code": "IVA",
+    "description": "Impuesto al Valor Agregado",
+    "est_taxe_composee": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 1,
+  "fields": {
+    "type_taxe": 1,
+    "region": "France métropolitaine",
+    "code_region": "FR",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 2,
+  "fields": {
+    "type_taxe": 1,
+    "region": "Corse",
+    "code_region": "COR",
+    "taux": "10.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 3,
+  "fields": {
+    "type_taxe": 2,
+    "region": "France",
+    "code_region": "FR",
+    "taux": "5.50",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 4,
+  "fields": {
+    "type_taxe": 3,
+    "region": "Allemagne",
+    "code_region": "DE",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 5,
+  "fields": {
+    "type_taxe": 3,
+    "region": "Allemagne réduit",
+    "code_region": "DE-R",
+    "taux": "7.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 6,
+  "fields": {
+    "type_taxe": 4,
+    "region": "Royaume-Uni",
+    "code_region": "UK",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 7,
+  "fields": {
+    "type_taxe": 5,
+    "region": "Canada",
+    "code_region": "CA",
+    "taux": "5.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 8,
+  "fields": {
+    "type_taxe": 6,
+    "region": "Québec",
+    "code_region": "QC",
+    "taux": "9.98",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 9,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Ontario",
+    "code_region": "ON",
+    "taux": "13.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 10,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Nouveau-Brunswick",
+    "code_region": "NB",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 11,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Nouvelle-Écosse",
+    "code_region": "NS",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 12,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Île-du-Prince-Édouard",
+    "code_region": "PE",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 13,
+  "fields": {
+    "type_taxe": 7,
+    "region": "Terre-Neuve",
+    "code_region": "NL",
+    "taux": "15.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 14,
+  "fields": {
+    "type_taxe": 8,
+    "region": "California",
+    "code_region": "CA",
+    "taux": "7.25",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 15,
+  "fields": {
+    "type_taxe": 8,
+    "region": "New York",
+    "code_region": "NY",
+    "taux": "8.88",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 16,
+  "fields": {
+    "type_taxe": 8,
+    "region": "Texas",
+    "code_region": "TX",
+    "taux": "6.25",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 17,
+  "fields": {
+    "type_taxe": 8,
+    "region": "Florida",
+    "code_region": "FL",
+    "taux": "6.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 18,
+  "fields": {
+    "type_taxe": 9,
+    "region": "Burkina Faso",
+    "code_region": "BF",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 19,
+  "fields": {
+    "type_taxe": 10,
+    "region": "Côte d'Ivoire",
+    "code_region": "CI",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 20,
+  "fields": {
+    "type_taxe": 11,
+    "region": "Sénégal",
+    "code_region": "SN",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 21,
+  "fields": {
+    "type_taxe": 12,
+    "region": "Mali",
+    "code_region": "ML",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 22,
+  "fields": {
+    "type_taxe": 13,
+    "region": "Niger",
+    "code_region": "NE",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 23,
+  "fields": {
+    "type_taxe": 14,
+    "region": "Togo",
+    "code_region": "TG",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 24,
+  "fields": {
+    "type_taxe": 15,
+    "region": "Bénin",
+    "code_region": "BJ",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 25,
+  "fields": {
+    "type_taxe": 16,
+    "region": "Cameroun",
+    "code_region": "CM",
+    "taux": "19.25",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 26,
+  "fields": {
+    "type_taxe": 17,
+    "region": "Gabon",
+    "code_region": "GA",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 27,
+  "fields": {
+    "type_taxe": 18,
+    "region": "Maroc",
+    "code_region": "MA",
+    "taux": "20.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 28,
+  "fields": {
+    "type_taxe": 19,
+    "region": "Tunisie",
+    "code_region": "TN",
+    "taux": "19.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 29,
+  "fields": {
+    "type_taxe": 20,
+    "region": "Afrique du Sud",
+    "code_region": "ZA",
+    "taux": "15.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 30,
+  "fields": {
+    "type_taxe": 21,
+    "region": "Nigeria",
+    "code_region": "NG",
+    "taux": "7.50",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 31,
+  "fields": {
+    "type_taxe": 22,
+    "region": "Inde standard",
+    "code_region": "IN",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 32,
+  "fields": {
+    "type_taxe": 22,
+    "region": "Inde réduit",
+    "code_region": "IN-R",
+    "taux": "12.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 33,
+  "fields": {
+    "type_taxe": 23,
+    "region": "São Paulo",
+    "code_region": "SP",
+    "taux": "18.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 34,
+  "fields": {
+    "type_taxe": 23,
+    "region": "Rio de Janeiro",
+    "code_region": "RJ",
+    "taux": "18.00",
+    "est_defaut": false
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 35,
+  "fields": {
+    "type_taxe": 24,
+    "region": "Brésil",
+    "code_region": "BR",
+    "taux": "5.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 36,
+  "fields": {
+    "type_taxe": 26,
+    "region": "Australie",
+    "code_region": "AU",
+    "taux": "10.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 37,
+  "fields": {
+    "type_taxe": 27,
+    "region": "Nouvelle-Zélande",
+    "code_region": "NZ",
+    "taux": "15.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 38,
+  "fields": {
+    "type_taxe": 28,
+    "region": "Japon",
+    "code_region": "JP",
+    "taux": "10.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.tauxtaxe",
+  "pk": 39,
+  "fields": {
+    "type_taxe": 29,
+    "region": "Mexique",
+    "code_region": "MX",
+    "taux": "16.00",
+    "est_defaut": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 1,
+  "fields": {
+    "pays": 24,
+    "code": "QC",
+    "nom": "Québec",
+    "tps": "5.00",
+    "tvq": "9.98",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 2,
+  "fields": {
+    "pays": 24,
+    "code": "ON",
+    "nom": "Ontario",
+    "tps": "0.00",
+    "tvq": "0.00",
+    "tvh": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 3,
+  "fields": {
+    "pays": 24,
+    "code": "BC",
+    "nom": "Colombie-Britannique",
+    "tps": "5.00",
+    "tvq": "7.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 4,
+  "fields": {
+    "pays": 24,
+    "code": "AB",
+    "nom": "Alberta",
+    "tps": "5.00",
+    "tvq": "0.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 5,
+  "fields": {
+    "pays": 24,
+    "code": "MB",
+    "nom": "Manitoba",
+    "tps": "5.00",
+    "tvq": "7.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 6,
+  "fields": {
+    "pays": 24,
+    "code": "SK",
+    "nom": "Saskatchewan",
+    "tps": "5.00",
+    "tvq": "6.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 7,
+  "fields": {
+    "pays": 24,
+    "code": "NB",
+    "nom": "Nouveau-Brunswick",
+    "tps": "0.00",
+    "tvq": "0.00",
+    "tvh": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 8,
+  "fields": {
+    "pays": 24,
+    "code": "NS",
+    "nom": "Nouvelle-Écosse",
+    "tps": "0.00",
+    "tvq": "0.00",
+    "tvh": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 9,
+  "fields": {
+    "pays": 24,
+    "code": "PE",
+    "nom": "Île-du-Prince-Édouard",
+    "tps": "0.00",
+    "tvq": "0.00",
+    "tvh": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 10,
+  "fields": {
+    "pays": 24,
+    "code": "NL",
+    "nom": "Terre-Neuve-et-Labrador",
+    "tps": "0.00",
+    "tvq": "0.00",
+    "tvh": true
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 11,
+  "fields": {
+    "pays": 24,
+    "code": "YT",
+    "nom": "Yukon",
+    "tps": "5.00",
+    "tvq": "0.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 12,
+  "fields": {
+    "pays": 24,
+    "code": "NT",
+    "nom": "Territoires du Nord-Ouest",
+    "tps": "5.00",
+    "tvq": "0.00",
+    "tvh": false
+  }
+},
+{
+  "model": "produits.province",
+  "pk": 13,
+  "fields": {
+    "pays": 24,
+    "code": "NU",
+    "nom": "Nunavut",
+    "tps": "5.00",
+    "tvq": "0.00",
+    "tvh": false
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 1,
+  "fields": {
+    "nom": "Canada",
+    "code": "CA",
+    "devise": "CAD",
+    "devise_symbole": "$",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 2,
+  "fields": {
+    "nom": "Afrique du Sud",
+    "code": "ZA",
+    "devise": "ZAR",
+    "devise_symbole": "R",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 3,
+  "fields": {
+    "nom": "Algérie",
+    "code": "DZ",
+    "devise": "DZD",
+    "devise_symbole": "DA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 4,
+  "fields": {
+    "nom": "Allemagne",
+    "code": "DE",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 5,
+  "fields": {
+    "nom": "Argentine",
+    "code": "AR",
+    "devise": "ARS",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 6,
+  "fields": {
+    "nom": "Australie",
+    "code": "AU",
+    "devise": "AUD",
+    "devise_symbole": "A$",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 7,
+  "fields": {
+    "nom": "Bangladesh",
+    "code": "BD",
+    "devise": "BDT",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 8,
+  "fields": {
+    "nom": "Belgique",
+    "code": "BE",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 9,
+  "fields": {
+    "nom": "Bénin",
+    "code": "BJ",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 10,
+  "fields": {
+    "nom": "Brésil",
+    "code": "BR",
+    "devise": "BRL",
+    "devise_symbole": "R$",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 11,
+  "fields": {
+    "nom": "Burkina Faso",
+    "code": "BF",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 12,
+  "fields": {
+    "nom": "Cameroun",
+    "code": "CM",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 13,
+  "fields": {
+    "nom": "Chili",
+    "code": "CL",
+    "devise": "CLP",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 14,
+  "fields": {
+    "nom": "Chine",
+    "code": "CN",
+    "devise": "CNY",
+    "devise_symbole": "¥",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 15,
+  "fields": {
+    "nom": "Colombie",
+    "code": "CO",
+    "devise": "COP",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 16,
+  "fields": {
+    "nom": "Congo",
+    "code": "CG",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 17,
+  "fields": {
+    "nom": "Corée du Sud",
+    "code": "KR",
+    "devise": "KRW",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 18,
+  "fields": {
+    "nom": "Côte d'Ivoire",
+    "code": "CI",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 19,
+  "fields": {
+    "nom": "Danemark",
+    "code": "DK",
+    "devise": "DKK",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 20,
+  "fields": {
+    "nom": "Égypte",
+    "code": "EG",
+    "devise": "EGP",
+    "devise_symbole": "E£",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 21,
+  "fields": {
+    "nom": "Espagne",
+    "code": "ES",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 22,
+  "fields": {
+    "nom": "États-Unis",
+    "code": "US",
+    "devise": "USD",
+    "devise_symbole": "$",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 23,
+  "fields": {
+    "nom": "Éthiopie",
+    "code": "ET",
+    "devise": "ETB",
+    "devise_symbole": "Br",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 24,
+  "fields": {
+    "nom": "Finlande",
+    "code": "FI",
+    "devise": "EUR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 25,
+  "fields": {
+    "nom": "France",
+    "code": "FR",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 26,
+  "fields": {
+    "nom": "Gabon",
+    "code": "GA",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 27,
+  "fields": {
+    "nom": "Ghana",
+    "code": "GH",
+    "devise": "GHS",
+    "devise_symbole": "₵",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 28,
+  "fields": {
+    "nom": "Hongrie",
+    "code": "HU",
+    "devise": "HUF",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 29,
+  "fields": {
+    "nom": "Inde",
+    "code": "IN",
+    "devise": "INR",
+    "devise_symbole": "₹",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 30,
+  "fields": {
+    "nom": "Indonésie",
+    "code": "ID",
+    "devise": "IDR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 31,
+  "fields": {
+    "nom": "Italie",
+    "code": "IT",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 32,
+  "fields": {
+    "nom": "Japon",
+    "code": "JP",
+    "devise": "JPY",
+    "devise_symbole": "¥",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 33,
+  "fields": {
+    "nom": "Kenya",
+    "code": "KE",
+    "devise": "KES",
+    "devise_symbole": "KSh",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 34,
+  "fields": {
+    "nom": "Malaisie",
+    "code": "MY",
+    "devise": "MYR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 35,
+  "fields": {
+    "nom": "Mali",
+    "code": "ML",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 36,
+  "fields": {
+    "nom": "Maroc",
+    "code": "MA",
+    "devise": "MAD",
+    "devise_symbole": "DH",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 37,
+  "fields": {
+    "nom": "Mexique",
+    "code": "MX",
+    "devise": "MXN",
+    "devise_symbole": "$",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 38,
+  "fields": {
+    "nom": "Népal",
+    "code": "NP",
+    "devise": "NPR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 39,
+  "fields": {
+    "nom": "Niger",
+    "code": "NE",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 40,
+  "fields": {
+    "nom": "Nigeria",
+    "code": "NG",
+    "devise": "NGN",
+    "devise_symbole": "₦",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 41,
+  "fields": {
+    "nom": "Norvège",
+    "code": "NO",
+    "devise": "NOK",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 42,
+  "fields": {
+    "nom": "Nouvelle-Zélande",
+    "code": "NZ",
+    "devise": "NZD",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 43,
+  "fields": {
+    "nom": "Ouganda",
+    "code": "UG",
+    "devise": "UGX",
+    "devise_symbole": "USh",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 44,
+  "fields": {
+    "nom": "Pakistan",
+    "code": "PK",
+    "devise": "PKR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 45,
+  "fields": {
+    "nom": "Pays-Bas",
+    "code": "NL",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 46,
+  "fields": {
+    "nom": "Pérou",
+    "code": "PE",
+    "devise": "PEN",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 47,
+  "fields": {
+    "nom": "Philippines",
+    "code": "PH",
+    "devise": "PHP",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 48,
+  "fields": {
+    "nom": "Pologne",
+    "code": "PL",
+    "devise": "PLN",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 49,
+  "fields": {
+    "nom": "Portugal",
+    "code": "PT",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 50,
+  "fields": {
+    "nom": "République Démocratique du Congo",
+    "code": "CD",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 51,
+  "fields": {
+    "nom": "République Tchèque",
+    "code": "CZ",
+    "devise": "CZK",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 52,
+  "fields": {
+    "nom": "Royaume-Uni",
+    "code": "GB",
+    "devise": "GBP",
+    "devise_symbole": "£",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 53,
+  "fields": {
+    "nom": "Russie",
+    "code": "RU",
+    "devise": "RUB",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 54,
+  "fields": {
+    "nom": "Rwanda",
+    "code": "RW",
+    "devise": "RWF",
+    "devise_symbole": "FRw",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 55,
+  "fields": {
+    "nom": "Sénégal",
+    "code": "SN",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 56,
+  "fields": {
+    "nom": "Singapour",
+    "code": "SG",
+    "devise": "SGD",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 57,
+  "fields": {
+    "nom": "Sri Lanka",
+    "code": "LK",
+    "devise": "LKR",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 58,
+  "fields": {
+    "nom": "Suède",
+    "code": "SE",
+    "devise": "SEK",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 59,
+  "fields": {
+    "nom": "Suisse",
+    "code": "CH",
+    "devise": "CHF",
+    "devise_symbole": "CHF",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 60,
+  "fields": {
+    "nom": "Tanzanie",
+    "code": "TZ",
+    "devise": "TZS",
+    "devise_symbole": "TSh",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 61,
+  "fields": {
+    "nom": "Thaïlande",
+    "code": "TH",
+    "devise": "THB",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 62,
+  "fields": {
+    "nom": "Togo",
+    "code": "TG",
+    "devise": "FCFA",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 63,
+  "fields": {
+    "nom": "Tunisie",
+    "code": "TN",
+    "devise": "TND",
+    "devise_symbole": "DT",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 64,
+  "fields": {
+    "nom": "Turquie",
+    "code": "TR",
+    "devise": "TRY",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 65,
+  "fields": {
+    "nom": "Venezuela",
+    "code": "VE",
+    "devise": "VES",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 66,
+  "fields": {
+    "nom": "Vietnam",
+    "code": "VN",
+    "devise": "VND",
+    "devise_symbole": "FCFA",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.pays",
+  "pk": 67,
+  "fields": {
+    "nom": "Luxembourg",
+    "code": "LU",
+    "devise": "EUR",
+    "devise_symbole": "€",
+    "actif": true,
+    "type_taxe_defaut": "",
+    "taux_defaut": "0.00"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 22,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Québec",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Québec"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 23,
+  "fields": {
+    "pays": 1,
+    "nom": "TVQ",
+    "code": "TVQ",
+    "taux": "9.98",
+    "actif": true,
+    "ordre": 2,
+    "description": "Taxe pour Québec",
+    "par_defaut": true,
+    "cumulative": true,
+    "province": "Québec"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 24,
+  "fields": {
+    "pays": 1,
+    "nom": "TVH",
+    "code": "TVH",
+    "taux": "13.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Ontario",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Ontario"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 25,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Colombie-Britannique",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Colombie-Britannique"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 26,
+  "fields": {
+    "pays": 1,
+    "nom": "TVP",
+    "code": "TVP",
+    "taux": "7.00",
+    "actif": true,
+    "ordre": 2,
+    "description": "Taxe pour Colombie-Britannique",
+    "par_defaut": true,
+    "cumulative": true,
+    "province": "Colombie-Britannique"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 27,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Alberta",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Alberta"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 28,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Manitoba",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Manitoba"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 29,
+  "fields": {
+    "pays": 1,
+    "nom": "TVP",
+    "code": "TVP",
+    "taux": "7.00",
+    "actif": true,
+    "ordre": 2,
+    "description": "Taxe pour Manitoba",
+    "par_defaut": true,
+    "cumulative": true,
+    "province": "Manitoba"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 30,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Saskatchewan",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Saskatchewan"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 31,
+  "fields": {
+    "pays": 1,
+    "nom": "TVP",
+    "code": "TVP",
+    "taux": "6.00",
+    "actif": true,
+    "ordre": 2,
+    "description": "Taxe pour Saskatchewan",
+    "par_defaut": true,
+    "cumulative": true,
+    "province": "Saskatchewan"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 32,
+  "fields": {
+    "pays": 1,
+    "nom": "TVH",
+    "code": "TVH",
+    "taux": "15.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Nouveau-Brunswick",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Nouveau-Brunswick"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 33,
+  "fields": {
+    "pays": 1,
+    "nom": "TVH",
+    "code": "TVH",
+    "taux": "15.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Nouvelle-Écosse",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Nouvelle-Écosse"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 34,
+  "fields": {
+    "pays": 1,
+    "nom": "TVH",
+    "code": "TVH",
+    "taux": "15.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Île-du-Prince-Édouard",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Île-du-Prince-Édouard"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 35,
+  "fields": {
+    "pays": 1,
+    "nom": "TVH",
+    "code": "TVH",
+    "taux": "15.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Terre-Neuve-et-Labrador",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Terre-Neuve-et-Labrador"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 36,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Territoires du Nord-Ouest",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Territoires du Nord-Ouest"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 37,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Nunavut",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Nunavut"
+  }
+},
+{
+  "model": "taxes.taxe",
+  "pk": 38,
+  "fields": {
+    "pays": 1,
+    "nom": "TPS",
+    "code": "TPS",
+    "taux": "5.00",
+    "actif": true,
+    "ordre": 1,
+    "description": "Taxe pour Yukon",
+    "par_defaut": true,
+    "cumulative": false,
+    "province": "Yukon"
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 1,
+  "fields": {
+    "nom": "Burkina Faso",
+    "code": "BF",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 2,
+  "fields": {
+    "nom": "France",
+    "code": "FR",
+    "type_taxe": "TVA",
+    "taux_defaut": "20.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 3,
+  "fields": {
+    "nom": "Côte d'Ivoire",
+    "code": "CI",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 4,
+  "fields": {
+    "nom": "Sénégal",
+    "code": "SN",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 5,
+  "fields": {
+    "nom": "Mali",
+    "code": "ML",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 6,
+  "fields": {
+    "nom": "Niger",
+    "code": "NE",
+    "type_taxe": "TVA",
+    "taux_defaut": "19.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 7,
+  "fields": {
+    "nom": "Bénin",
+    "code": "BJ",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 8,
+  "fields": {
+    "nom": "Togo",
+    "code": "TG",
+    "type_taxe": "TVA",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 9,
+  "fields": {
+    "nom": "Cameroun",
+    "code": "CM",
+    "type_taxe": "TVA",
+    "taux_defaut": "19.25",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 10,
+  "fields": {
+    "nom": "Maroc",
+    "code": "MA",
+    "type_taxe": "TVA",
+    "taux_defaut": "20.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 11,
+  "fields": {
+    "nom": "Tunisie",
+    "code": "TN",
+    "type_taxe": "TVA",
+    "taux_defaut": "19.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 12,
+  "fields": {
+    "nom": "Algérie",
+    "code": "DZ",
+    "type_taxe": "TVA",
+    "taux_defaut": "19.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 13,
+  "fields": {
+    "nom": "Canada",
+    "code": "CA",
+    "type_taxe": "GST",
+    "taux_defaut": "5.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 14,
+  "fields": {
+    "nom": "États-Unis",
+    "code": "US",
+    "type_taxe": "Sales Tax",
+    "taux_defaut": "0.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 15,
+  "fields": {
+    "nom": "Belgique",
+    "code": "BE",
+    "type_taxe": "TVA",
+    "taux_defaut": "21.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 16,
+  "fields": {
+    "nom": "Suisse",
+    "code": "CH",
+    "type_taxe": "TVA",
+    "taux_defaut": "8.10",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 17,
+  "fields": {
+    "nom": "Allemagne",
+    "code": "DE",
+    "type_taxe": "TVA",
+    "taux_defaut": "19.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 18,
+  "fields": {
+    "nom": "Espagne",
+    "code": "ES",
+    "type_taxe": "IVA",
+    "taux_defaut": "21.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 19,
+  "fields": {
+    "nom": "Italie",
+    "code": "IT",
+    "type_taxe": "IVA",
+    "taux_defaut": "22.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 20,
+  "fields": {
+    "nom": "Royaume-Uni",
+    "code": "GB",
+    "type_taxe": "VAT",
+    "taux_defaut": "20.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 21,
+  "fields": {
+    "nom": "Chine",
+    "code": "CN",
+    "type_taxe": "VAT",
+    "taux_defaut": "13.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 22,
+  "fields": {
+    "nom": "Inde",
+    "code": "IN",
+    "type_taxe": "GST",
+    "taux_defaut": "18.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 23,
+  "fields": {
+    "nom": "Brésil",
+    "code": "BR",
+    "type_taxe": "ICMS",
+    "taux_defaut": "17.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 24,
+  "fields": {
+    "nom": "Mexique",
+    "code": "MX",
+    "type_taxe": "IVA",
+    "taux_defaut": "16.00",
+    "actif": true,
+    "pays_migre": null
+  }
+},
+{
+  "model": "taxes.paystaxe",
+  "pk": 25,
+  "fields": {
+    "nom": "Afrique du Sud",
+    "code": "ZA",
+    "type_taxe": "VAT",
+    "taux_defaut": "15.00",
+    "actif": true,
+    "pays_migre": null
+  }
+}
+]

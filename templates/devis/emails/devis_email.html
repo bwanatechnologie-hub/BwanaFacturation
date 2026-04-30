@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Devis {{ devis.numero }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #1e3a5f; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .btn { background: #2d6a9f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+        .footer { font-size: 12px; color: #666; text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Devis {{ devis.numero }}</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour <strong>{{ client.nom }} {{ client.prenom }}</strong>,</p>
+            <p>Veuillez trouver ci-joint votre devis n°<strong>{{ devis.numero }}</strong>.</p>
+            <p><strong>Montant total :</strong> {{ total_ttc|floatformat:0 }} {{ devise }}</p>
+            <p><strong>Date de validité :</strong> {{ devis.date_validite|date:"d/m/Y" }}</p>
+            <div style="text-align: center; margin: 25px 0;">
+                <a href="{{ lien_devis }}" class="btn">Voir le devis en ligne</a>
+            </div>
+            <p>Nous restons à votre disposition.</p>
+            <p>Cordialement.</p>
+        </div>
+        <div class="footer">
+            <p>Ce message est généré automatiquement.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -13,8 +13,51 @@ from produits.models import Produit
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection, EmailMessage
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from taxes.models import Taxe
+
+
+# ✅ Helper pour obtenir la configuration email depuis la base de données
+def get_email_config(type_email='principal'):
+    """Récupère la configuration email depuis la base de données"""
+    try:
+        from users.admin_models import ConfigurationEmail
+        config = ConfigurationEmail.objects.get(type_email=type_email, actif=True)
+        return config
+    except Exception:
+        return None
+
+
+def get_email_connection(type_email='principal'):
+    """Retourne une connexion SMTP basée sur la configuration en base"""
+    config = get_email_config(type_email)
+    if config:
+        return get_connection(
+            host=config.host,
+            port=config.port,
+            username=config.username,
+            password=config.password,
+            use_tls=config.use_tls,
+            use_ssl=config.use_ssl,
+        )
+    # Fallback sur les settings
+    return get_connection(
+        host=getattr(settings, 'FACTURE_EMAIL_HOST', 'smtp.gmail.com'),
+        port=getattr(settings, 'FACTURE_EMAIL_PORT', 587),
+        username=getattr(settings, 'FACTURE_EMAIL_HOST_USER', ''),
+        password=getattr(settings, 'FACTURE_EMAIL_HOST_PASSWORD', ''),
+        use_tls=True,
+    )
+
+
+def get_from_email(type_email='principal'):
+    """Retourne l'adresse d'expédition depuis la base ou les settings"""
+    config = get_email_config(type_email)
+    if config:
+        return config.from_email
+    return getattr(settings, 'FACTURE_DEFAULT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL)
 
 
 @login_required
@@ -498,6 +541,102 @@ def telecharger_pdf_devis(request, pk):
     response = HttpResponse(buffer, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="{nom_fichier}"'
     return response
+
+
+@login_required
+def envoyer_devis_email(request, pk):
+    """Envoie le devis par email au client ou à une autre personne"""
+    devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
+    
+    # Récupérer l'option choisie par l'utilisateur
+    option_destinataire = request.POST.get('option_destinataire')
+    
+    # Déterminer l'adresse email du destinataire
+    if option_destinataire == 'client':
+        email_destinataire = devis.client.email
+        if not email_destinataire:
+            messages.error(request, f"Le client {devis.client.nom} n'a pas d'adresse email enregistrée.")
+            return redirect('liste_devis')
+    else:
+        email_destinataire = request.POST.get('email_autre')
+        if not email_destinataire:
+            messages.error(request, "Veuillez saisir une adresse email.")
+            return redirect('liste_devis')
+    
+    # Vérifier que le PDF existe, sinon le générer
+    from .pdf import generer_pdf_devis
+    buffer = generer_pdf_devis(devis)
+    
+    # Base URL pour les liens absolus
+    base_url = request.build_absolute_uri('/')[:-1]
+    
+    # Contexte pour le template email
+    context = {
+        'devis': devis,
+        'client': devis.client,
+        'total_ht': devis.calculer_total_ht(),
+        'total_ttc': devis.calculer_total_ttc(),
+        'tva': devis.calculer_tva(),
+        'devise': devis.get_devise(),
+        'date_validite': devis.date_validite,
+        'lien_devis': f"{base_url}{reverse('detail_devis', args=[devis.pk])}",
+        'lien_pdf': f"{base_url}{reverse('pdf_devis', args=[devis.pk])}",
+        'utilisateur': request.user,
+        'taxes_details': devis.get_taxes_details(),
+    }
+    
+    # Rendre le template HTML
+    html_message = render_to_string('devis/emails/devis_email.html', context)
+    plain_message = strip_tags(html_message)
+    
+    # ✅ Utiliser la configuration depuis la base de données
+    sujet = f"Devis {devis.numero} - {devis.client.nom}"
+    
+    # Récupérer la connexion et l'expéditeur depuis la base de données
+    # Note: les devis utilisent aussi le type 'factures' car ils sont envoyés par le même serveur
+    connection = get_connection(
+        host=getattr(settings, 'FACTURE_EMAIL_HOST', 'smtp.gmail.com'),
+        port=getattr(settings, 'FACTURE_EMAIL_PORT', 587),
+        username=getattr(settings, 'FACTURE_EMAIL_HOST_USER', ''),
+        password=getattr(settings, 'FACTURE_EMAIL_HOST_PASSWORD', ''),
+        use_tls=True,
+    )
+    
+    # Essayer d'utiliser la configuration en base pour les factures
+    config = get_email_config('factures')
+    if config:
+        connection = get_connection(
+            host=config.host,
+            port=config.port,
+            username=config.username,
+            password=config.password,
+            use_tls=config.use_tls,
+            use_ssl=config.use_ssl,
+        )
+        from_email = config.from_email
+    else:
+        from_email = getattr(settings, 'FACTURE_DEFAULT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL)
+    
+    email = EmailMessage(
+        subject=sujet,
+        body=html_message,
+        from_email=from_email,
+        to=[email_destinataire],
+        reply_to=[request.user.email],
+        connection=connection,
+    )
+    email.content_subtype = 'html'
+    
+    # Ajouter le PDF en pièce jointe
+    email.attach(f"devis_{devis.numero}.pdf", buffer.getvalue(), 'application/pdf')
+    
+    try:
+        email.send()
+        messages.success(request, f"Devis {devis.numero} envoyé par email à {email_destinataire}")
+    except Exception as e:
+        messages.error(request, f"Erreur lors de l'envoi : {str(e)}")
+    
+    return redirect('liste_devis')
 
 
 @login_required

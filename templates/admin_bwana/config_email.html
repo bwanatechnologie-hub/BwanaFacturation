@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuration email — Administration{% endblock %}
+{% block page_title %}📧 Configuration des serveurs email{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <!-- Message d'aide -->
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-4" style="border-radius: 16px; background: #e8f0fe; border: none;">
+        <i class="bi bi-info-circle-fill fs-4" style="color: #1e3a5f;"></i>
+        <div>
+            <strong>Configuration des serveurs SMTP</strong><br>
+            Vous pouvez configurer deux serveurs email distincts :
+            <ul class="mb-0 mt-1">
+                <li><strong>Email principal</strong> : utilisé pour les notifications, validation de compte, réinitialisation de mot de passe</li>
+                <li><strong>Email factures</strong> : utilisé pour l'envoi des factures et devis (compte dédié recommandé)</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for config in configs %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 {% if config.actif %}border-success{% endif %}">
+                <div class="card-header bg-white border-0 pt-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color: #1e3a5f;">
+                            <i class="bi bi-envelope-fill me-2"></i>{{ config.nom }}
+                        </h5>
+                        <span class="badge mt-2 {% if config.actif %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if config.actif %}✓ Actif{% else %}✗ Inactif{% endif %}
+                        </span>
+                        <span class="badge bg-info ms-1">{{ config.get_type_email_display }}</span>
+                    </div>
+                    {% if config.test_envoye and config.date_dernier_test %}
+                    <span class="text-muted small">
+                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                        Testé le {{ config.date_dernier_test|date:"d/m/Y H:i" }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td style="width: 40%;" class="text-muted">Serveur SMTP :</td>
+                            <td><strong>{{ config.host }}:{{ config.port }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Sécurité :</td>
+                            <td>
+                                {% if config.use_tls %}<span class="badge bg-primary">TLS</span>{% endif %}
+                                {% if config.use_ssl %}<span class="badge bg-primary">SSL</span>{% endif %}
+                                {% if not config.use_tls and not config.use_ssl %}<span class="badge bg-secondary">Aucune</span>{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Nom d'utilisateur :</td>
+                            <td>{{ config.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Email d'expédition :</td>
+                            <td><strong>{{ config.from_email }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Mot de passe :</td>
+                            <td>•••••••• <a href="#" class="text-muted small" data-bs-toggle="tooltip" title="Modifiable dans le formulaire">modifiable</a></td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer bg-white border-0 pb-4">
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'admin_config_email_modifier' config.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil me-1"></i>Modifier
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#testModal{{ config.pk }}">
+                            <i class="bi bi-send me-1"></i>Tester
+                        </button>
+                        <a href="{% url 'admin_config_email_activer' config.pk %}" class="btn btn-sm {% if config.actif %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" onclick="return confirm('Confirmer la {% if config.actif %}désactivation{% else %}activation{% endif %} de cette configuration ?')">
+                            <i class="bi bi-{% if config.actif %}x-circle{% else %}check-circle{% endif %} me-1"></i>
+                            {% if config.actif %}Désactiver{% else %}Activer{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de test -->
+        <div class="modal fade" id="testModal{{ config.pk }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="post" action="{% url 'admin_config_email_tester' config.pk %}">
+                        {% csrf_token %}
+                        <div class="modal-header" style="background: #1e3a5f; color: white;">
+                            <h5 class="modal-title">
+                                <i class="bi bi-envelope-paper me-2"></i>Tester : {{ config.nom }}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Adresse email de test</label>
+                                <input type="email" name="email_test" class="form-control" placeholder="votre@email.com" required>
+                                <small class="text-muted">Un email de test sera envoyé à cette adresse depuis la configuration sélectionnée.</small>
+                            </div>
+                            <div class="alert alert-light small mb-0">
+                                <i class="bi bi-lightbulb me-1"></i>
+                                Si vous ne recevez pas l'email, vérifiez vos paramètres SMTP et les spams.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn" style="background: #1e3a5f; color: white;">
+                                <i class="bi bi-send me-1"></i>Envoyer le test
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Retour au dashboard -->
+    <div class="mt-4 text-center">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Retour au tableau de bord
+        </a>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+}
+
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.table-borderless td {
+    padding: 0.4rem 0;
+}
+</style>
+
+<script>
+// Initialiser les tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
