@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}Devis {{ devis.numero }}{% endblock %}
+{% block auto_refresh %}1{% endblock %}
 {% block page_title %}Détail du Devis{% endblock %}
 
 {% block content %}
@@ -145,9 +146,11 @@
                                     {% elif devis.statut == 'accepte' %}
                                         <span class="badge" style="background: #2d6a9f; color: white;">Accepté</span>
                                     {% elif devis.statut == 'approuve_superieur' %}
-                                        <span class="badge" style="background: #17a2b8; color: white;">✅ Approuvé par supérieur</span>
+                                        <span class="badge" style="background: #17a2b8; color: white;"><i class="bi bi-check-circle-fill me-1"></i>Approuvé par supérieur</span>
                                     {% elif devis.statut == 'rejete_superieur' %}
-                                        <span class="badge" style="background: #dc3545; color: white;">❌ Rejeté par supérieur</span>
+                                        <span class="badge" style="background: #dc3545; color: white;"><i class="bi bi-x-circle-fill me-1"></i>Rejeté par supérieur</span>
+                                    {% elif devis.statut == 'expire' %}
+                                        <span class="badge bg-secondary">Expiré</span>
                                     {% else %}
                                         <span class="badge bg-danger">Refusé</span>
                                     {% endif %}

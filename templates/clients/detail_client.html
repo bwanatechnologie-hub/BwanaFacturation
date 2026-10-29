@@ -47,7 +47,7 @@
                         <span class="small">{{ client.pays_obj.nom|default:"Non renseigné" }}</span>
                         {% if client.devise %}
                             <span class="badge ms-2" style="background: #e8f0fe; color: #1e3a5f;">
-                                💱 {{ client.devise }}
+                                <i class="bi bi-currency-exchange me-1"></i>{{ client.devise }}
                             </span>
                         {% endif %}
                     </div>

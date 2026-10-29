@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Tableau de bord{% endblock %}
+{% block auto_refresh %}1{% endblock %}
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block content %}
@@ -355,7 +356,7 @@ new Chart(document.getElementById('graphDevisStatut'), {
         labels: devisStatutsLabels,
         datasets: [{
             data: devisStatutsData,
-            backgroundColor: ['#344e65', '#2d6a9f', '#1e3a5f'],
+            backgroundColor: ['#f5b942', '#2d6a9f', '#e8590c', '#2f9e44', '#c92a2a', '#adb5bd'],
             borderWidth: 2, borderColor: '#fff',
         }]
     },
@@ -402,7 +403,7 @@ new Chart(document.getElementById('graphFacturesStatut'), {
         labels: facturesStatutsLabels,
         datasets: [{
             data: facturesStatutsData,
-            backgroundColor: ['#1e3a5f', '#2d6a9f', '#344e65'],
+            backgroundColor: ['#f5b942', '#2d6a9f', '#c92a2a', '#e8590c', '#2f9e44', '#adb5bd'],
             borderWidth: 2, borderColor: '#fff',
         }]
     },

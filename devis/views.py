@@ -4,13 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Devis, LigneDevis
 from .forms import DevisForm, LigneDevisForm, LigneDevisFormSet
-from .utils import generer_numero_devis
-from django.http import HttpResponse
+from .utils import generer_numero_devis, email_documents_configure, expliquer_erreur_email, MESSAGE_EMAIL_NON_CONFIGURE
+from django.http import HttpResponse, Http404, JsonResponse
 import os
 import json
 from django.conf import settings
 from produits.models import Produit
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.urls import reverse
 from django.utils import timezone
 from django.core.mail import send_mail, get_connection, EmailMessage
@@ -102,7 +102,7 @@ def ajouter_devis(request):
             # Validation de la date
             date_validite = form.cleaned_data.get('date_validite')
             if date_validite <= timezone.now().date():
-                messages.error(request, '❌ La date de validité doit être postérieure à aujourd\'hui.')
+                messages.error(request, 'La date de validité doit être postérieure à aujourd\'hui.')
                 return render_creation_devis(request, form, formset)
 
             devis = form.save(commit=False)
@@ -148,17 +148,17 @@ def ajouter_devis(request):
 
             if lignes_sauvegardees == 0:
                 devis.delete()
-                messages.error(request, '❌ Veuillez ajouter au moins un produit ou service.')
+                messages.error(request, 'Veuillez ajouter au moins un produit ou service.')
                 return render_creation_devis(request, form, formset)
 
-            messages.success(request, f'✅ Devis {devis.numero} créé avec succès !')
+            messages.success(request, f'Devis {devis.numero} créé avec succès !')
             
             # Rediriger vers la page de gestion des liens
             return redirect('gestion_liens_devis', pk=devis.pk)
         else:
-            messages.error(request, '❌ Veuillez corriger les erreurs dans le formulaire.')
-            print(f"❌ ERREURS FORM: {form.errors}")
-            print(f"❌ ERREURS FORMSET: {formset.errors}")
+            messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
+            print(f"ERREURS FORM: {form.errors}")
+            print(f"ERREURS FORMSET: {formset.errors}")
     else:
         form = DevisForm(user=request.user)
         formset = LigneDevisFormSet(prefix='lignes', user=request.user)
@@ -186,6 +186,11 @@ def render_creation_devis(request, form, formset):
 def gestion_liens_devis(request, pk):
     """Page pour gérer les liens d'approbation et client"""
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
+
+    # Documents anciens créés sans liens publics
+    if not devis.token_client or not devis.token_approbation:
+        devis.generer_tokens()
+        devis.save(update_fields=['token_client', 'token_approbation'])
     
     base_url = request.build_absolute_uri('/')[:-1]
     lien_approbation = f"{base_url}{reverse('visualiser_devis_approbation', args=[devis.token_approbation])}"
@@ -201,12 +206,19 @@ def gestion_liens_devis(request, pk):
 def visualiser_devis_approbation(request, token):
     """Page publique pour que le supérieur approuve le devis"""
     devis = get_object_or_404(Devis, token_approbation=token)
-    
-    if devis.approuve_par:
+
+    # Une seule décision possible, tant que le devis est en attente
+    if devis.statut != 'en_attente':
+        if devis.statut == 'rejete_superieur':
+            message = 'Ce devis a déjà été rejeté.'
+        elif devis.statut == 'expire':
+            message = 'Ce devis a expiré.'
+        else:
+            message = 'Ce devis a déjà été approuvé.'
         return render(request, 'devis/public/approbation.html', {
             'devis': devis,
             'deja_traite': True,
-            'message_warning': 'Ce devis a déjà été approuvé.'
+            'message_warning': message,
         })
     
     if request.method == 'POST':
@@ -222,7 +234,7 @@ def visualiser_devis_approbation(request, token):
             
             try:
                 send_mail(
-                    subject=f'✅ Devis {devis.numero} approuvé',
+                    subject=f'Devis {devis.numero} approuvé',
                     message=f'Votre devis {devis.numero} a été approuvé.\n\nCommentaire : {commentaire}',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[devis.utilisateur.email],
@@ -234,18 +246,19 @@ def visualiser_devis_approbation(request, token):
             return render(request, 'devis/public/approbation.html', {
                 'devis': devis,
                 'action_effectuee': 'approuver',
-                'message_success': f'✅ Devis {devis.numero} approuvé avec succès !',
+                'message_success': f'Devis {devis.numero} approuvé avec succès !',
                 'commentaire': commentaire
             })
             
         elif action == 'rejeter':
             devis.statut = 'rejete_superieur'
+            devis.approuve_le = timezone.now()
             devis.commentaire_approbation = commentaire
             devis.save()
             
             try:
                 send_mail(
-                    subject=f'❌ Devis {devis.numero} rejeté',
+                    subject=f'Devis {devis.numero} rejeté',
                     message=f'Votre devis {devis.numero} a été rejeté.\n\nMotif : {commentaire}',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[devis.utilisateur.email],
@@ -257,7 +270,7 @@ def visualiser_devis_approbation(request, token):
             return render(request, 'devis/public/approbation.html', {
                 'devis': devis,
                 'action_effectuee': 'rejeter',
-                'message_success': f'❌ Devis {devis.numero} rejeté.',
+                'message_success': f'Devis {devis.numero} rejeté.',
                 'commentaire': commentaire
             })
     
@@ -270,19 +283,31 @@ def visualiser_devis_approbation(request, token):
 def visualiser_devis_client(request, token):
     """Page publique pour que le client accepte/refuse le devis"""
     devis = get_object_or_404(Devis, token_client=token)
-    
-    if devis.statut != 'approuve_superieur':
-        return render(request, 'devis/public/client.html', {
-            'devis': devis,
-            'message_warning': 'Ce devis n\'a pas encore été approuvé en interne.',
-            'en_attente': True
-        })
-    
+
+    # Vérifier d'abord si le client a déjà répondu (le statut a changé depuis)
     if devis.accepte_par_client is not None:
         return render(request, 'devis/public/client.html', {
             'devis': devis,
             'deja_repondu': True,
             'message_warning': 'Vous avez déjà répondu à ce devis.'
+        })
+
+    if devis.statut == 'approuve_superieur' and devis.date_validite < timezone.now().date():
+        devis.statut = 'expire'
+        devis.save(update_fields=['statut'])
+
+    if devis.statut == 'expire':
+        return render(request, 'devis/public/client.html', {
+            'devis': devis,
+            'message_warning': 'Ce devis a expiré. Contactez votre interlocuteur pour en obtenir un nouveau.',
+            'en_attente': True
+        })
+
+    if devis.statut != 'approuve_superieur':
+        return render(request, 'devis/public/client.html', {
+            'devis': devis,
+            'message_warning': 'Ce devis n\'a pas encore été approuvé en interne.',
+            'en_attente': True
         })
     
     if request.method == 'POST':
@@ -296,7 +321,7 @@ def visualiser_devis_client(request, token):
             
             try:
                 send_mail(
-                    subject=f'✅ Devis {devis.numero} accepté',
+                    subject=f'Devis {devis.numero} accepté',
                     message=f'Le client {devis.client.nom} a accepté le devis {devis.numero}.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[devis.utilisateur.email],
@@ -308,7 +333,7 @@ def visualiser_devis_client(request, token):
             return render(request, 'devis/public/client.html', {
                 'devis': devis,
                 'action_effectuee': 'accepter',
-                'message_success': f'✅ Merci ! Votre acceptation a été enregistrée.'
+                'message_success': f'Merci ! Votre acceptation a été enregistrée.'
             })
             
         elif action == 'refuser':
@@ -319,7 +344,7 @@ def visualiser_devis_client(request, token):
             
             try:
                 send_mail(
-                    subject=f'❌ Devis {devis.numero} refusé',
+                    subject=f'Devis {devis.numero} refusé',
                     message=f'Le client {devis.client.nom} a refusé le devis {devis.numero}.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[devis.utilisateur.email],
@@ -331,7 +356,7 @@ def visualiser_devis_client(request, token):
             return render(request, 'devis/public/client.html', {
                 'devis': devis,
                 'action_effectuee': 'refuser',
-                'message_success': f'ℹ️ Nous avons bien enregistré votre refus.'
+                'message_success': f'Nous avons bien enregistré votre refus.'
             })
     
     return render(request, 'devis/public/client.html', {
@@ -344,7 +369,7 @@ def detail_devis(request, pk):
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
     lignes = devis.lignes.all().select_related('produit')
     
-    if devis.date_validite < timezone.now().date() and devis.statut == 'en_attente':
+    if devis.date_validite < timezone.now().date() and devis.statut in ('en_attente', 'approuve_superieur'):
         devis.statut = 'expire'
         devis.save(update_fields=['statut'])
 
@@ -359,7 +384,7 @@ def modifier_devis(request, pk):
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
 
     if devis.transforme_en_facture:
-        messages.error(request, '❌ Ce devis a déjà été transformé en facture.')
+        messages.error(request, 'Ce devis a déjà été transformé en facture.')
         return redirect('detail_devis', pk=pk)
 
     if request.method == 'POST':
@@ -369,11 +394,17 @@ def modifier_devis(request, pk):
         if form.is_valid() and formset.is_valid():
             date_validite = form.cleaned_data.get('date_validite')
             if date_validite <= timezone.now().date():
-                messages.error(request, '❌ La date de validité doit être postérieure à aujourd\'hui.')
+                messages.error(request, 'La date de validité doit être postérieure à aujourd\'hui.')
                 return render_modification_devis(request, devis, form, formset)
 
             devis = form.save(commit=False)
-            
+
+            # Un devis rejeté ou expiré qui est corrigé repart en approbation
+            if devis.statut in ('rejete_superieur', 'expire'):
+                devis.statut = 'en_attente'
+                devis.approuve_par = None
+                devis.approuve_le = None
+
             # ✅ RÉCUPÉRER LES TAXES PERSONNALISÉES
             taxes_perso = request.POST.get('taxes_personnalisees', '')
             if taxes_perso:
@@ -411,13 +442,14 @@ def modifier_devis(request, pk):
                     lignes_sauvegardees += 1
 
             if lignes_sauvegardees == 0:
-                messages.error(request, '❌ Veuillez ajouter au moins un produit ou service.')
+                messages.error(request, 'Veuillez ajouter au moins un produit ou service.')
                 return render_modification_devis(request, devis, form, formset)
 
-            messages.success(request, f'✏️ Devis {devis.numero} modifié avec succès !')
+            messages.success(request, f'Devis {devis.numero} modifié avec succès !')
             return redirect('detail_devis', pk=devis.pk)
         else:
-            messages.error(request, '❌ Veuillez corriger les erreurs.')
+            messages.error(request, 'Veuillez corriger les erreurs.')
+        lignes_existantes = []
     else:
         form = DevisForm(user=request.user, instance=devis)
         formset = LigneDevisFormSet(prefix='lignes', user=request.user)
@@ -452,7 +484,7 @@ def supprimer_devis(request, pk):
     if request.method == 'POST':
         numero = devis.numero
         devis.delete()
-        messages.success(request, f'🗑️ Devis {numero} supprimé.')
+        messages.success(request, f'Devis {numero} supprimé.')
         return redirect('liste_devis')
 
     return render(request, 'devis/confirmer_suppression.html', {'devis': devis})
@@ -463,11 +495,11 @@ def transformer_en_facture(request, pk):
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
 
     if devis.statut != 'accepte':
-        messages.error(request, '❌ Seul un devis accepté peut être transformé en facture.')
+        messages.error(request, 'Seul un devis accepté peut être transformé en facture.')
         return redirect('detail_devis', pk=pk)
 
     if devis.transforme_en_facture:
-        messages.error(request, '❌ Ce devis a déjà été transformé en facture.')
+        messages.error(request, 'Ce devis a déjà été transformé en facture.')
         return redirect('detail_devis', pk=pk)
 
     if request.method == 'POST':
@@ -475,31 +507,32 @@ def transformer_en_facture(request, pk):
         from devis.utils import generer_numero_facture
         import datetime
 
-        client = devis.client
-        pays_facture = devis.pays or getattr(client, 'pays_nom', '')
-        type_taxe_facture = devis.type_taxe or getattr(client, 'type_taxe_nom', 'TVA')
-        taux_taxe_facture = devis.taux_taxe or getattr(client, 'taux_tva', 0)
-
-        facture = Facture.objects.create(
+        # La facture reprend EXACTEMENT les taxes du devis accepté par le client :
+        # un devis sans taxe donne une facture sans taxe (pas de taux par défaut du pays).
+        facture = Facture(
             utilisateur=request.user,
-            client=client,
+            client=devis.client,
             devis=devis,
             numero=generer_numero_facture(request.user),
             date_echeance=timezone.now().date() + datetime.timedelta(days=30),
             notes=devis.notes,
+            # Le devis a déjà été approuvé en interne et accepté par le client :
+            # la facture part directement en « non payée », avec ses propres liens publics.
             statut='non_payee',
-            pays=pays_facture,
-            type_taxe=type_taxe_facture,
-            taux_taxe=taux_taxe_facture,
+            pays=devis.pays,
+            type_taxe=devis.type_taxe if devis.taux_taxe else '',
+            taux_taxe=devis.taux_taxe or 0,
+            taxes_personnalisees=devis.taxes_personnalisees or {},
+            devise_choisie=devis.devise_choisie,
+            approuve_par=devis.approuve_par,
+            approuve_le=devis.approuve_le,
+            accepte_par_client=True,
+            accepte_client_le=devis.accepte_client_le,
         )
+        facture.generer_tokens()
+        facture.save()
         
-        if devis.taxes.exists():
-            facture.taxes.set(devis.taxes.all())
-        
-        # ✅ Copier les taxes personnalisées
-        if hasattr(devis, 'taxes_personnalisees') and devis.taxes_personnalisees:
-            facture.taxes_personnalisees = devis.taxes_personnalisees
-            facture.save(update_fields=['taxes_personnalisees'])
+        facture.taxes.set(devis.taxes.all())
 
         for ligne in devis.lignes.all().select_related('produit'):
             LigneFacture.objects.create(
@@ -507,12 +540,13 @@ def transformer_en_facture(request, pk):
                 description=ligne.description,
                 quantite=ligne.quantite,
                 prix_unitaire=ligne.prix_unitaire,
+                tva=ligne.tva or 0,
             )
 
         devis.transforme_en_facture = True
         devis.save()
 
-        messages.success(request, f'✅ Facture {facture.numero} créée avec succès !')
+        messages.success(request, f'Facture {facture.numero} créée avec succès !')
         return redirect('detail_facture', pk=facture.pk)
 
     return render(request, 'devis/confirmer_transformation.html', {'devis': devis})
@@ -543,10 +577,27 @@ def telecharger_pdf_devis(request, pk):
     return response
 
 
+def telecharger_pdf_devis_public(request, token):
+    """PDF du devis sans compte : accessible avec le jeton du lien client ou d'approbation."""
+    devis = Devis.objects.filter(Q(token_client=token) | Q(token_approbation=token)).first()
+    if devis is None:
+        raise Http404
+    from .pdf import generer_pdf_devis
+    buffer = generer_pdf_devis(devis)
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="devis_{devis.numero}.pdf"'
+    return response
+
+
 @login_required
 def envoyer_devis_email(request, pk):
     """Envoie le devis par email au client ou à une autre personne"""
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
+
+    # Documents anciens créés sans liens publics
+    if not devis.token_client or not devis.token_approbation:
+        devis.generer_tokens()
+        devis.save(update_fields=['token_client', 'token_approbation'])
     
     # Récupérer l'option choisie par l'utilisateur
     option_destinataire = request.POST.get('option_destinataire')
@@ -563,6 +614,10 @@ def envoyer_devis_email(request, pk):
             messages.error(request, "Veuillez saisir une adresse email.")
             return redirect('liste_devis')
     
+    if not email_documents_configure():
+        messages.error(request, MESSAGE_EMAIL_NON_CONFIGURE)
+        return redirect('liste_devis')
+
     # Vérifier que le PDF existe, sinon le générer
     from .pdf import generer_pdf_devis
     buffer = generer_pdf_devis(devis)
@@ -579,8 +634,9 @@ def envoyer_devis_email(request, pk):
         'tva': devis.calculer_tva(),
         'devise': devis.get_devise(),
         'date_validite': devis.date_validite,
-        'lien_devis': f"{base_url}{reverse('detail_devis', args=[devis.pk])}",
-        'lien_pdf': f"{base_url}{reverse('pdf_devis', args=[devis.pk])}",
+        'lien_devis': f"{base_url}{reverse('visualiser_devis_client', args=[devis.token_client])}",
+        'lien_pdf': f"{base_url}{reverse('pdf_devis_public', args=[devis.token_client])}",
+        'reponse_possible': devis.statut == 'approuve_superieur',
         'utilisateur': request.user,
         'taxes_details': devis.get_taxes_details(),
     }
@@ -633,10 +689,84 @@ def envoyer_devis_email(request, pk):
     try:
         email.send()
         messages.success(request, f"Devis {devis.numero} envoyé par email à {email_destinataire}")
+        if devis.statut == 'en_attente':
+            messages.warning(request, "Ce devis n'est pas encore approuvé en interne : "
+                                      "le client pourra y répondre une fois l'approbation donnée.")
     except Exception as e:
-        messages.error(request, f"Erreur lors de l'envoi : {str(e)}")
+        messages.error(request, expliquer_erreur_email(e))
     
     return redirect('liste_devis')
+
+
+# ══════════════════════════════════════════════════
+# API : réponses reçues via les liens publics (rafraîchissement auto)
+# ══════════════════════════════════════════════════
+
+# Statuts où un supérieur ou le client peut encore répondre
+DEVIS_EN_COURS = ('en_attente', 'approuve_superieur')
+FACTURES_EN_COURS = ('en_attente', 'approuvee')
+
+
+def _evenements_publics(type_doc, numero, avant, apres):
+    """Décrit les réponses arrivées par les liens publics entre deux états (statut, accepte_par_client)."""
+    statut_avant, client_avant = avant
+    statut_apres, client_apres = apres
+    evenements = []
+    if type_doc == 'devis':
+        if statut_avant == 'en_attente' and statut_apres in ('approuve_superieur', 'accepte', 'refuse'):
+            evenements.append(f"Devis {numero} approuvé par le supérieur.")
+        elif statut_avant == 'en_attente' and statut_apres == 'rejete_superieur':
+            evenements.append(f"Devis {numero} rejeté par le supérieur.")
+        libelle = 'Devis'
+        accorde = ''
+    else:
+        # « approuvée » ou, si le client a déjà répondu dans l'intervalle, la suite du circuit
+        if statut_avant == 'en_attente' and (statut_apres == 'approuvee' or client_apres is not None):
+            evenements.append(f"Facture {numero} approuvée par le supérieur.")
+        elif statut_avant == 'en_attente' and statut_apres == 'rejetee' and client_apres is None:
+            evenements.append(f"Facture {numero} rejetée par le supérieur.")
+        libelle = 'Facture'
+        accorde = 'e'
+    if client_avant is None and client_apres is True:
+        evenements.append(f"{libelle} {numero} accepté{accorde} par le client.")
+    elif client_avant is None and client_apres is False:
+        evenements.append(f"{libelle} {numero} refusé{accorde} par le client.")
+    return evenements
+
+
+@login_required
+def api_etat_documents(request):
+    """
+    Interrogée régulièrement par les pages de l'émetteur. Compare l'état des devis
+    et factures en attente de réponse avec le dernier passage (gardé en session) :
+    si un supérieur ou un client a répondu, ajoute une notification et demande au
+    navigateur de recharger la page. Les actions de l'utilisateur lui-même
+    (payée, annulée, modification...) ne déclenchent rien.
+    """
+    from factures.models import Facture
+
+    precedent = request.session.get('etat_documents')
+    actuel = {'devis': {}, 'factures': {}}
+    evenements = []
+
+    for cle, modele, en_cours in (('devis', Devis, DEVIS_EN_COURS), ('factures', Facture, FACTURES_EN_COURS)):
+        anciens = (precedent or {}).get(cle, {})
+        lignes = (modele.objects
+                  .filter(utilisateur=request.user)
+                  .filter(Q(statut__in=en_cours) | Q(pk__in=[int(pk) for pk in anciens]))
+                  .values_list('pk', 'numero', 'statut', 'accepte_par_client'))
+        for pk, numero, statut, accepte in lignes:
+            if statut in en_cours:
+                actuel[cle][str(pk)] = [statut, accepte]
+            avant = anciens.get(str(pk))
+            if avant and tuple(avant) != (statut, accepte):
+                evenements += _evenements_publics('devis' if cle == 'devis' else 'facture',
+                                                  numero, tuple(avant), (statut, accepte))
+
+    request.session['etat_documents'] = actuel
+    for texte in evenements:
+        messages.success(request, texte)
+    return JsonResponse({'changement': bool(evenements), 'evenements': evenements})
 
 
 @login_required
@@ -693,18 +823,20 @@ def tableau_de_bord(request):
         )
         ca_par_mois.append(float(sum(f.calculer_total_ttc() for f in fs)))
 
-    devis_statuts_labels = ['En attente', 'Acceptés', 'Refusés']
-    devis_statuts_data = [
-        Devis.objects.filter(utilisateur=request.user, statut='en_attente').count(),
-        Devis.objects.filter(utilisateur=request.user, statut='accepte').count(),
-        Devis.objects.filter(utilisateur=request.user, statut='refuse').count(),
-    ]
-    factures_statuts_labels = ['Non payées', 'Payées', 'Annulées']
-    factures_statuts_data = [
-        Facture.objects.filter(utilisateur=request.user, statut='non_payee').count(),
-        Facture.objects.filter(utilisateur=request.user, statut='payee').count(),
-        Facture.objects.filter(utilisateur=request.user, statut='annulee').count(),
-    ]
+    # Tous les statuts, dans l'ordre du cycle de vie
+    devis_par_statut = dict(
+        Devis.objects.filter(utilisateur=request.user)
+        .values_list('statut').annotate(n=Count('id'))
+    )
+    devis_statuts_labels = [label for _, label in Devis.STATUT_CHOICES]
+    devis_statuts_data = [devis_par_statut.get(code, 0) for code, _ in Devis.STATUT_CHOICES]
+
+    factures_par_statut = dict(
+        Facture.objects.filter(utilisateur=request.user)
+        .values_list('statut').annotate(n=Count('id'))
+    )
+    factures_statuts_labels = [label for _, label in Facture.STATUT_CHOICES]
+    factures_statuts_data = [factures_par_statut.get(code, 0) for code, _ in Facture.STATUT_CHOICES]
 
     return render(request, 'tableau_de_bord.html', {
         'nb_clients': nb_clients,

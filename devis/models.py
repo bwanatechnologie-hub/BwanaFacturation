@@ -14,6 +14,7 @@ class Devis(models.Model):
         ('rejete_superieur', 'Rejeté par supérieur'),
         ('accepte', 'Accepté'),
         ('refuse', 'Refusé'),
+        ('expire', 'Expiré'),
     ]
 
     # ── Champs existants ──
