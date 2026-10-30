@@ -152,8 +152,26 @@ def ajouter_devis(request):
                 return render_creation_devis(request, form, formset)
 
             messages.success(request, f'Devis {devis.numero} créé avec succès !')
-            
-            # Rediriger vers la page de gestion des liens
+
+            # Choix fait dans la fenêtre « Que faire de ce devis ? »
+            envoi = request.POST.get('envoi', '')
+            if envoi == 'approbation':
+                ok, message = envoyer_demande_approbation(request, devis)
+                (messages.success if ok else messages.error)(request, message)
+                if ok:
+                    return redirect('detail_devis', pk=devis.pk)
+            elif envoi == 'client':
+                if not devis.client.email:
+                    messages.error(request, f"Le client {devis.client.nom} n'a pas d'adresse email : "
+                                            "le devis n'a pas été envoyé.")
+                else:
+                    approuver_soi_meme(request, devis)
+                    ok, message = envoyer_devis_au_client(request, devis, devis.client.email)
+                    (messages.success if ok else messages.error)(request, message)
+                    if ok:
+                        return redirect('detail_devis', pk=devis.pk)
+
+            # Pas d'envoi (ou envoi impossible) : page des liens pour les transmettre à la main
             return redirect('gestion_liens_devis', pk=devis.pk)
         else:
             messages.error(request, 'Veuillez corriger les erreurs dans le formulaire.')
@@ -231,23 +249,36 @@ def visualiser_devis_approbation(request, token):
             devis.commentaire_approbation = commentaire
             devis.statut = 'approuve_superieur'
             devis.save()
-            
+
+            # Le devis approuvé part automatiquement chez le client
+            if devis.client.email:
+                envoye, detail = envoyer_devis_au_client(request, devis, devis.client.email)
+                info_client = (f"Le devis a été envoyé automatiquement au client ({devis.client.email})."
+                               if envoye else f"Le devis n'a pas pu être envoyé au client : {detail}")
+            else:
+                envoye = False
+                info_client = (f"Le client {devis.client.nom} n'a pas d'adresse email : "
+                               "le devis doit lui être transmis manuellement.")
+
             try:
                 send_mail(
                     subject=f'Devis {devis.numero} approuvé',
-                    message=f'Votre devis {devis.numero} a été approuvé.\n\nCommentaire : {commentaire}',
+                    message=(f'Votre devis {devis.numero} a été approuvé.\n\n'
+                             f'Commentaire : {commentaire or "aucun"}\n\n{info_client}'),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[devis.utilisateur.email],
                     fail_silently=True,
                 )
             except:
                 pass
-            
+
             return render(request, 'devis/public/approbation.html', {
                 'devis': devis,
                 'action_effectuee': 'approuver',
                 'message_success': f'Devis {devis.numero} approuvé avec succès !',
-                'commentaire': commentaire
+                'commentaire': commentaire,
+                'info_client': info_client,
+                'envoye_client': envoye,
             })
             
         elif action == 'rejeter':
@@ -589,112 +620,122 @@ def telecharger_pdf_devis_public(request, token):
     return response
 
 
+def _assurer_jetons(devis):
+    """Documents anciens créés sans liens publics."""
+    if not devis.token_client or not devis.token_approbation:
+        devis.generer_tokens()
+        devis.save(update_fields=['token_client', 'token_approbation'])
+
+
+def _envoyer_email_devis(request, devis, destinataire, sujet, template, contexte):
+    """Envoie un email HTML avec le PDF du devis en pièce jointe. Lève l'erreur SMTP."""
+    from .pdf import generer_pdf_devis
+    contexte = {
+        'devis': devis,
+        'client': devis.client,
+        'total_ht': devis.calculer_total_ht(),
+        'total_ttc': devis.calculer_total_ttc(),
+        'devise': devis.get_devise(),
+        'taxes_details': devis.get_taxes_details(),
+        # L'émetteur du devis — le supérieur qui approuve n'est pas connecté
+        'utilisateur': devis.utilisateur,
+        **contexte,
+    }
+    email = EmailMessage(
+        subject=sujet,
+        body=render_to_string(template, contexte),
+        from_email=get_from_email('factures'),
+        to=[destinataire],
+        reply_to=[devis.utilisateur.email] if devis.utilisateur.email else None,
+        connection=get_email_connection('factures'),
+    )
+    email.content_subtype = 'html'
+    email.attach(f"devis_{devis.numero}.pdf", generer_pdf_devis(devis).getvalue(), 'application/pdf')
+    email.send()
+
+
+def envoyer_devis_au_client(request, devis, destinataire):
+    """Envoie le lien public du devis au client. Renvoie (succès, message)."""
+    _assurer_jetons(devis)
+    if not email_documents_configure():
+        return False, MESSAGE_EMAIL_NON_CONFIGURE
+    try:
+        _envoyer_email_devis(
+            request, devis, destinataire,
+            sujet=f"Devis {devis.numero} - {devis.client.nom}",
+            template='devis/emails/devis_email.html',
+            contexte={
+                'date_validite': devis.date_validite,
+                'lien_devis': request.build_absolute_uri(reverse('visualiser_devis_client', args=[devis.token_client])),
+                'lien_pdf': request.build_absolute_uri(reverse('pdf_devis_public', args=[devis.token_client])),
+                'reponse_possible': devis.statut == 'approuve_superieur',
+            },
+        )
+    except Exception as e:
+        return False, expliquer_erreur_email(e)
+    return True, f"Devis {devis.numero} envoyé par email à {destinataire}."
+
+
+def envoyer_demande_approbation(request, devis):
+    """Envoie le lien d'approbation au supérieur défini dans le profil. Renvoie (succès, message)."""
+    profil = getattr(request.user, 'profil', None)
+    destinataire = profil.superieur_email if profil else ''
+    if not destinataire:
+        return False, ("Aucun supérieur n'est renseigné : ajoutez son email dans "
+                       "Mon profil → Approbation des devis.")
+    _assurer_jetons(devis)
+    if not email_documents_configure():
+        return False, MESSAGE_EMAIL_NON_CONFIGURE
+    try:
+        _envoyer_email_devis(
+            request, devis, destinataire,
+            sujet=f"Approbation demandée : devis {devis.numero} - {devis.client.nom}",
+            template='devis/emails/demande_approbation_email.html',
+            contexte={
+                'superieur_nom': profil.superieur_nom,
+                'lien_approbation': request.build_absolute_uri(
+                    reverse('visualiser_devis_approbation', args=[devis.token_approbation])),
+            },
+        )
+    except Exception as e:
+        return False, expliquer_erreur_email(e)
+    nom = f"{profil.superieur_nom} ({destinataire})" if profil.superieur_nom else destinataire
+    return True, f"Devis {devis.numero} envoyé pour approbation à {nom}."
+
+
+def approuver_soi_meme(request, devis):
+    """Envoi direct au client sans passer par le supérieur : l'émetteur valide lui-même."""
+    devis.statut = 'approuve_superieur'
+    devis.approuve_par = request.user
+    devis.approuve_le = timezone.now()
+    devis.commentaire_approbation = "Envoyé directement au client, sans approbation par un supérieur."
+    devis.save(update_fields=['statut', 'approuve_par', 'approuve_le', 'commentaire_approbation'])
+
+
 @login_required
 def envoyer_devis_email(request, pk):
     """Envoie le devis par email au client ou à une autre personne"""
     devis = get_object_or_404(Devis, pk=pk, utilisateur=request.user)
 
-    # Documents anciens créés sans liens publics
-    if not devis.token_client or not devis.token_approbation:
-        devis.generer_tokens()
-        devis.save(update_fields=['token_client', 'token_approbation'])
-    
-    # Récupérer l'option choisie par l'utilisateur
-    option_destinataire = request.POST.get('option_destinataire')
-    
-    # Déterminer l'adresse email du destinataire
-    if option_destinataire == 'client':
-        email_destinataire = devis.client.email
-        if not email_destinataire:
+    if request.POST.get('option_destinataire') == 'client':
+        destinataire = devis.client.email
+        if not destinataire:
             messages.error(request, f"Le client {devis.client.nom} n'a pas d'adresse email enregistrée.")
             return redirect('liste_devis')
     else:
-        email_destinataire = request.POST.get('email_autre')
-        if not email_destinataire:
+        destinataire = request.POST.get('email_autre')
+        if not destinataire:
             messages.error(request, "Veuillez saisir une adresse email.")
             return redirect('liste_devis')
-    
-    if not email_documents_configure():
-        messages.error(request, MESSAGE_EMAIL_NON_CONFIGURE)
-        return redirect('liste_devis')
 
-    # Vérifier que le PDF existe, sinon le générer
-    from .pdf import generer_pdf_devis
-    buffer = generer_pdf_devis(devis)
-    
-    # Base URL pour les liens absolus
-    base_url = request.build_absolute_uri('/')[:-1]
-    
-    # Contexte pour le template email
-    context = {
-        'devis': devis,
-        'client': devis.client,
-        'total_ht': devis.calculer_total_ht(),
-        'total_ttc': devis.calculer_total_ttc(),
-        'tva': devis.calculer_tva(),
-        'devise': devis.get_devise(),
-        'date_validite': devis.date_validite,
-        'lien_devis': f"{base_url}{reverse('visualiser_devis_client', args=[devis.token_client])}",
-        'lien_pdf': f"{base_url}{reverse('pdf_devis_public', args=[devis.token_client])}",
-        'reponse_possible': devis.statut == 'approuve_superieur',
-        'utilisateur': request.user,
-        'taxes_details': devis.get_taxes_details(),
-    }
-    
-    # Rendre le template HTML
-    html_message = render_to_string('devis/emails/devis_email.html', context)
-    plain_message = strip_tags(html_message)
-    
-    # ✅ Utiliser la configuration depuis la base de données
-    sujet = f"Devis {devis.numero} - {devis.client.nom}"
-    
-    # Récupérer la connexion et l'expéditeur depuis la base de données
-    # Note: les devis utilisent aussi le type 'factures' car ils sont envoyés par le même serveur
-    connection = get_connection(
-        host=getattr(settings, 'FACTURE_EMAIL_HOST', 'smtp.gmail.com'),
-        port=getattr(settings, 'FACTURE_EMAIL_PORT', 587),
-        username=getattr(settings, 'FACTURE_EMAIL_HOST_USER', ''),
-        password=getattr(settings, 'FACTURE_EMAIL_HOST_PASSWORD', ''),
-        use_tls=True,
-    )
-    
-    # Essayer d'utiliser la configuration en base pour les factures
-    config = get_email_config('factures')
-    if config:
-        connection = get_connection(
-            host=config.host,
-            port=config.port,
-            username=config.username,
-            password=config.password,
-            use_tls=config.use_tls,
-            use_ssl=config.use_ssl,
-        )
-        from_email = config.from_email
-    else:
-        from_email = getattr(settings, 'FACTURE_DEFAULT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL)
-    
-    email = EmailMessage(
-        subject=sujet,
-        body=html_message,
-        from_email=from_email,
-        to=[email_destinataire],
-        reply_to=[request.user.email],
-        connection=connection,
-    )
-    email.content_subtype = 'html'
-    
-    # Ajouter le PDF en pièce jointe
-    email.attach(f"devis_{devis.numero}.pdf", buffer.getvalue(), 'application/pdf')
-    
-    try:
-        email.send()
-        messages.success(request, f"Devis {devis.numero} envoyé par email à {email_destinataire}")
-        if devis.statut == 'en_attente':
-            messages.warning(request, "Ce devis n'est pas encore approuvé en interne : "
-                                      "le client pourra y répondre une fois l'approbation donnée.")
-    except Exception as e:
-        messages.error(request, expliquer_erreur_email(e))
-    
+    ok, message = envoyer_devis_au_client(request, devis, destinataire)
+    if not ok:
+        messages.error(request, message)
+        return redirect('liste_devis')
+    messages.success(request, message)
+    if devis.statut == 'en_attente':
+        messages.warning(request, "Ce devis n'est pas encore approuvé en interne : "
+                                  "le client pourra y répondre une fois l'approbation donnée.")
     return redirect('liste_devis')
 
 

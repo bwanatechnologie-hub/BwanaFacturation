@@ -147,8 +147,9 @@ def api_client_info(request, pk):
             'type_taxe': client.type_taxe_nom,
             'taxes': taxes,
             'province': client.province or '',
+            'email': client.email or '',
         })
-        
+
     except Exception as e:
         logger.error(f"Erreur dans api_client_info: {str(e)}")
         logger.error(traceback.format_exc())

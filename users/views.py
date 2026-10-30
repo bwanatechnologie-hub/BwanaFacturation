@@ -191,12 +191,22 @@ def profil(request):
             messages.error(request, "Cet email est déjà utilisé par un autre compte.")
             return redirect('profil')
 
+        superieur_email = request.POST.get('superieur_email', '').strip()
+        if superieur_email:
+            try:
+                validate_email(superieur_email)
+            except ValidationError:
+                messages.error(request, "Adresse email du supérieur invalide.")
+                return redirect('profil')
+
         request.user.first_name = request.POST.get('first_name', '').strip()
         request.user.last_name  = request.POST.get('last_name', '').strip()
         request.user.email      = email
         request.user.save()
 
         # ── Infos entreprise
+        profil_obj.superieur_nom        = request.POST.get('superieur_nom', '').strip()[:150]
+        profil_obj.superieur_email      = superieur_email
         profil_obj.nom_entreprise       = request.POST.get('nom_entreprise', '').strip()
         profil_obj.telephone            = request.POST.get('telephone', '').strip()
         profil_obj.email_entreprise     = request.POST.get('email_entreprise', '').strip()
